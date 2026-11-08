@@ -6,11 +6,13 @@
     "exports": {
         ".": "./src/index.ts",
         "./fixture": "./src/fixture/index.ts",
+        "./supabase": "./src/supabase/index.ts",
         "./schema": "./src/schema.ts"
     },
     "scripts": {
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "generate": "drizzle-kit generate",
+        "migrate": "tsx src/migrate.ts",
         "seed": "tsx src/seed.ts"
     },
     "dependencies": {

@@ -30,7 +30,7 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Done when: the test finds no content in any event.
   - Requirements: 6.1
 
-- [ ] 5. Supabase store, read side (needs database)
+- [x] 5. Supabase store, read side (needs database)
   - Owner: Đăng
   - Files: `packages/db/src/supabase/store.ts`, `packages/db/src/supabase/store.test.ts`, `packages/db/package.json`
   - Do: implement `listProjects`, `getProjectDetail`, `listEvidence`, `listFindings`, `getJob`, `getReportData` with Drizzle and the access rules. Run `pnpm db:generate` check (no schema drift), apply the migration to the dev project, run `pnpm db:seed`.
