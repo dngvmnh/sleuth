@@ -2,28 +2,28 @@
 
 All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run fully against fixtures. Tasks 5 to 10 need a Supabase dev project (or local Postgres) and are marked. After every task fixture mode must still work with no keys: run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts`.
 
-- [ ] 1. Pure limits function
+- [x] 1. Pure limits function
   - Owner: Đăng
   - Files: `packages/domain/src/limits.ts`, `packages/domain/src/limits.test.ts`, `packages/domain/src/limits.property.test.ts`, `packages/domain/src/index.ts`
   - Do: `checkLimits({ durationMs, analysesToday, config })` with codes `video_too_long` and `limit_exceeded`. Config has `maxVideoMs`, `dailyAnalysisLimit`.
   - Done when: unit tests cover edges (0, 180000, 180001, count at limit); property tests prove 2.2 and 5.2's pure part.
   - Requirements: 2.2, 5.2, 5.3
 
-- [ ] 2. Shared store contract suite
+- [x] 2. Shared store contract suite
   - Owner: Đăng
   - Files: `packages/db/src/store-contract.ts`, `packages/db/src/fixture/store.test.ts`
   - Do: move the access, review and change tests into `runStoreContract(name, makeStore)`; add cases for 1.3 (property), 2.3, 3.2, 3.4, 4.2, 4.3. Fixture store calls it.
   - Done when: the suite passes on the fixture store; the cases that fail (4.3 duplicate jobs, 3.2 retired ids if missing) are fixed in the fixture store in this task.
   - Requirements: 1.3, 2.3, 3.2, 3.4, 4.2, 4.3
 
-- [ ] 3. Enforce limits in the fixture store
+- [x] 3. Enforce limits in the fixture store
   - Owner: Đăng
   - Files: `packages/db/src/store.ts` (add status 429), `packages/db/src/fixture/store.ts`, `packages/db/src/fixture/store.test.ts`, `docs/api/openapi.yaml` (regenerated)
   - Do: count `analysis_requested` per user per UTC day with the injected clock; return 429 `limit_exceeded` with `details.resetsAt`. Add `analysis_requested` audit events to the fixture store.
   - Done when: a sixth analysis in a day is refused, the next UTC day is accepted, `pnpm check:contracts` passes. Label the PR `contract-change` (new error status).
   - Requirements: 5.2, 6.1
 
-- [ ] 4. Audit events in the fixture store
+- [x] 4. Audit events in the fixture store
   - Owner: Đăng
   - Files: `packages/db/src/fixture/store.ts`, `packages/db/src/fixture/store.test.ts`
   - Do: write `AuditEvent` rows for project, asset, script, checklist creation; ids only. Add a test that scans every event's JSON for script text and file names.

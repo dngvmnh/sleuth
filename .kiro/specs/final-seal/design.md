@@ -37,8 +37,8 @@ Endpoints: `GET /projects/{id}/coverage` returns `{ coverage, seal: Seal | null,
 ## Pure rules (`packages/domain`)
 
 ```ts
-computeCoverage({ checklist, evidence, decisions, reshoots }): CoverageSummary
-sealBlockers({ coverage, evidence, jobs, hasAnalysis }): SealBlocker[]
+computeCoverage(checklist, script, evidence, decisions, reshoots?): CoverageSummary   // script lets it treat a changed line as stale
+sealBlockers({ coverage, evidence, jobs, hasAnalysis }): SealBlocker[]   // an empty checklist counts as uncovered_items
 canSeal(input): { ok: true } | { ok: false; blockers: SealBlocker[] }
 ```
 

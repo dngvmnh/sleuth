@@ -2,28 +2,28 @@
 
 Tasks 1 to 5 are Đăng's (@dngvmnh, backend and contracts). Tasks 6 to 10 are Đạt's (@phatdat220707, frontend). Each is half a day or less and runs against fixture mode with no keys. Task 6 onward needs task 1 merged first (contract change). After every task: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts`.
 
-- [ ] 1. Contracts, endpoints and OpenAPI
+- [x] 1. Contracts, endpoints and OpenAPI
   - Owner: Đăng
   - Files: `packages/contracts/src/entities.ts` (or new `seal.ts`), `endpoints.ts`, `index.ts`, `docs/api/openapi.yaml` (regenerated), `apps/web/app/api/v1/projects/[id]/coverage/route.ts`, `apps/web/app/api/v1/projects/[id]/reshoots/route.ts` (add GET), `apps/web/app/api/v1/projects/[id]/seal/route.ts`, `apps/web/app/api/v1/reshoots/[id]/route.ts`
   - Do: add the schemas and four endpoints from the design; routes return 501 `not_implemented` until task 4 (so the frontend can compile against the client).
   - Done when: `pnpm check:contracts` passes; the OpenAPI file lists the new paths. Label the PR `contract-change`.
   - Requirements: 1, 2, 3 (shapes)
 
-- [ ] 2. `computeCoverage`
+- [x] 2. `computeCoverage`
   - Owner: Đăng
   - Files: `packages/domain/src/coverage.ts`, `coverage.test.ts`, `coverage.property.test.ts`, `packages/domain/src/index.ts`
   - Do: implement with the first-match order in the design; decisions matched by evidence id.
   - Done when: unit tests for each state; property tests for 1.3, 1.4, 1.5 pass; the golden fixture with no decisions gives 4 items `needs_review` (including the engine-proposed outside-proof item) and 1 `uncovered` (the Export item).
   - Requirements: 1.1 to 1.5
 
-- [ ] 3. `sealBlockers` and `canSeal`
+- [x] 3. `sealBlockers` and `canSeal`
   - Owner: Đăng
   - Files: `packages/domain/src/seal.ts`, `seal.test.ts`, `seal.property.test.ts`
   - Do: pure rules from the design.
   - Done when: property tests for 3.2 pass (undecided candidate always blocks; allowed implies no `uncovered` or `needs_review`).
   - Requirements: 3.2, 3.3
 
-- [ ] 4. Store: coverage, reshoots, seal, break
+- [x] 4. Store: coverage, reshoots, seal, break
   - Owner: Đăng
   - Files: `packages/db/src/store.ts`, `packages/db/src/fixture/store.ts`, `store.test.ts`, the four route files from task 1
   - Do: implement `getCoverage`, `listReshoots`, `updateReshoot`, `sealProject`, `breakSeal` in the fixture store; wire the routes; add `decisions`, `seal`, `coverage` to `ReportData`.
@@ -31,7 +31,7 @@ Tasks 1 to 5 are Đăng's (@dngvmnh, backend and contracts). Tasks 6 to 10 are �
   - Requirements: 2.1, 2.2, 3.1 to 3.7
   - Depends on: tasks 1 to 3
 
-- [ ] 5. Report model, CSV and HTML
+- [x] 5. Report model, CSV and HTML
   - Owner: Đăng
   - Files: `apps/web/app/api/_lib/report.ts`, `report.test.ts`, `report.property.test.ts`
   - Do: one `ReportModel`; CSV sections; HTML with seal banner, coverage, reshoots, outside proof, honesty notes, print stylesheet; escaping and formula property tests.

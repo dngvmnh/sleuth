@@ -40,12 +40,14 @@ deriveSegmentStates(segments, evidence): Record<segmentId, SegmentState>
 type SegmentState = "covered" | "needs_review" | "stale" | "uncovered" | "outside_proof"
 ```
 
-`deriveSegmentStates` rules, first match wins:
-1. any candidate with status `needs_outside_proof` and none valid otherwise -> `outside_proof`
-2. has a candidate that is `confirmed` -> `covered`
-3. has a `candidate`, `needs_reshoot` -> `needs_review`
-4. has candidates and all are `stale` -> `stale`
-5. otherwise -> `uncovered` (rejected-only also counts as uncovered)
+`deriveSegmentStates` rules, first match wins (as built in `packages/domain/src/segment-state.ts`):
+1. a `confirmed` candidate -> `covered` (a person's confirmation wins)
+2. a `needs_outside_proof` candidate -> `outside_proof`
+3. a `candidate` or `needs_reshoot` candidate -> `needs_review`
+4. only `stale` candidates, nothing fresh -> `stale`
+5. nothing, or only `rejected` (also stale plus rejected) -> `uncovered`
+
+"Fresh" means not stale. Evidence whose `segmentHash` no longer matches the segment counts as stale even if its status was not updated, so a caller that forgot to invalidate cannot show out-of-date evidence as valid. `planReanalysis(diff, evidence, { assetChanged })` is built too: modified and added segments, unchanged segments with only stale evidence, or every surviving segment when the video changed.
 
 The review-workspace timeline uses this function directly. It lives in `domain` so the frontend never re-implements the rules.
 
@@ -69,7 +71,13 @@ Supabase store writes the same changes in one transaction: new script version an
 - Store-level property test: random sequences of edits, uploads, re-analyses and reviews against the fixture store (and later the Supabase store through the shared contract suite). Invariants checked after every step: no stale candidate is confirmed; human decisions on unchanged hashes survive; candidates outside `segmentIds` are untouched by re-analysis; no duplicate candidate ids.
 - API-level test through the route handlers: edit one sentence on a `copyFromDemo` project and assert exactly one stale candidate and one Poltergeist finding.
 
-## Open questions
+## Decisions made while building (the store-level property test found both)
 
-- Whether a rejected candidate on an edited segment should become `stale` (current rule: yes, every non-stale status) or stay `rejected`. Current behaviour keeps the invariant simple.
+- A rejected candidate stays `rejected` when its line or video changes. Staling it again re-opened a dismissed Poltergeist on every later edit and broke "a cosmetic edit changes nothing".
+- Dismissing a stale candidate made it `rejected`, and a rejected candidate could then be confirmed on an outdated line. `applyReviewDecision(evidence, decision, current)` now takes the current line hash and video id; the store passes them. Evidence that does not match can only be dismissed.
+- A Poltergeist reopens if the same evidence goes stale a second time (the store upserts findings by id).
+- `mergeEvidence` and `mergeFindings` moved to `@sleuth/domain` so stores can use them; `@sleuth/evidence-engine` re-exports them.
+- `applyAnalysisResult` (fixture store only) merges a finished run. A targeted run may only write evidence and findings about its own lines; checklist-level Ghost findings need the whole script, so only a full run replaces them. Evidence-analysis task 4 (Bảo) makes the engine itself aware of existing evidence.
+
+## Open questions
 - Whether `removed` segments' stale evidence should be hidden from the default view after dismissal (frontend call).

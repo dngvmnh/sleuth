@@ -10,6 +10,8 @@ import { GET as reportCsv } from "../v1/projects/[id]/report.csv/route";
 import { GET as reportHtml } from "../v1/projects/[id]/report.html/route";
 import { PATCH as review } from "../v1/evidence/[id]/review/route";
 import { POST as createScript } from "../v1/projects/[id]/scripts/route";
+import { POST as createUploadUrl } from "../v1/projects/[id]/assets/upload-url/route";
+import { POST as startAnalysis } from "../v1/projects/[id]/analysis/route";
 import { buildCsv, buildHtml, htmlEscape } from "./report";
 import { createFixtureStore } from "@sleuth/db/fixture";
 
@@ -95,13 +97,37 @@ describe("API routes in fixture mode", () => {
     );
   });
 
+  it("answers 429 with the standard error shape and a reset time after the daily limit", async () => {
+    const who = "limit-test-user";
+    const created = await createProject(json("POST", { name: "Limits" }, who), ctx());
+    const id = ((await created.json()) as { project: { id: string } }).project.id;
+    const upload = await createUploadUrl(
+      json("POST", { fileName: "a.mp4", mimeType: "video/mp4", durationMs: 5000 }, who),
+      ctx({ id }),
+    );
+    expect(upload.status).toBe(201);
+    const script = Array.from({ length: 8 }, (_, i) => `Line number ${i + 1} here.`).join("\n");
+    expect((await createScript(json("POST", { text: script }, who), ctx({ id }))).status).toBe(201);
+
+    // The default limit is 5 per user per day. Each request names a different segment.
+    for (let i = 1; i <= 5; i++) {
+      const ok = await startAnalysis(json("POST", { segmentIds: [`seg-${i}`] }, who), ctx({ id }));
+      expect(ok.status).toBe(202);
+    }
+    const refused = await startAnalysis(json("POST", { segmentIds: ["seg-6"] }, who), ctx({ id }));
+    expect(refused.status).toBe(429);
+    const body = ErrorResponseSchema.parse(await refused.json());
+    expect(body.error.code).toBe("limit_exceeded");
+    expect(JSON.stringify(body.error.details)).toContain("resetsAt");
+  });
+
   it("serves the report as CSV and as HTML", async () => {
     const csv = await reportCsv(new Request("http://localhost/x"), ctx({ id: "proofpay-demo" }));
     expect(csv.headers.get("content-type")).toContain("text/csv");
     expect(await csv.text()).toContain("Phantom Dialogue,Script line not spoken");
     const html = await reportHtml(new Request("http://localhost/x"), ctx({ id: "proofpay-demo" }));
     expect(html.headers.get("content-type")).toContain("text/html");
-    expect(await html.text()).toContain("has not been signed off");
+    expect(await html.text()).toContain("Draft: not signed off");
   });
 });
 

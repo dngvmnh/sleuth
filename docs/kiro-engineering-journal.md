@@ -66,3 +66,37 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Real results: `pnpm lint` clean; `pnpm typecheck` clean; `pnpm test` 13 files / 144 tests passed; `pnpm test:property` 13 passed; `pnpm check:contracts` passed; `pnpm build` passed.
 - Not verified: the specs describe work that does not exist yet. The Supabase parts (ingestion 5 to 9, evidence-analysis 12 and 16) have never run against a database.
 - Decisions left open on purpose (each is written in the relevant `design.md`): provider choice (ADR 0007, Bảo), retention period and scheduler (ingestion 10), whether unscripted and reordered lines need their own finding types, whether CI gets a Postgres service.
+
+### 2026-11-08, Đăng (@dngvmnh), ingestion 1 to 4 and change-impact 1 and 2
+- Goal: finish Đăng's first-day tasks. `deriveSegmentStates` is on the critical path because Đạt's timeline (review-workspace 7) uses it.
+- Kiro feature used: the specs in `.kiro/specs/ingestion` and `.kiro/specs/change-impact`, one task at a time, tests first for the rules.
+- Built:
+  - `packages/domain/src/segment-state.ts`: five states, first-match rules. A candidate whose `segmentHash` no longer matches counts as stale even if its status was not updated.
+  - `packages/domain/src/reanalysis.ts`: `planReanalysis(diff, evidence, { assetChanged })`.
+  - `packages/domain/src/limits.ts`: `checkLimits` plus UTC-day helpers. Added an `invalid_duration` code beside the two in the spec, so a negative or fractional duration is not called "too long".
+  - `packages/db/src/store-contract.ts`: one suite for project isolation, contiguous asset versions, retired segment ids, checklist positions, and jobs. `fixture/store.test.ts` runs it. Other stores will run the same suite.
+  - Fixture store: daily limit (429 `limit_exceeded` with `details.resetsAt`, default 5, from `DAILY_ANALYSIS_LIMIT_PER_USER`), duration check at the store, idempotent analysis requests, and audit events with ids and counts only. `ProjectStore` gained `listAuditEvents` (owner only). OpenAPI lists the 429 response.
+- Decisions to check:
+  - A repeat request returns the existing queued or running job and does not use up the daily quota. "Same request" means same video version, script version and set of segments, so a re-analysis of other segments is a new job.
+  - Stale plus rejected evidence shows as `uncovered`, not `stale`: a person already said no, so nothing is left to review.
+- What the tests caught: I removed `retiredIds` from the fixture store on purpose and the segment-id property test failed in 1 run, so the contract suite does detect id reuse. The file is restored.
+- Real results: `pnpm lint` clean; `pnpm typecheck` clean; `pnpm test` 16 files / 211 tests passed; `pnpm test:property` 29 passed; `pnpm check:contracts` passed; `pnpm build` passed. `e2e` not re-run (no UI change).
+- Contract change: new error status 429 and the `listAuditEvents` store method. The PR needs the `contract-change` label.
+- Not done: nothing here touches Supabase. The contract suite has not run against a real store other than the fixture.
+
+### 2026-11-08, Đăng (@dngvmnh), milestones 1 and 2: change-impact and Final Seal backend (fixture mode)
+- Goal: finish the rest of Đăng's change-impact and final-seal tasks that run without a database.
+- Kiro feature used: `backend-builder` agent rules and the specs. Tests were written before or with each rule, and one property test found two real bugs.
+- Built (change-impact 3, 5, 6, 7, 8, 10):
+  - `resolvePoltergeists`; Poltergeist findings now say whether the script or the video made them stale.
+  - `reanalysisPlan` on the script response; `startAnalysis` rejects empty or unknown `segmentIds` (400); `applyAnalysisResult` and `breakSeal` on a `FixtureStore` type (not part of the shared `ProjectStore` contract); `script_revised` and `asset_replaced` audit events with counts only.
+  - `packages/db/src/fixture/store.property.test.ts`: 200 random histories of edits, cosmetic edits, removals, uploads, re-analyses and reviews; invariants checked after every step. `apps/web/app/api/_lib/change-impact.test.ts`: copy the demo, edit one sentence, see 1 stale candidate and 1 Poltergeist, re-analyse that line with the real matching engine, see it resolved.
+- Built (final-seal 1 to 5): contracts (`CoverageSummary`, `CoverageState`, `Seal`, `SealBlocker`, four endpoints and OpenAPI), `computeCoverage`, `sealBlockers`, `canSeal`, store methods `getCoverage`, `listReshoots`, `updateReshoot`, `sealProject` and seal breaking on edits and uploads, the four routes (first as 501 stubs, then wired), and a `ReportModel` behind both exports (sections, banner for draft, sealed or broken, formula neutralising, escaped HTML with print CSS).
+- Bugs the property test found, both in code I wrote earlier:
+  1. A stale candidate that a person dismissed (`rejected`) could then be confirmed, because the review rules only looked at the status. `applyReviewDecision` now takes the current line hash and video id and refuses anything but a dismissal for outdated evidence. Mutation check: with the new argument removed the property test failed in 4 of 6 runs.
+  2. A dismissed candidate turned back into `stale` on every later script change, which reopened its Poltergeist and broke "a cosmetic edit changes nothing". `rejected` now stays `rejected`.
+  A third small one: evidence going stale a second time did not reopen its resolved Poltergeist. Fixed by upserting findings.
+- Decisions to check: `computeCoverage` takes `(checklist, script, evidence, decisions, reshoots?)`, the optional fifth argument is how open reshoots count. A `confirmed` status without a person's confirm decision is never "proven". An empty checklist cannot be sealed (reported as `uncovered_items`). Sealing with open reshoots and outside-proof items is allowed and shown. Re-sealing replaces the earlier seal and keeps it as `broken` with reason "Replaced by a newer seal." `mergeEvidence` and `mergeFindings` moved to `@sleuth/domain` (evidence-engine re-exports them) so stores can use them without breaking the dependency direction.
+- Real results (PowerShell): `pnpm lint` clean; `pnpm typecheck` clean; `pnpm test` 22 files / 289 tests passed; `pnpm test:property` 9 files / 54 passed; `pnpm check:contracts` 14 tests passed and `openapi.yaml` matches; `pnpm build` passed; `node tools/kiro-hooks/hook.mjs ghost-scan` found nothing new, and a separate scan of all non-test source shows `confirmed` is only assigned in `packages/domain/src/review.ts`. Note that `ghost-scan` reads `git diff HEAD`, so it cannot see untracked new files; I ran the manual scan for that reason.
+- Contract changes (need the `contract-change` label): four endpoints, `reanalysisPlan`, new schemas, new error status 429 (earlier), `ReportData` fields, `listAuditEvents`, `listReshoots`, `updateReshoot`, `getCoverage`, `sealProject` on `ProjectStore`.
+- Not done: milestone 3 (Supabase store, storage, auth, RLS tests, retention). No `DATABASE_URL`, `TEST_DATABASE_URL`, Supabase credentials or `.env` file exist on this machine and Docker's daemon is off, so none of it could run. I did not write unrun database code and call it done.

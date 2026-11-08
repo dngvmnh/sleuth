@@ -1,5 +1,10 @@
 export { loadGoldenFixture } from "./load";
-export { createFixtureStore, type FixtureStoreOptions } from "./store";
+export {
+  createFixtureStore,
+  type AnalysisResult,
+  type FixtureStore,
+  type FixtureStoreOptions,
+} from "./store";
 export {
   StoreError,
   type Actor,

@@ -2,6 +2,16 @@ import { createFixtureStore, StoreError, type Actor, type ProjectStore } from "@
 
 export type DataMode = "fixture" | "supabase";
 
+/** Blank or invalid env values count as unset, so the store default applies. */
+function positiveInt(value: string | undefined): number | undefined {
+  const n = Number(value);
+  return value && Number.isInteger(n) && n > 0 ? n : undefined;
+}
+function seconds(value: string | undefined): number | undefined {
+  const n = positiveInt(value);
+  return n === undefined ? undefined : n * 1000;
+}
+
 export function dataMode(): DataMode {
   return process.env.SLEUTH_DATA_MODE === "supabase" ? "supabase" : "fixture";
 }
@@ -18,7 +28,10 @@ export function getStore(): ProjectStore {
       "Supabase mode is not implemented yet. Unset SLEUTH_DATA_MODE to use the fixture.",
     );
   }
-  globalForStore.__sleuthFixtureStore ??= createFixtureStore();
+  globalForStore.__sleuthFixtureStore ??= createFixtureStore({
+    dailyAnalysisLimit: positiveInt(process.env.DAILY_ANALYSIS_LIMIT_PER_USER),
+    maxVideoMs: seconds(process.env.MAX_VIDEO_SECONDS),
+  });
   return globalForStore.__sleuthFixtureStore;
 }
 
