@@ -1,0 +1,91 @@
+[
+  {
+    "id": "ev-seg-1-av-1",
+    "projectId": "proofpay-demo",
+    "checklistItemId": "ck-1",
+    "scriptSegmentId": "seg-1",
+    "scriptVersionId": "sv-1",
+    "segmentHash": "78fc68eba2a0ccdc6c6362482ce0de4700c7d65eeba7b15f53347e7d9e7334ac",
+    "assetVersionId": "av-1",
+    "startMs": 1000,
+    "endMs": 5000,
+    "transcriptSegmentIds": [
+      "tr-1"
+    ],
+    "frameObservationIds": [
+      "fr-1"
+    ],
+    "explanation": "Spoken at 0:01-0:05 (100% of the line's key words). 1 nearby frame shares up to 1 key word with the line. Confidence ranks this match; a person must confirm it.",
+    "confidence": "medium",
+    "status": "candidate",
+    "source": "ai",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "ev-seg-2-av-1",
+    "projectId": "proofpay-demo",
+    "checklistItemId": "ck-2",
+    "scriptSegmentId": "seg-2",
+    "scriptVersionId": "sv-1",
+    "segmentHash": "e234eed7b527f82cdc353a0a361c6079a04f5a22657d395d87a30d3d1a3a2cc5",
+    "assetVersionId": "av-1",
+    "startMs": 4000,
+    "endMs": 10000,
+    "transcriptSegmentIds": [
+      "tr-2"
+    ],
+    "frameObservationIds": [
+      "fr-2",
+      "fr-3"
+    ],
+    "explanation": "Spoken at 0:06-0:10 (100% of the line's key words). 2 nearby frames share up to 2 key words with the line. Confidence ranks this match; a person must confirm it.",
+    "confidence": "high",
+    "status": "candidate",
+    "source": "ai",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "ev-seg-3-av-1",
+    "projectId": "proofpay-demo",
+    "checklistItemId": "ck-3",
+    "scriptSegmentId": "seg-3",
+    "scriptVersionId": "sv-1",
+    "segmentHash": "b39aba042b20e48698125cae111a086a44c3448c927d8621f73861ad6a3b46f3",
+    "assetVersionId": "av-1",
+    "startMs": 11000,
+    "endMs": 18000,
+    "transcriptSegmentIds": [
+      "tr-3"
+    ],
+    "frameObservationIds": [
+      "fr-4",
+      "fr-5",
+      "fr-6"
+    ],
+    "explanation": "Spoken at 0:11-0:18 (100% of the line's key words). 3 nearby frames share up to 2 key words with the line. Confidence ranks this match; a person must confirm it.",
+    "confidence": "high",
+    "status": "candidate",
+    "source": "ai",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "ev-seg-5-av-1",
+    "projectId": "proofpay-demo",
+    "checklistItemId": "ck-5",
+    "scriptSegmentId": "seg-5",
+    "scriptVersionId": "sv-1",
+    "segmentHash": "0f0b9d7f29b4436b3153a7a0f979d821b7661d1e4cbec4eb041a0d84905fd0a9",
+    "assetVersionId": "av-1",
+    "startMs": 30000,
+    "endMs": 35000,
+    "transcriptSegmentIds": [
+      "tr-5"
+    ],
+    "frameObservationIds": [],
+    "explanation": "Spoken at 0:30-0:35 (100% of the line's key words). This claim cannot be proven by footage, so it needs proof from outside the video.",
+    "confidence": "low",
+    "status": "needs_outside_proof",
+    "source": "ai",
+    "analysisRunId": "run-golden-1"
+  }
+]

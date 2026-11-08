@@ -1,0 +1,51 @@
+{
+  "id": "sv-1",
+  "projectId": "proofpay-demo",
+  "version": 1,
+  "text": "Welcome to ProofPay, the invoicing tool for freelancers.\nFirst, click New Invoice to start a draft.\nEnter the client name and the amount of 1,250 dollars.\nClick Export to download the invoice as a PDF.\nAll customer data is encrypted end to end.\nThanks for watching.",
+  "segments": [
+    {
+      "id": "seg-1",
+      "scriptVersionId": "sv-1",
+      "index": 0,
+      "text": "Welcome to ProofPay, the invoicing tool for freelancers.",
+      "hash": "78fc68eba2a0ccdc6c6362482ce0de4700c7d65eeba7b15f53347e7d9e7334ac"
+    },
+    {
+      "id": "seg-2",
+      "scriptVersionId": "sv-1",
+      "index": 1,
+      "text": "First, click New Invoice to start a draft.",
+      "hash": "e234eed7b527f82cdc353a0a361c6079a04f5a22657d395d87a30d3d1a3a2cc5"
+    },
+    {
+      "id": "seg-3",
+      "scriptVersionId": "sv-1",
+      "index": 2,
+      "text": "Enter the client name and the amount of 1,250 dollars.",
+      "hash": "b39aba042b20e48698125cae111a086a44c3448c927d8621f73861ad6a3b46f3"
+    },
+    {
+      "id": "seg-4",
+      "scriptVersionId": "sv-1",
+      "index": 3,
+      "text": "Click Export to download the invoice as a PDF.",
+      "hash": "f8b76ef1020fc3b0ed4ed25d763f6b9a912f8b7640328e9f0f00d27ebff8c30d"
+    },
+    {
+      "id": "seg-5",
+      "scriptVersionId": "sv-1",
+      "index": 4,
+      "text": "All customer data is encrypted end to end.",
+      "hash": "0f0b9d7f29b4436b3153a7a0f979d821b7661d1e4cbec4eb041a0d84905fd0a9"
+    },
+    {
+      "id": "seg-6",
+      "scriptVersionId": "sv-1",
+      "index": 5,
+      "text": "Thanks for watching.",
+      "hash": "8da3863a601aa4f6e48eaf47162f0f0d432a70eaa9f00010eff6008df886b709"
+    }
+  ],
+  "createdAt": "2026-11-01T00:00:00.000Z"
+}

@@ -1,0 +1,80 @@
+/*
+ * SLEUTH design tokens: a premium haunted film studio.
+ * Contrast (WCAG AA, measured against --sleuth-bg and --sleuth-surface):
+ *   text 15:1, muted about 8:1, primary about 6:1, warn about 10:1.
+ * Use these tokens in components. Do not write raw hex values there.
+ */
+:root {
+  --sleuth-bg: #0e0b16; /* midnight charcoal */
+  --sleuth-surface: #171225; /* deep purple */
+  --sleuth-surface-raised: #211a36;
+  --sleuth-border: #3a2f5c;
+  --sleuth-text: #ece8f6;
+  --sleuth-text-muted: #b8aed1;
+  --sleuth-primary: #a78bfa; /* spectral violet */
+  --sleuth-primary-strong: #c4b5fd;
+  --sleuth-on-primary: #0e0b16;
+  --sleuth-warn: #f2b84b; /* candlelight amber */
+  --sleuth-danger: #f4908f;
+  --sleuth-ok: #86d9b0;
+  --sleuth-focus: #f2b84b;
+
+  --sleuth-font-sans:
+    ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sleuth-font-display:
+    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+
+  --sleuth-radius: 0.5rem;
+  --sleuth-border-width: 1px;
+}
+
+/* Decorative fog and glow. Both are switched off for people who ask for less motion. */
+.sleuth-fog {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60rem 30rem at 15% 10%, rgb(167 139 250 / 0.12), transparent 70%),
+    radial-gradient(50rem 28rem at 85% 90%, rgb(242 184 75 / 0.06), transparent 70%);
+  animation: sleuth-drift 40s ease-in-out infinite alternate;
+}
+
+.sleuth-glow {
+  box-shadow: 0 0 0.75rem rgb(167 139 250 / 0.55);
+  animation: sleuth-pulse 3s ease-in-out infinite;
+}
+
+@keyframes sleuth-drift {
+  from {
+    transform: translate3d(-1.5%, 0, 0);
+  }
+  to {
+    transform: translate3d(1.5%, -1%, 0);
+  }
+}
+
+@keyframes sleuth-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0.35rem rgb(167 139 250 / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 1rem rgb(167 139 250 / 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sleuth-fog {
+    animation: none;
+    display: none;
+  }
+  .sleuth-glow {
+    animation: none;
+    box-shadow: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

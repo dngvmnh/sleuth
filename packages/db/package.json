@@ -1,0 +1,27 @@
+{
+    "name": "@sleuth/db",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./fixture": "./src/fixture/index.ts",
+        "./schema": "./src/schema.ts"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "generate": "drizzle-kit generate",
+        "seed": "tsx src/seed.ts"
+    },
+    "dependencies": {
+        "@sleuth/contracts": "workspace:*",
+        "@sleuth/domain": "workspace:*",
+        "drizzle-orm": "0.45.4",
+        "postgres": "4.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "26.6.6",
+        "drizzle-kit": "0.31.11",
+        "tsx": "4.23.15"
+    }
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "fd-cursed-frame-seg-1",
+    "projectId": "proofpay-demo",
+    "type": "cursed_frame",
+    "plainLabel": "Needs human check",
+    "checklistItemId": "ck-1",
+    "scriptSegmentId": "seg-1",
+    "evidenceId": "ev-seg-1-av-1",
+    "found": "1 frame near the spoken line shares words with it.",
+    "notFound": "Not every key word of the line was seen on screen.",
+    "limits": "Matching compares words only. Watch the clip to confirm it shows the step.",
+    "status": "open",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "fd-phantom-dialogue-seg-4",
+    "projectId": "proofpay-demo",
+    "type": "phantom_dialogue",
+    "plainLabel": "Script line not spoken",
+    "checklistItemId": "ck-4",
+    "scriptSegmentId": "seg-4",
+    "evidenceId": null,
+    "found": "The script line exists.",
+    "notFound": "No spoken sentence in the transcript covers enough of its words.",
+    "limits": "Speech to text can miss words, and the presenter may have said it differently. Listen to the clip.",
+    "status": "open",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "fd-needs-outside-proof-seg-5",
+    "projectId": "proofpay-demo",
+    "type": "needs_outside_proof",
+    "plainLabel": "Footage cannot prove this",
+    "checklistItemId": "ck-5",
+    "scriptSegmentId": "seg-5",
+    "evidenceId": null,
+    "found": "The script makes a claim about security, guarantees or compliance.",
+    "notFound": "Footage cannot show this. No visual check was attempted.",
+    "limits": "Needs a document, certificate or other proof from outside the video.",
+    "status": "open",
+    "analysisRunId": "run-golden-1"
+  },
+  {
+    "id": "fd-ghost-ck-4",
+    "projectId": "proofpay-demo",
+    "type": "ghost",
+    "plainLabel": "No visual evidence",
+    "checklistItemId": "ck-4",
+    "scriptSegmentId": null,
+    "evidenceId": null,
+    "found": "A script line points at this item.",
+    "notFound": "No frame near a matching spoken line shows it.",
+    "limits": "Frames are sampled, so a quick action between samples can be missed. Scrub the video to check.",
+    "status": "open",
+    "analysisRunId": "run-golden-1"
+  }
+]

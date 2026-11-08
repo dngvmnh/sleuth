@@ -1,0 +1,9 @@
+{
+  "id": "av-1",
+  "projectId": "proofpay-demo",
+  "version": 1,
+  "storagePath": "placeholder/proofpay-demo.mp4",
+  "mimeType": "video/mp4",
+  "durationMs": 52000,
+  "createdAt": "2026-11-01T00:00:00.000Z"
+}

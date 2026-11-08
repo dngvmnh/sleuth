@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-background: var(--sleuth-bg);
+  --color-surface: var(--sleuth-surface);
+  --color-raised: var(--sleuth-surface-raised);
+  --color-line: var(--sleuth-border);
+  --color-foreground: var(--sleuth-text);
+  --color-muted: var(--sleuth-text-muted);
+  --color-primary: var(--sleuth-primary);
+  --color-primary-strong: var(--sleuth-primary-strong);
+  --color-on-primary: var(--sleuth-on-primary);
+  --color-warn: var(--sleuth-warn);
+  --color-danger: var(--sleuth-danger);
+  --color-ok: var(--sleuth-ok);
+  --font-sans: var(--sleuth-font-sans);
+  --font-display: var(--sleuth-font-display);
+  --radius-md: var(--sleuth-radius);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--sleuth-bg);
+  color: var(--sleuth-text);
+  font-family: var(--sleuth-font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--sleuth-focus);
+  outline-offset: 2px;
+}

@@ -1,0 +1,9 @@
+{
+  "id": "proofpay-demo",
+  "name": "ProofPay demo (public example)",
+  "ownerId": null,
+  "isDemo": true,
+  "currentScriptVersionId": "sv-1",
+  "currentAssetVersionId": "av-1",
+  "createdAt": "2026-11-01T00:00:00.000Z"
+}

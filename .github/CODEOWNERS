@@ -1,0 +1,29 @@
+# Last matching pattern wins. Keep the specific rules below the general ones.
+# Owners: Đăng @dngvmnh (backend, scaffold), Đạt @phatdat220707 (frontend), Bảo @baofrovn (media).
+
+* @dngvmnh
+
+# Frontend
+/apps/web/ @phatdat220707
+/tests/e2e/ @phatdat220707
+
+# Backend (apps/web/app/api sits inside apps/web, so it is listed after it)
+/apps/web/app/api/ @dngvmnh
+/packages/contracts/ @dngvmnh
+/packages/domain/ @dngvmnh
+/packages/db/ @dngvmnh
+
+# Media
+/apps/worker/ @baofrovn
+/packages/media/ @baofrovn
+/packages/evidence-engine/ @baofrovn
+/tests/evaluation/ @baofrovn
+
+# Shared files: @dngvmnh plus the owner of the affected area
+/fixtures/golden/ @dngvmnh @phatdat220707 @baofrovn
+/.kiro/steering/ @dngvmnh @phatdat220707 @baofrovn
+/.github/ @dngvmnh
+/pnpm-lock.yaml @dngvmnh
+/package.json @dngvmnh
+/tsconfig*.json @dngvmnh
+/eslint.config.mjs @dngvmnh

@@ -1,0 +1,307 @@
+[
+  {
+    "id": "tr-1",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 1000,
+    "endMs": 5000,
+    "text": "Welcome to ProofPay, the invoicing tool for freelancers.",
+    "words": [
+      {
+        "text": "Welcome",
+        "startMs": 1000,
+        "endMs": 1571
+      },
+      {
+        "text": "to",
+        "startMs": 1571,
+        "endMs": 1734
+      },
+      {
+        "text": "ProofPay,",
+        "startMs": 1734,
+        "endMs": 2469
+      },
+      {
+        "text": "the",
+        "startMs": 2469,
+        "endMs": 2714
+      },
+      {
+        "text": "invoicing",
+        "startMs": 2714,
+        "endMs": 3449
+      },
+      {
+        "text": "tool",
+        "startMs": 3449,
+        "endMs": 3776
+      },
+      {
+        "text": "for",
+        "startMs": 3776,
+        "endMs": 4021
+      },
+      {
+        "text": "freelancers.",
+        "startMs": 4021,
+        "endMs": 5000
+      }
+    ]
+  },
+  {
+    "id": "tr-2",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 6000,
+    "endMs": 10000,
+    "text": "First, click New Invoice to start a draft.",
+    "words": [
+      {
+        "text": "First,",
+        "startMs": 6000,
+        "endMs": 6686
+      },
+      {
+        "text": "click",
+        "startMs": 6686,
+        "endMs": 7257
+      },
+      {
+        "text": "New",
+        "startMs": 7257,
+        "endMs": 7600
+      },
+      {
+        "text": "Invoice",
+        "startMs": 7600,
+        "endMs": 8400
+      },
+      {
+        "text": "to",
+        "startMs": 8400,
+        "endMs": 8629
+      },
+      {
+        "text": "start",
+        "startMs": 8629,
+        "endMs": 9200
+      },
+      {
+        "text": "a",
+        "startMs": 9200,
+        "endMs": 9314
+      },
+      {
+        "text": "draft.",
+        "startMs": 9314,
+        "endMs": 10000
+      }
+    ]
+  },
+  {
+    "id": "tr-3",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 11000,
+    "endMs": 18000,
+    "text": "Now I enter the client name and an amount of 1,250 dollars.",
+    "words": [
+      {
+        "text": "Now",
+        "startMs": 11000,
+        "endMs": 11438
+      },
+      {
+        "text": "I",
+        "startMs": 11438,
+        "endMs": 11584
+      },
+      {
+        "text": "enter",
+        "startMs": 11584,
+        "endMs": 12313
+      },
+      {
+        "text": "the",
+        "startMs": 12313,
+        "endMs": 12751
+      },
+      {
+        "text": "client",
+        "startMs": 12751,
+        "endMs": 13626
+      },
+      {
+        "text": "name",
+        "startMs": 13626,
+        "endMs": 14209
+      },
+      {
+        "text": "and",
+        "startMs": 14209,
+        "endMs": 14647
+      },
+      {
+        "text": "an",
+        "startMs": 14647,
+        "endMs": 14939
+      },
+      {
+        "text": "amount",
+        "startMs": 14939,
+        "endMs": 15814
+      },
+      {
+        "text": "of",
+        "startMs": 15814,
+        "endMs": 16106
+      },
+      {
+        "text": "1,250",
+        "startMs": 16106,
+        "endMs": 16835
+      },
+      {
+        "text": "dollars.",
+        "startMs": 16835,
+        "endMs": 18000
+      }
+    ]
+  },
+  {
+    "id": "tr-4",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 19000,
+    "endMs": 24000,
+    "text": "Then I save it and check the preview.",
+    "words": [
+      {
+        "text": "Then",
+        "startMs": 19000,
+        "endMs": 19667
+      },
+      {
+        "text": "I",
+        "startMs": 19667,
+        "endMs": 19834
+      },
+      {
+        "text": "save",
+        "startMs": 19834,
+        "endMs": 20501
+      },
+      {
+        "text": "it",
+        "startMs": 20501,
+        "endMs": 20834
+      },
+      {
+        "text": "and",
+        "startMs": 20834,
+        "endMs": 21334
+      },
+      {
+        "text": "check",
+        "startMs": 21334,
+        "endMs": 22167
+      },
+      {
+        "text": "the",
+        "startMs": 22167,
+        "endMs": 22667
+      },
+      {
+        "text": "preview.",
+        "startMs": 22667,
+        "endMs": 24000
+      }
+    ]
+  },
+  {
+    "id": "tr-5",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 30000,
+    "endMs": 35000,
+    "text": "ProofPay keeps all your customer data encrypted end to end.",
+    "words": [
+      {
+        "text": "ProofPay",
+        "startMs": 30000,
+        "endMs": 30800
+      },
+      {
+        "text": "keeps",
+        "startMs": 30800,
+        "endMs": 31300
+      },
+      {
+        "text": "all",
+        "startMs": 31300,
+        "endMs": 31600
+      },
+      {
+        "text": "your",
+        "startMs": 31600,
+        "endMs": 32000
+      },
+      {
+        "text": "customer",
+        "startMs": 32000,
+        "endMs": 32800
+      },
+      {
+        "text": "data",
+        "startMs": 32800,
+        "endMs": 33200
+      },
+      {
+        "text": "encrypted",
+        "startMs": 33200,
+        "endMs": 34100
+      },
+      {
+        "text": "end",
+        "startMs": 34100,
+        "endMs": 34400
+      },
+      {
+        "text": "to",
+        "startMs": 34400,
+        "endMs": 34600
+      },
+      {
+        "text": "end.",
+        "startMs": 34600,
+        "endMs": 35000
+      }
+    ]
+  },
+  {
+    "id": "tr-6",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "startMs": 44000,
+    "endMs": 47000,
+    "text": "Thanks for watching.",
+    "words": [
+      {
+        "text": "Thanks",
+        "startMs": 44000,
+        "endMs": 45000
+      },
+      {
+        "text": "for",
+        "startMs": 45000,
+        "endMs": 45500
+      },
+      {
+        "text": "watching.",
+        "startMs": 45500,
+        "endMs": 47000
+      }
+    ]
+  }
+]

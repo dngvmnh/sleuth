@@ -1,0 +1,1668 @@
+openapi: 3.0.3
+info:
+  title: SLEUTH API
+  version: 0.1.0
+  description: Generated from packages/contracts. Do not edit by hand; run `pnpm tsx scripts/generate-openapi.ts`. Timestamps are integer milliseconds from video start.
+servers:
+  - url: /api/v1
+paths:
+  /projects:
+    post:
+      operationId: createProject
+      summary: Create a project
+      parameters: []
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      name:
+                        type: string
+                        minLength: 1
+                        maxLength: 120
+                      ownerId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      isDemo:
+                        type: boolean
+                      currentScriptVersionId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      currentAssetVersionId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - name
+                      - ownerId
+                      - isDemo
+                      - currentScriptVersionId
+                      - currentAssetVersionId
+                      - createdAt
+                    additionalProperties: false
+                required:
+                  - project
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: &a1
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                copyFromDemo:
+                  type: boolean
+              required:
+                - name
+    get:
+      operationId: listProjects
+      summary: List projects the caller can see, including the public demo
+      parameters: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        name:
+                          type: string
+                          minLength: 1
+                          maxLength: 120
+                        ownerId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        isDemo:
+                          type: boolean
+                        currentScriptVersionId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        currentAssetVersionId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        createdAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      required:
+                        - id
+                        - name
+                        - ownerId
+                        - isDemo
+                        - currentScriptVersionId
+                        - currentAssetVersionId
+                        - createdAt
+                      additionalProperties: false
+                required:
+                  - projects
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /projects/{id}:
+    get:
+      operationId: getProject
+      summary: Get a project with its current video, script and checklist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      name:
+                        type: string
+                        minLength: 1
+                        maxLength: 120
+                      ownerId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      isDemo:
+                        type: boolean
+                      currentScriptVersionId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      currentAssetVersionId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - name
+                      - ownerId
+                      - isDemo
+                      - currentScriptVersionId
+                      - currentAssetVersionId
+                      - createdAt
+                    additionalProperties: false
+                  assetVersion:
+                    nullable: true
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      version:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      storagePath:
+                        type: string
+                        minLength: 1
+                      mimeType:
+                        type: string
+                        minLength: 1
+                      durationMs:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - version
+                      - storagePath
+                      - mimeType
+                      - durationMs
+                      - createdAt
+                    additionalProperties: false
+                  scriptVersion:
+                    nullable: true
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      version:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      text:
+                        type: string
+                      segments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              minLength: 1
+                            scriptVersionId:
+                              type: string
+                              minLength: 1
+                            index:
+                              type: integer
+                              minimum: 0
+                              maximum: 9007199254740991
+                            text:
+                              type: string
+                              minLength: 1
+                            hash:
+                              type: string
+                              pattern: ^[0-9a-f]{64}$
+                          required:
+                            - id
+                            - scriptVersionId
+                            - index
+                            - text
+                            - hash
+                          additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - version
+                      - text
+                      - segments
+                      - createdAt
+                    additionalProperties: false
+                  checklist:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        projectId:
+                          type: string
+                          minLength: 1
+                        label:
+                          type: string
+                          minLength: 1
+                          maxLength: 300
+                        position:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                      required:
+                        - id
+                        - projectId
+                        - label
+                        - position
+                      additionalProperties: false
+                required:
+                  - project
+                  - assetVersion
+                  - scriptVersion
+                  - checklist
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /projects/{id}/assets/upload-url:
+    post:
+      operationId: createUploadUrl
+      summary: Create a new asset version and a short-lived signed upload URL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assetVersion:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      version:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      storagePath:
+                        type: string
+                        minLength: 1
+                      mimeType:
+                        type: string
+                        minLength: 1
+                      durationMs:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - version
+                      - storagePath
+                      - mimeType
+                      - durationMs
+                      - createdAt
+                    additionalProperties: false
+                  uploadUrl:
+                    type: string
+                    minLength: 1
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                required:
+                  - assetVersion
+                  - uploadUrl
+                  - expiresAt
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                mimeType:
+                  type: string
+                  pattern: ^video\/
+                durationMs:
+                  type: integer
+                  minimum: 0
+                  maximum: 180000
+              required:
+                - fileName
+                - mimeType
+                - durationMs
+  /projects/{id}/scripts:
+    post:
+      operationId: createScript
+      summary: Save a new script version; returns the diff and which evidence went stale
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scriptVersion:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      version:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      text:
+                        type: string
+                      segments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              minLength: 1
+                            scriptVersionId:
+                              type: string
+                              minLength: 1
+                            index:
+                              type: integer
+                              minimum: 0
+                              maximum: 9007199254740991
+                            text:
+                              type: string
+                              minLength: 1
+                            hash:
+                              type: string
+                              pattern: ^[0-9a-f]{64}$
+                          required:
+                            - id
+                            - scriptVersionId
+                            - index
+                            - text
+                            - hash
+                          additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - version
+                      - text
+                      - segments
+                      - createdAt
+                    additionalProperties: false
+                  diff:
+                    type: object
+                    properties:
+                      added:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                      modified:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                      removed:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                      unchanged:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                    required:
+                      - added
+                      - modified
+                      - removed
+                      - unchanged
+                    additionalProperties: false
+                  staleEvidenceIds:
+                    type: array
+                    items:
+                      type: string
+                      minLength: 1
+                required:
+                  - scriptVersion
+                  - diff
+                  - staleEvidenceIds
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 20000
+              required:
+                - text
+  /projects/{id}/checklist:
+    post:
+      operationId: setChecklist
+      summary: Replace the checklist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        projectId:
+                          type: string
+                          minLength: 1
+                        label:
+                          type: string
+                          minLength: 1
+                          maxLength: 300
+                        position:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                      required:
+                        - id
+                        - projectId
+                        - label
+                        - position
+                      additionalProperties: false
+                required:
+                  - items
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  minItems: 1
+                  maxItems: 50
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      label:
+                        type: string
+                        minLength: 1
+                        maxLength: 300
+                    required:
+                      - label
+              required:
+                - items
+  /projects/{id}/analysis:
+    post:
+      operationId: startAnalysis
+      summary: Queue an analysis job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        enum:
+                          - analysis
+                          - reanalysis
+                      status:
+                        type: string
+                        enum:
+                          - queued
+                          - running
+                          - succeeded
+                          - failed
+                      attempts:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      maxAttempts:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      lockedBy:
+                        nullable: true
+                        type: string
+                      heartbeatAt:
+                        nullable: true
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      error:
+                        nullable: true
+                        type: string
+                      payload:
+                        type: object
+                        properties:
+                          assetVersionId:
+                            type: string
+                            minLength: 1
+                          scriptVersionId:
+                            type: string
+                            minLength: 1
+                          segmentIds:
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                        required:
+                          - assetVersionId
+                          - scriptVersionId
+                        additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - kind
+                      - status
+                      - attempts
+                      - maxAttempts
+                      - lockedBy
+                      - heartbeatAt
+                      - error
+                      - payload
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+                required:
+                  - job
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                segmentIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+  /projects/{id}/jobs/{jobId}:
+    get:
+      operationId: getJob
+      summary: Get a processing job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        enum:
+                          - analysis
+                          - reanalysis
+                      status:
+                        type: string
+                        enum:
+                          - queued
+                          - running
+                          - succeeded
+                          - failed
+                      attempts:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      maxAttempts:
+                        type: integer
+                        minimum: 0
+                        exclusiveMinimum: true
+                        maximum: 9007199254740991
+                      lockedBy:
+                        nullable: true
+                        type: string
+                      heartbeatAt:
+                        nullable: true
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      error:
+                        nullable: true
+                        type: string
+                      payload:
+                        type: object
+                        properties:
+                          assetVersionId:
+                            type: string
+                            minLength: 1
+                          scriptVersionId:
+                            type: string
+                            minLength: 1
+                          segmentIds:
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                        required:
+                          - assetVersionId
+                          - scriptVersionId
+                        additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - kind
+                      - status
+                      - attempts
+                      - maxAttempts
+                      - lockedBy
+                      - heartbeatAt
+                      - error
+                      - payload
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+                required:
+                  - job
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /projects/{id}/evidence:
+    get:
+      operationId: listEvidence
+      summary: List evidence candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evidence:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        projectId:
+                          type: string
+                          minLength: 1
+                        checklistItemId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        scriptSegmentId:
+                          type: string
+                          minLength: 1
+                        scriptVersionId:
+                          type: string
+                          minLength: 1
+                        segmentHash:
+                          type: string
+                          pattern: ^[0-9a-f]{64}$
+                        assetVersionId:
+                          type: string
+                          minLength: 1
+                        startMs:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        endMs:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        transcriptSegmentIds:
+                          type: array
+                          items:
+                            type: string
+                            minLength: 1
+                        frameObservationIds:
+                          type: array
+                          items:
+                            type: string
+                            minLength: 1
+                        explanation:
+                          type: string
+                          minLength: 1
+                        confidence:
+                          type: string
+                          enum:
+                            - low
+                            - medium
+                            - high
+                        status:
+                          type: string
+                          enum:
+                            - candidate
+                            - confirmed
+                            - rejected
+                            - stale
+                            - needs_reshoot
+                            - needs_outside_proof
+                        source:
+                          type: string
+                          enum:
+                            - ai
+                            - human
+                        analysisRunId:
+                          type: string
+                          minLength: 1
+                      required:
+                        - id
+                        - projectId
+                        - checklistItemId
+                        - scriptSegmentId
+                        - scriptVersionId
+                        - segmentHash
+                        - assetVersionId
+                        - startMs
+                        - endMs
+                        - transcriptSegmentIds
+                        - frameObservationIds
+                        - explanation
+                        - confidence
+                        - status
+                        - source
+                        - analysisRunId
+                      additionalProperties: false
+                required:
+                  - evidence
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /projects/{id}/findings:
+    get:
+      operationId: listFindings
+      summary: List findings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        projectId:
+                          type: string
+                          minLength: 1
+                        type:
+                          type: string
+                          enum:
+                            - ghost
+                            - phantom_dialogue
+                            - cursed_frame
+                            - poltergeist
+                            - needs_outside_proof
+                        plainLabel:
+                          type: string
+                          minLength: 1
+                        checklistItemId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        scriptSegmentId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        evidenceId:
+                          nullable: true
+                          type: string
+                          minLength: 1
+                        found:
+                          type: string
+                          minLength: 1
+                        notFound:
+                          type: string
+                          minLength: 1
+                        limits:
+                          type: string
+                          minLength: 1
+                        status:
+                          type: string
+                          enum:
+                            - open
+                            - resolved
+                        analysisRunId:
+                          type: string
+                          minLength: 1
+                      required:
+                        - id
+                        - projectId
+                        - type
+                        - plainLabel
+                        - checklistItemId
+                        - scriptSegmentId
+                        - evidenceId
+                        - found
+                        - notFound
+                        - limits
+                        - status
+                        - analysisRunId
+                      additionalProperties: false
+                required:
+                  - findings
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /evidence/{id}/review:
+    patch:
+      operationId: reviewEvidence
+      summary: Record a human review decision (Exorcism) on one evidence candidate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evidence:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      checklistItemId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      scriptSegmentId:
+                        type: string
+                        minLength: 1
+                      scriptVersionId:
+                        type: string
+                        minLength: 1
+                      segmentHash:
+                        type: string
+                        pattern: ^[0-9a-f]{64}$
+                      assetVersionId:
+                        type: string
+                        minLength: 1
+                      startMs:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      endMs:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                      transcriptSegmentIds:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                      frameObservationIds:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                      explanation:
+                        type: string
+                        minLength: 1
+                      confidence:
+                        type: string
+                        enum:
+                          - low
+                          - medium
+                          - high
+                      status:
+                        type: string
+                        enum:
+                          - candidate
+                          - confirmed
+                          - rejected
+                          - stale
+                          - needs_reshoot
+                          - needs_outside_proof
+                      source:
+                        type: string
+                        enum:
+                          - ai
+                          - human
+                      analysisRunId:
+                        type: string
+                        minLength: 1
+                    required:
+                      - id
+                      - projectId
+                      - checklistItemId
+                      - scriptSegmentId
+                      - scriptVersionId
+                      - segmentHash
+                      - assetVersionId
+                      - startMs
+                      - endMs
+                      - transcriptSegmentIds
+                      - frameObservationIds
+                      - explanation
+                      - confidence
+                      - status
+                      - source
+                      - analysisRunId
+                    additionalProperties: false
+                  decision:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      evidenceId:
+                        type: string
+                        minLength: 1
+                      decision:
+                        type: string
+                        enum:
+                          - confirm
+                          - reject
+                          - needs_reshoot
+                          - needs_outside_proof
+                      reviewerId:
+                        type: string
+                        minLength: 1
+                      note:
+                        nullable: true
+                        type: string
+                        maxLength: 1000
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - evidenceId
+                      - decision
+                      - reviewerId
+                      - note
+                      - createdAt
+                    additionalProperties: false
+                required:
+                  - evidence
+                  - decision
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decision:
+                  type: string
+                  enum:
+                    - confirm
+                    - reject
+                    - needs_reshoot
+                    - needs_outside_proof
+                note:
+                  type: string
+                  maxLength: 1000
+              required:
+                - decision
+  /projects/{id}/reshoots:
+    post:
+      operationId: createReshoot
+      summary: Create a reshoot task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reshoot:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      projectId:
+                        type: string
+                        minLength: 1
+                      checklistItemId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      scriptSegmentId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      findingId:
+                        nullable: true
+                        type: string
+                        minLength: 1
+                      note:
+                        type: string
+                        minLength: 1
+                        maxLength: 1000
+                      status:
+                        type: string
+                        enum:
+                          - open
+                          - done
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                    required:
+                      - id
+                      - projectId
+                      - checklistItemId
+                      - scriptSegmentId
+                      - findingId
+                      - note
+                      - status
+                      - createdAt
+                    additionalProperties: false
+                required:
+                  - reshoot
+                additionalProperties: false
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                checklistItemId:
+                  type: string
+                  minLength: 1
+                scriptSegmentId:
+                  type: string
+                  minLength: 1
+                findingId:
+                  type: string
+                  minLength: 1
+              required:
+                - note
+  /projects/{id}/report.csv:
+    get:
+      operationId: reportCsv
+      summary: Download the report as CSV
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            text/csv:
+              schema:
+                type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+  /projects/{id}/report.html:
+    get:
+      operationId: reportHtml
+      summary: Printable HTML report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema: *a1
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema: *a1
+        "403":
+          description: Not allowed (for example, the demo project is read-only)
+          content:
+            application/json:
+              schema: *a1
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: *a1
+        "409":
+          description: Conflict with current state
+          content:
+            application/json:
+              schema: *a1
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              minLength: 1
+            message:
+              type: string
+              minLength: 1
+            details: {}
+          required:
+            - code
+            - message
+          additionalProperties: false
+      required:
+        - error
+      additionalProperties: false

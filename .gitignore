@@ -1,0 +1,29 @@
+# dependencies and build output
+node_modules/
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets: ignore every env file except the example
+.env*
+!.env.example
+
+# local media and worker output
+media/
+*.mp4
+*.mov
+*.webm
+.sleuth-out/
+
+# tests
+playwright-report/
+test-results/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+
+# NOTE: .kiro/ is committed on purpose. Never add it here.

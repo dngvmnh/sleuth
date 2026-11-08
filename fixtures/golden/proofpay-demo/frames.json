@@ -1,0 +1,111 @@
+[
+  {
+    "id": "fr-1",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 2000,
+    "description": "Home screen of the app with a logo",
+    "onScreenText": [
+      "ProofPay"
+    ]
+  },
+  {
+    "id": "fr-2",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 4000,
+    "description": "Empty invoice list with a button in the top right",
+    "onScreenText": [
+      "Invoices",
+      "New Invoice"
+    ]
+  },
+  {
+    "id": "fr-3",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 8000,
+    "description": "New invoice form opens with empty fields",
+    "onScreenText": [
+      "New Invoice",
+      "Client",
+      "Amount"
+    ]
+  },
+  {
+    "id": "fr-4",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 12000,
+    "description": "Form with the client field being typed in",
+    "onScreenText": [
+      "Client",
+      "Lumen Studio"
+    ]
+  },
+  {
+    "id": "fr-5",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 14000,
+    "description": "Amount field filled in",
+    "onScreenText": [
+      "Amount",
+      "1,250.00"
+    ]
+  },
+  {
+    "id": "fr-6",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 16000,
+    "description": "Completed invoice form",
+    "onScreenText": [
+      "Client: Lumen Studio",
+      "Amount: 1,250.00"
+    ]
+  },
+  {
+    "id": "fr-7",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 20000,
+    "description": "Saved invoice preview",
+    "onScreenText": [
+      "Preview",
+      "Invoice INV-001"
+    ]
+  },
+  {
+    "id": "fr-8",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 22000,
+    "description": "Preview page scrolled down",
+    "onScreenText": [
+      "Preview"
+    ]
+  },
+  {
+    "id": "fr-9",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 32000,
+    "description": "Settings page with a security section",
+    "onScreenText": [
+      "Settings",
+      "Security"
+    ]
+  },
+  {
+    "id": "fr-10",
+    "projectId": "proofpay-demo",
+    "assetVersionId": "av-1",
+    "timestampMs": 46000,
+    "description": "Invoice list with one invoice",
+    "onScreenText": [
+      "Invoices",
+      "INV-001"
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ck-1",
+    "projectId": "proofpay-demo",
+    "label": "Show the ProofPay welcome screen",
+    "position": 0
+  },
+  {
+    "id": "ck-2",
+    "projectId": "proofpay-demo",
+    "label": "Create a new invoice",
+    "position": 1
+  },
+  {
+    "id": "ck-3",
+    "projectId": "proofpay-demo",
+    "label": "Fill in the client and the amount",
+    "position": 2
+  },
+  {
+    "id": "ck-4",
+    "projectId": "proofpay-demo",
+    "label": "Export the invoice as a PDF",
+    "position": 3
+  },
+  {
+    "id": "ck-5",
+    "projectId": "proofpay-demo",
+    "label": "State that customer data is encrypted",
+    "position": 4
+  }
+]

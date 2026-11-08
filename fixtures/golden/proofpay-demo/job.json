@@ -1,0 +1,17 @@
+{
+  "id": "job-demo-1",
+  "projectId": "proofpay-demo",
+  "kind": "analysis",
+  "status": "queued",
+  "attempts": 0,
+  "maxAttempts": 3,
+  "lockedBy": null,
+  "heartbeatAt": null,
+  "error": null,
+  "payload": {
+    "assetVersionId": "av-1",
+    "scriptVersionId": "sv-1"
+  },
+  "createdAt": "2026-11-01T00:00:00.000Z",
+  "updatedAt": "2026-11-01T00:00:00.000Z"
+}
