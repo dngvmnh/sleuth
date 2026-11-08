@@ -37,7 +37,7 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Done when: the contract suite's read cases pass with `TEST_DATABASE_URL` set; the demo project is readable with no user. Record in the journal that the migration was applied for the first time.
   - Requirements: 1.3, 1.4, 1.6
 
-- [ ] 6. Supabase store, write side (needs database)
+- [x] 6. Supabase store, write side (needs database)
   - Owner: Đăng
   - Files: `packages/db/src/supabase/store.ts`, `packages/db/migrations/` (new migration for the active-job unique index), `packages/db/src/schema.ts`
   - Do: `createProject`, `createScript` (transaction, retired ids from the table), `setChecklist` (transaction), `startAnalysis` (idempotent insert, limit check with advisory lock), `createReshoot`, `reviewEvidence` (via `applyReviewDecision`).

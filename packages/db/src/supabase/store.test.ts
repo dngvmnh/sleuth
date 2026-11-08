@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import * as t from "../schema";
-import { StoreError, type ProjectStore } from "../store";
+import { StoreError, type Actor, type ProjectStore } from "../store";
+import { runStoreContract } from "../store-contract";
 import { createSupabaseStore } from "./store";
 import { toIso } from "./mappers";
 import {
@@ -31,6 +32,20 @@ if (!url) {
 }
 const suite = url ? describe : describe.skip;
 
+// A remote database answers in tens of milliseconds per query; the contract makes many.
+vi.setConfig({ testTimeout: 300_000, hookTimeout: 60_000 });
+
+let handle: ReturnType<typeof openTestDb>;
+let store: ProjectStore;
+beforeAll(() => {
+  if (!url) return;
+  handle = openTestDb();
+  store = createSupabaseStore({ db: handle.db });
+});
+afterAll(async () => {
+  await handle?.close();
+});
+
 const DEMO = "proofpay-demo";
 const anon = { userId: null };
 const owner = { userId: testUser("store", 20) };
@@ -48,8 +63,6 @@ async function refused(p: Promise<unknown>): Promise<StoreError> {
 }
 
 suite("SupabaseStore (read side) on Postgres", () => {
-  const handle = openTestDb();
-  const store: ProjectStore = createSupabaseStore({ db: handle.db });
   const ids = { job: "", audit: "" };
 
   beforeAll(async () => {
@@ -121,7 +134,6 @@ suite("SupabaseStore (read side) on Postgres", () => {
 
   afterAll(async () => {
     await deleteTestProjects(handle.db, "store");
-    await handle.close();
   }, 60_000);
 
   it("serves the seeded demo project to a visitor who is not signed in [1.6]", async () => {
@@ -199,3 +211,30 @@ suite("SupabaseStore (read side) on Postgres", () => {
     expect((await refused(store.listAuditEvents(anon, DEMO))).status).toBe(403);
   });
 });
+
+// The same suite the fixture store passes. Test users are UUIDs from a fixed namespace, project
+// names carry a prefix, and every run starts by removing the previous run's rows.
+const prefixed = (inner: ProjectStore): ProjectStore =>
+  new Proxy(inner, {
+    get(target, prop, receiver) {
+      if (prop === "createProject") {
+        return (actor: Actor, input: { name: string; copyFromDemo?: boolean }) =>
+          target.createProject(actor, { ...input, name: `${TEST_PROJECT_PREFIX}${input.name}` });
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+
+if (url) {
+  runStoreContract(
+    "SupabaseStore",
+    async () => {
+      await deleteTestProjects(handle.db, "store");
+      return prefixed(store);
+    },
+    { userId: (n) => testUser("store", n), maxRuns: 4 },
+  );
+  afterAll(async () => {
+    await deleteTestProjects(handle.db, "store");
+  }, 60_000);
+}

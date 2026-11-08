@@ -10,6 +10,7 @@ import type {
   ReviewDecision,
   ScriptSegment,
   ScriptVersion,
+  Seal,
 } from "@sleuth/contracts";
 import type * as t from "../schema";
 
@@ -159,4 +160,18 @@ export const auditOf = (r: typeof t.auditEvents.$inferSelect): AuditEvent => ({
   type: r.type,
   data: r.data,
   createdAt: toIso(r.createdAt),
+});
+
+export const sealOf = (r: typeof t.seals.$inferSelect): Seal => ({
+  id: r.id,
+  projectId: r.projectId,
+  sealedBy: r.sealedBy,
+  sealedAt: toIso(r.sealedAt),
+  scriptVersionId: r.scriptVersionId,
+  assetVersionId: r.assetVersionId,
+  coverage: r.coverage,
+  note: r.note,
+  status: r.status,
+  brokenAt: r.brokenAt === null ? null : toIso(r.brokenAt),
+  brokenReason: r.brokenReason,
 });

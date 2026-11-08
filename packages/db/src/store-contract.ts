@@ -9,12 +9,21 @@ import { StoreError, type Actor, type ProjectStore } from "./store";
  *
  * Covers ingestion requirements 1.2, 1.3, 1.4, 1.5, 2.2, 2.3, 3.2, 3.4, 4.2, 4.3.
  */
+export interface ContractOptions {
+  /** User id for test user n. Default `contract-user-n`; a real database needs UUIDs. */
+  userId?: (n: number) => string;
+  /** Cap on property runs. A remote database is slow, so it runs fewer. */
+  maxRuns?: number;
+}
+
 export function runStoreContract(
   name: string,
   makeStore: () => ProjectStore | Promise<ProjectStore>,
+  options: ContractOptions = {},
 ) {
   const DEMO = "proofpay-demo";
-  const user = (n: number): Actor => ({ userId: `contract-user-${n}` });
+  const user = (n: number): Actor => ({ userId: options.userId?.(n) ?? `contract-user-${n}` });
+  const runs = (n: number) => Math.min(n, options.maxRuns ?? n);
   const anon: Actor = { userId: null };
 
   async function refused(p: Promise<unknown>): Promise<StoreError> {
@@ -62,7 +71,7 @@ export function runStoreContract(
             expect((await store.listProjects(anon)).map((p) => p.id)).toEqual([DEMO]);
           },
         ),
-        { numRuns: 25 },
+        { numRuns: runs(25) },
       );
     });
 
@@ -131,7 +140,7 @@ export function runStoreContract(
             expect(first.assetVersion.version).toBe(1);
           },
         ),
-        { numRuns: 25 },
+        { numRuns: runs(25) },
       );
     });
 
@@ -161,7 +170,7 @@ export function runStoreContract(
             expect(ok.assetVersion.version).toBe(1);
           },
         ),
-        { numRuns: 25 },
+        { numRuns: runs(25) },
       );
     });
 
@@ -214,7 +223,7 @@ export function runStoreContract(
             previous = new Set(ids);
           }
         }),
-        { numRuns: 30 },
+        { numRuns: runs(30) },
       );
     });
 
@@ -249,7 +258,7 @@ export function runStoreContract(
             ).toEqual(second);
           },
         ),
-        { numRuns: 25 },
+        { numRuns: runs(25) },
       );
     });
   });
@@ -287,7 +296,7 @@ export function runStoreContract(
             ids.add((await store.startAnalysis(user(1), p.id, {})).id);
           expect(ids.size).toBe(1);
         }),
-        { numRuns: 20 },
+        { numRuns: runs(20) },
       );
     });
 

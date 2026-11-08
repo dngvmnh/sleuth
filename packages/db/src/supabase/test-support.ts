@@ -32,6 +32,8 @@ export const NAMESPACES = {
   rls: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0002",
   api: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0003",
   purge: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0004",
+  write: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0005",
+  upload: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0006",
 } as const;
 
 export const testUser = (ns: keyof typeof NAMESPACES, n: number): string =>
