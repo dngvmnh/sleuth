@@ -1,7 +1,24 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { createDb } from "./client";
 import { loadGoldenFixture } from "./fixture/load";
 import { fixtureToRows } from "./seed-rows";
 import * as t from "./schema";
+
+// Load .env.local or .env if DATABASE_URL is not already in process.env
+if (!process.env.DATABASE_URL) {
+  for (const rel of [".env.local", ".env", "../../.env.local", "../../.env"]) {
+    const p = resolve(process.cwd(), rel);
+    if (existsSync(p)) {
+      try {
+        process.loadEnvFile(p);
+        if (process.env.DATABASE_URL) break;
+      } catch {
+        // ignore load errors
+      }
+    }
+  }
+}
 
 /** Loads the golden fixture into Postgres. Safe to run twice (existing rows are kept). */
 async function main() {
