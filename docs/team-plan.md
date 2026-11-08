@@ -105,6 +105,8 @@ One project can win one Overall or one Category prize, plus any number of bonus 
 
 ## 6. Per-developer Kiro prompts (use after Phase 2 is merged)
 
+The same roles exist as custom agents in `.kiro/agents/` (`frontend-builder`, `backend-builder`, `media-builder`, `qa-reviewer`). Pick yours in the chat agent selector, then paste the prompt below. Use `qa-reviewer` on your own branch before you open a pull request.
+
 **Frontend (Đạt):** "You are the SLEUTH frontend engineer. Follow `.kiro/steering/` and `.kiro/specs/review-workspace/` and `.kiro/specs/final-seal/`. Work only in the frontend directories listed in `team-workflow.md`. Use the fixture API client; do not write backend logic or change contracts. Implement the next unchecked task, add component and Playwright tests, run them, and report the real result."
 
 **Backend (Đăng):** "You are the SLEUTH backend engineer. Follow `.kiro/steering/` and `.kiro/specs/ingestion/` and `.kiro/specs/change-impact/`. Work only in contracts, domain, db and `apps/web/app/api/`. Keep fixture mode working. Every business rule gets a unit test and, where the spec marks it, a fast-check property test. Implement the next unchecked task, run the tests, report the real result."
@@ -115,5 +117,112 @@ One project can win one Overall or one Category prize, plus any number of bonus 
 
 1. Accept the GitHub invite and request your own Kiro credits.
 2. Confirm: are you a current student (school, degree, year)? Did you register for Kiroween 2025? Are you above the age of majority where you live?
-3. Wait for the scaffold merge (target 9 November night), then clone, run `pnpm install && pnpm dev`, and open your spec.
+3. Wait for the scaffold merge (target 9 November night), then follow section 8 to clone and run the app, and open your spec.
 4. Post a short async update in the team channel each day: done, contract changes, blocked, next pull request.
+
+## 8. Setup on a fresh Windows machine (everyone)
+
+Use PowerShell, a normal Windows folder (not a WSL path such as `\\wsl$` or `/mnt/c`), and open that folder in Kiro IDE. Run the commands one at a time; do not chain with `&&` in Windows PowerShell 5.1.
+
+```powershell
+# Node 22 (skip if `node -v` already prints v22.x)
+winget install OpenJS.NodeJS.LTS
+node -v
+
+# pnpm, pinned to the repo's version
+npm install -g pnpm@10.12.1
+pnpm -v
+
+# get the code
+git clone https://github.com/dngvmnh/sleuth
+cd sleuth
+
+# install, then check everything is green
+pnpm install
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:property
+pnpm check:contracts
+
+# run the app (http://localhost:3000), then in a second terminal the worker
+pnpm dev
+pnpm worker -- --once
+```
+
+If `corepack enable` fails with `EPERM`, that is the nvm-for-Windows folder permission problem. The `npm install -g pnpm@10.12.1` line above avoids it.
+
+Extra for Phạm Quốc Bảo (media): `winget install Gyan.FFmpeg`, then open a new terminal and check `ffmpeg -version` and `ffprobe -version`.
+
+Extra for Đạt (frontend): `pnpm exec playwright install chromium` once, then `pnpm test:e2e`.
+
+Extra for Đăng (backend, later): a Supabase dev project and a `.env.local` copied from `.env.example` with your own values. Nobody else needs it until ingestion task 5.
+
+Every day: `git switch main`, `git pull`, `pnpm install`, then `git switch -c feat/<area>-<topic>`.
+
+## 9. Plan for the first three working days (10 to 12 November)
+
+Each task is in `.kiro/specs/<spec>/tasks.md`. Do them in the order shown. Start each task by telling your agent: "Do task N of the <spec> spec." Tick the box in `tasks.md` in the same pull request.
+
+### Đăng (@dngvmnh): ingestion and change-impact
+
+Before day 1 (scaffold owner): push the repo, add branch protection on `main` (CI green and one review), invite the two teammates, replace the TODO notes if any, and turn on the CODEOWNERS review requirement.
+
+| Day | Task | Spec and task | Files |
+|---|---|---|---|
+| 1 | Segment display states (unblocks Đạt's timeline) | change-impact 2 | `packages/domain/src/segment-state.ts` and tests, `packages/domain/src/index.ts` |
+| 1 | Pure limits function | ingestion 1 | `packages/domain/src/limits.ts` and tests |
+| 2 | Shared store contract suite | ingestion 2 | `packages/db/src/store-contract.ts`, `packages/db/src/fixture/store.test.ts` |
+| 2 | Enforce limits in the fixture store (contract change: status 429) | ingestion 3 | `packages/db/src/store.ts`, `packages/db/src/fixture/store.ts`, `docs/api/openapi.yaml` |
+| 3 | `planReanalysis` | change-impact 1 | `packages/domain/src/reanalysis.ts` and tests |
+| 3 | `resolvePoltergeists` | change-impact 3 | `packages/domain/src/poltergeist.ts` and tests |
+| 3 | Audit events in the fixture store | ingestion 4 | `packages/db/src/fixture/store.ts` and tests |
+
+First pull request: `feat/domain-segment-state` (change-impact task 2). It is small, has no contract change, and Đạt waits for it.
+
+### Đạt (@phatdat220707): review-workspace
+
+| Day | Task | Spec and task | Files |
+|---|---|---|---|
+| 1 | Component test tooling (shared files: Đăng reviews) | review-workspace 1 | `package.json`, `vitest.config.ts` |
+| 1 | Complete the API client | review-workspace 2 | `apps/web/lib/api-client.ts` and test |
+| 2 | App shell and dashboard | review-workspace 3 | `apps/web/app/(workspace)/layout.tsx`, `page.tsx`, `apps/web/components/state-panel.tsx`, `apps/web/features/dashboard/*` |
+| 2 | Pure timeline helpers | review-workspace 4 | `apps/web/features/timeline/geometry.ts`, `segment-at.ts` and property tests |
+| 3 | Player port and simulated player | review-workspace 5 | `apps/web/features/player/*` |
+| 3 | Workspace data hook and page skeleton | review-workspace 6 | `apps/web/app/(workspace)/projects/[id]/page.tsx`, `apps/web/features/workspace/*` |
+
+First pull request: `feat/web-test-tooling` (review-workspace task 1, plus task 2 if small). Tell the team before you change `pnpm-lock.yaml`.
+
+### Phạm Quốc Bảo (@baofrovn): evidence-analysis
+
+| Day | Task | Spec and task | Files |
+|---|---|---|---|
+| 1 | FFmpeg probe and audio extraction | evidence-analysis 1 | `packages/media/src/ffmpeg.ts` and test |
+| 1 | Frame extraction and cleanup | evidence-analysis 2 | `packages/media/src/ffmpeg.ts`, `packages/evidence-engine/src/frames.property.test.ts` |
+| 2 | Provider decision ADR (write the comparison; no keys) | evidence-analysis 3 | `docs/decisions/0007-provider-choice.md` |
+| 2 | Output validation property tests | evidence-analysis 4 | `packages/media/src/validate.property.test.ts` |
+| 3 | Script alignment | evidence-analysis 5 | `packages/evidence-engine/src/align.ts`, `thresholds.ts`, tests, `analyse.ts` |
+
+First pull request: `feat/media-ffmpeg-probe` (evidence-analysis task 1).
+
+### The first three pull requests, in order
+
+1. Đăng: scaffold merge, plus branch protection and invites (before day 1).
+2. Đăng: `feat/domain-segment-state`.
+3. Bảo: `feat/media-ffmpeg-probe`, and Đạt: `feat/web-test-tooling`, reviewed within the day.
+
+Every pull request: small, CI green, the template filled in, `contract-change` label if you touched contracts, the schema or the golden fixture, and a journal entry in `docs/kiro-engineering-journal.md`.
+
+## 10. Risks I see
+
+1. **Nothing has run against a real database.** The migration, the RLS policies, the queue claim query and the worker Dockerfile were never executed (Docker was not running). Ingestion tasks 5 and 9 are where this gets proven. Until then treat those as unverified.
+2. **The Kiro hook and agent files were not tried inside the IDE.** The formats come from public docs and examples for IDE 1.x. Open the Agent Hooks panel and the agent selector once; fix whatever the IDE rejects. File-save hooks fire for agent edits only; CI is the real gate.
+3. **The golden fixture is regression-locked, not ground truth.** Its expected output comes from our own matching code, read by hand. Real speech and real screens will be messier. The hand-labelled clips (evidence-analysis 11, 14, 15) and the first evaluation run are how we find out. Quote only numbers the harness prints.
+4. **Word-overlap matching will be weak on real transcripts.** Expect to spend time on alignment and confidence (evidence-analysis 5 and 6). This is the highest technical risk.
+5. **AI cost and keys.** One team-owned account with a hard monthly cap, set before the provider adapters run on anything. Judges' "try your own video" runs spend our money; the limits in ingestion 1 and 3 must exist before the public link does.
+6. **No video file in the repo.** The player runs on a simulated clock in fixture mode. We need our own recorded clips (evidence-analysis 11) before the demo looks real.
+7. **Shared-file conflicts.** `pnpm-lock.yaml`, root configs and `.github/` need review from Đăng and one person adds dependencies at a time. Review-workspace task 1 touches them on day 1.
+8. **Contract changes ripple.** Ingestion 3, change-impact 5 and final-seal 1 are contract changes. Land them early in the week, announce them in the team channel, and regenerate the fixture and OpenAPI file in the same pull request.
+9. **Hosting must outlive judging.** Supabase free projects pause when idle; worker needs a Docker host with FFmpeg. Budget a small paid tier from 1 December until results.
+10. **Time.** Four weeks, three people, five specs. If we slip, cut in this order: ingestion 10 (retention), review-workspace 12 (upload polish), evidence-analysis 12 only if real providers are not ready. Do not cut the Poltergeist flow, the Final Seal or the evaluation numbers.
+11. **Age of majority and eligibility** (section 5) still need answers from each member before we rely on any prize.
