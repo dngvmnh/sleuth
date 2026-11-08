@@ -87,6 +87,37 @@ Under `/api/v1`. Documented in `docs/api/openapi.yaml`, generated from the Zod s
 
 Migrations come from Drizzle only: edit `packages/db/src/schema.ts`, then `pnpm db:generate`. Row Level Security is on for every table. `pnpm db:seed` loads the demo project (needs `DATABASE_URL`).
 
+## Kiro setup
+
+Everything Kiro reads lives in `.kiro/` and is committed.
+
+| Path | What it is |
+|---|---|
+| `.kiro/steering/` | Rules loaded into chat. Most are always on; `frontend.md`, `backend.md`, `media.md` load by file path; `ghost-hunt.md` is manual (type `/ghost-hunt` in chat). |
+| `.kiro/hooks/` | Automations (Kiro 1.x `v1` JSON). They call `tools/kiro-hooks/hook.mjs`. |
+| `.kiro/agents/` | Custom agents: `frontend-builder`, `backend-builder`, `media-builder`, and a read-only `qa-reviewer`. Pick one in the chat agent selector. |
+| `.kiro/specs/` | Feature specs with requirements, design and tasks. |
+| `.kiro/settings/mcp.json` | Suggested MCP servers, all disabled. |
+
+Hooks:
+
+- Domain or evidence-engine file saved by the agent: that package's unit and property tests run.
+- Contracts file saved by the agent: `pnpm check:contracts`, workspace typecheck, and a reminder to label the PR `contract-change`.
+- Spec task finished: typecheck and tests of the packages that changed, then an agent writes a journal entry in `docs/kiro-engineering-journal.md`.
+- Ghost hunt (manual): `/ghost-hunt` reviews your diff against `ai-safety.md`.
+
+File-save hooks fire for changes made by the Kiro agent, not for typing in the editor. CI runs the same checks on every pull request, so nothing depends on a hook. To run a hook's check yourself: `node tools/kiro-hooks/hook.mjs test domain` (also `test evidence-engine`, `contracts`, `task-check`, `ghost-scan`).
+
+### Turning on MCP servers (optional, your own credentials)
+
+Do not edit the committed file to enable a server. Copy the entry you want into your user-level `%USERPROFILE%\.kiro\settings\mcp.json`, set `"disabled": false`, and restart the server from Kiro's MCP panel.
+
+- **Supabase** (read-only schema inspection): create a personal access token in your Supabase account and put your project ref in `--project-ref=`. Set the token as a user environment variable named `SUPABASE_ACCESS_TOKEN` through Windows Settings, "Edit environment variables for your account". Do not paste it into any file in this repo.
+- **Playwright** (check the UI in a browser): no credentials. Needs Chromium: `pnpm exec playwright install chromium`.
+- **GitHub** (review pull requests): create a fine-grained token with read access to this repo and set it as the user environment variable `GITHUB_PERSONAL_ACCESS_TOKEN`. Kiro versions differ in how they expand `${VAR}` in `headers`; if the server will not connect, use the `gh` CLI instead.
+
+Never share tokens in chat, issues or commits. If one leaks, rotate it.
+
 ## Contributing
 
 See `CONTRIBUTING.md`.

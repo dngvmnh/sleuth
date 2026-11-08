@@ -8,7 +8,7 @@ inclusion: always
 
 | Area | Owner | Directories |
 |---|---|---|
-| Frontend and product experience | Đạt (@phatdat220707) | `apps/web/app/(workspace)/`, `apps/web/components/`, `apps/web/features/`, `apps/web/styles/`, `tests/e2e/` (Playwright) |
+| Frontend and product experience | Đạt (@phatdat220707) | `apps/web/app/(workspace)/`, `apps/web/app/layout.tsx`, `apps/web/components/`, `apps/web/features/`, `apps/web/styles/`, `apps/web/lib/`, `tests/e2e/` (Playwright) |
 | Backend, database, revisions | Đăng (@dngvmnh), also scaffold owner | `packages/contracts/`, `packages/domain/`, `packages/db/`, `apps/web/app/api/` |
 | Media worker and evidence engine | Phạm Quốc Bảo (@baofrovn) | `apps/worker/`, `packages/media/`, `packages/evidence-engine/`, `tests/evaluation/` |
 | Shared files | @dngvmnh plus the owner of the affected area | `fixtures/golden/`, root configs, `pnpm-lock.yaml`, `.github/`, `.kiro/steering/` |

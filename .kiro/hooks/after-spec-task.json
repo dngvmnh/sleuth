@@ -1,0 +1,21 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Check changed packages after a spec task",
+      "description": "Typechecks and tests only the packages that changed. Fast; no end-to-end tests.",
+      "trigger": "PostTaskExec",
+      "action": { "type": "command", "command": "node tools/kiro-hooks/hook.mjs task-check" },
+      "timeout": 180
+    },
+    {
+      "name": "Journal entry after a spec task",
+      "description": "Appends a short, honest entry to docs/kiro-engineering-journal.md. Judges read this file.",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "agent",
+        "prompt": "A spec task just finished. Append one short entry to docs/kiro-engineering-journal.md using the template at the top of that file: today's date, the task id and spec name, which Kiro feature was used, what you produced, what you had to fix or reject, and the real result of the typecheck and tests (say what you ran and what it printed). Do not claim anything you did not run. Do not edit any other file."
+      }
+    }
+  ]
+}

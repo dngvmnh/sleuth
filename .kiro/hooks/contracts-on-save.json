@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Contracts check on save",
+      "description": "After the agent saves a file in packages/contracts: golden fixture and OpenAPI check, workspace typecheck, and a reminder to label the PR contract-change.",
+      "trigger": "PostFileSave",
+      "matcher": "packages[/\\\\]contracts[/\\\\]",
+      "action": { "type": "command", "command": "node tools/kiro-hooks/hook.mjs contracts" },
+      "timeout": 180
+    }
+  ]
+}

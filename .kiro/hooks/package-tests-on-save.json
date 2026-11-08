@@ -1,0 +1,21 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Domain tests on save",
+      "description": "Runs unit and property tests of packages/domain after the agent saves a file there.",
+      "trigger": "PostFileSave",
+      "matcher": "packages[/\\\\]domain[/\\\\]",
+      "action": { "type": "command", "command": "node tools/kiro-hooks/hook.mjs test domain" },
+      "timeout": 90
+    },
+    {
+      "name": "Evidence engine tests on save",
+      "description": "Runs unit and property tests of packages/evidence-engine after the agent saves a file there.",
+      "trigger": "PostFileSave",
+      "matcher": "packages[/\\\\]evidence-engine[/\\\\]",
+      "action": { "type": "command", "command": "node tools/kiro-hooks/hook.mjs test evidence-engine" },
+      "timeout": 90
+    }
+  ]
+}
