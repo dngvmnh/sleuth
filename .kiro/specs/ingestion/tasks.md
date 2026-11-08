@@ -49,6 +49,7 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Files: `packages/db/src/supabase/storage.ts`, `packages/db/src/supabase/store.ts`, `.env.example` (check only; no values)
   - Do: private `video-assets` bucket; `createSignedUploadUrl`; path without file name; `expiresAt` at most 5 minutes; invalidate evidence on older asset versions in the same transaction.
   - Done when: a real upload to the signed URL works from a script; a URL older than its expiry is refused; the response never contains the service-role key (test on the JSON).
+  - Status: built and tested on the dev project (real upload works, tampered token refused, no key in the response, older evidence goes stale at once). Open: Supabase fixes signed upload URLs at 2 hours (measured 7199 s) with no setting, so the 5-minute rule in 2.4 is not met. Needs a team decision before this is ticked.
   - Requirements: 2.1, 2.4, 2.5
 
 - [ ] 8. Session actor and anonymous sign-in (needs Supabase project)
