@@ -630,3 +630,52 @@ describe("fixture store coverage, reshoots and the Final Seal (final-seal 1 to 3
     expect(report.coverage.totals.proven).toBe(3);
   });
 });
+
+describe("fixture store retention purge [5.4]", () => {
+  const day = 86_400_000;
+  const t0 = new Date("2026-11-01T00:00:00.000Z");
+
+  it("removes anonymous projects older than the cutoff and keeps everything else", async () => {
+    let clock = t0;
+    const store = createFixtureStore({ now: () => clock });
+    const oldAnon = await store.createProject({ userId: "anon-1" }, { name: "old" });
+    await store.createUploadUrl({ userId: "anon-1" }, oldAnon.id, {
+      fileName: "a.mp4",
+      mimeType: "video/mp4",
+      durationMs: 1000,
+    });
+    const oldUser = await store.createProject(alice, { name: "kept" });
+    clock = new Date(t0.getTime() + 6 * day);
+    const freshAnon = await store.createProject({ userId: "anon-2" }, { name: "fresh" });
+
+    const now = new Date(t0.getTime() + 7 * day + 1);
+    const result = await store.purgeExpiredAnonymousProjects(now, 7);
+    expect(result).toEqual({ projectIds: [oldAnon.id], files: 1 });
+
+    expect((await rejects(store.getProjectDetail({ userId: "anon-1" }, oldAnon.id))).status).toBe(
+      404,
+    );
+    expect((await store.getProjectDetail(alice, oldUser.id)).project.id).toBe(oldUser.id);
+    expect((await store.getProjectDetail({ userId: "anon-2" }, freshAnon.id)).project.id).toBe(
+      freshAnon.id,
+    );
+    expect((await store.getProjectDetail(anon, "proofpay-demo")).project.isDemo).toBe(true);
+    // A second run finds nothing more.
+    expect(await store.purgeExpiredAnonymousProjects(now, 7)).toEqual({ projectIds: [], files: 0 });
+  });
+
+  it("keeps a project created exactly at the cutoff", async () => {
+    const store = createFixtureStore({ now: () => t0 });
+    const p = await store.createProject({ userId: "anon-1" }, { name: "edge" });
+    const atCutoff = new Date(t0.getTime() + 7 * day);
+    expect((await store.purgeExpiredAnonymousProjects(atCutoff, 7)).projectIds).toEqual([]);
+    expect(
+      (await store.purgeExpiredAnonymousProjects(new Date(atCutoff.getTime() + 1), 7)).projectIds,
+    ).toEqual([p.id]);
+  });
+
+  it("refuses a negative retention period", async () => {
+    const store = createFixtureStore();
+    await expect(store.purgeExpiredAnonymousProjects(t0, -1)).rejects.toThrow(RangeError);
+  });
+});

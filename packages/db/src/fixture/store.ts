@@ -30,8 +30,15 @@ import {
   segmentScript,
   startOfUtcDayMs,
 } from "@sleuth/domain";
-import type { Actor, ProjectDetail, ProjectStore, ReportData } from "../store";
-import { StoreError } from "../store";
+import type {
+  Actor,
+  ProjectDetail,
+  ProjectStore,
+  PurgeResult,
+  ReportData,
+  RetentionStore,
+} from "../store";
+import { retentionCutoff, StoreError } from "../store";
 import { cloneWithPrefix } from "../clone";
 import { loadGoldenFixture } from "./load";
 
@@ -61,7 +68,7 @@ export interface AnalysisResult {
  * `applyAnalysisResult` plays the worker finishing a job; `breakSeal` is the internal step the
  * revision and upload paths call. Neither is part of the shared `ProjectStore` contract.
  */
-export interface FixtureStore extends ProjectStore {
+export interface FixtureStore extends ProjectStore, RetentionStore {
   /**
    * Simulate a finished analysis job in memory: merge the produced evidence (human decisions on an
    * unchanged hash are kept), merge produced findings, resolve the Poltergeist findings of stale
@@ -83,6 +90,11 @@ export interface FixtureStoreOptions {
   dailyAnalysisLimit?: number;
   /** Longest video in ms. Default 180000. */
   maxVideoMs?: number;
+  /**
+   * Which users signed in anonymously. Fixture mode has no auth server, so by default an id that
+   * starts with `anon-` counts as anonymous.
+   */
+  isAnonymousUser?: (userId: string) => boolean;
 }
 
 /**
@@ -643,6 +655,23 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       };
       d.jobs[i] = done;
       return { job: done, replacedEvidenceIds };
+    },
+
+    async purgeExpiredAnonymousProjects(at, days): Promise<PurgeResult> {
+      const cutoff = retentionCutoff(at, days).getTime();
+      const isAnonymous = options.isAnonymousUser ?? ((id: string) => id.startsWith("anon-"));
+      const projectIds: string[] = [];
+      let files = 0;
+      for (const [id, d] of data) {
+        const owner = d.project.ownerId;
+        if (d.project.isDemo || owner === null || !isAnonymous(owner)) continue;
+        if (Date.parse(d.project.createdAt) >= cutoff) continue;
+        // Fixture mode stores no files; count the asset paths that storage would have held.
+        files += d.assets.length;
+        data.delete(id);
+        projectIds.push(id);
+      }
+      return { projectIds, files };
     },
 
     async getReportData(actor, projectId): Promise<ReportData> {

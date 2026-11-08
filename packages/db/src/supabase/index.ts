@@ -1,4 +1,4 @@
-export { createSupabaseStore, type SupabaseStoreOptions } from "./store";
+export { createSupabaseStore, type SupabaseStore, type SupabaseStoreOptions } from "./store";
 export {
   createStorageClient,
   storageFromEnv,

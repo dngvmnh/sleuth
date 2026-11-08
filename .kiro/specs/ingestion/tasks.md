@@ -59,16 +59,16 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Done when: with a fake verifier injected, routes accept a valid actor and refuse a forged id; a manual run with a token from the Supabase dashboard shows an anonymous user can create a project and cannot read another's.
   - Requirements: 1.1, 1.2, 5.1
 
-- [ ] 9. RLS checks on a real Postgres
+- [x] 9. RLS checks on a real Postgres
   - Owner: Đăng
   - Files: `packages/db/src/supabase/rls.test.ts`, `.github/workflows/ci.yml` (optional Postgres service)
   - Do: with two database roles that set `request.jwt.claims`, prove user A cannot read or write user B's rows, anon can read only the demo, and anon cannot write. Skip when `TEST_DATABASE_URL` is unset. The two-worker queue check (requirement 4.5) is evidence-analysis task 16, owned by Bảo because it lives in `apps/worker`.
   - Done when: the test passes locally; results recorded in the journal; CI service added only if the team agrees (shared file, needs all reviewers).
   - Requirements: 1.4
 
-- [ ] 10. Retention purge
+- [x] 10. Retention purge
   - Owner: Đăng
   - Files: `packages/db/src/fixture/store.ts`, `packages/db/src/supabase/store.ts`, `packages/db/src/store.ts`, tests
-  - Do: `purgeExpiredAnonymousProjects(now, days)` on both stores; storage objects removed first. Decide the scheduler (Supabase cron or worker timer) and write it in an ADR (`docs/decisions/0007-...`).
+  - Do: `purgeExpiredAnonymousProjects(now, days)` on both stores; storage objects removed first. Decide the scheduler (Supabase cron or worker timer) and write it in an ADR (`docs/decisions/0008-anonymous-retention-purge.md`; 0007 is kept for the provider choice).
   - Done when: the fixture-store test passes with an injected clock; a manual run on the dev project removes an old anonymous project and its files.
   - Requirements: 5.4

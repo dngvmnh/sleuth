@@ -10,5 +10,9 @@ export {
   type Actor,
   type ProjectDetail,
   type ProjectStore,
+  type PurgeResult,
   type ReportData,
+  type RetentionStore,
+  ANONYMOUS_RETENTION_DAYS,
+  retentionCutoff,
 } from "../store";

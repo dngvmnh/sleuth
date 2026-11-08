@@ -38,7 +38,10 @@ import {
   type Actor,
   type ProjectDetail,
   type ProjectStore,
+  type PurgeResult,
   type ReportData,
+  type RetentionStore,
+  retentionCutoff,
 } from "../store";
 import {
   assetOf,
@@ -100,7 +103,10 @@ function extensionFor(mimeType: string): string {
  * are the second wall, proven in `rls.test.ts`). A project the caller cannot read is "not found",
  * never "forbidden", so existence does not leak.
  */
-export function createSupabaseStore(options: SupabaseStoreOptions): ProjectStore {
+/** The API store plus the retention job, which only the worker calls. */
+export type SupabaseStore = ProjectStore & RetentionStore;
+
+export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStore {
   const { db, storage } = options;
   const now = options.now ?? (() => new Date());
   const iso = () => now().toISOString();
@@ -871,6 +877,43 @@ export function createSupabaseStore(options: SupabaseStoreOptions): ProjectStore
         });
         return seal;
       });
+    },
+
+    async purgeExpiredAnonymousProjects(at, days): Promise<PurgeResult> {
+      const cutoff = retentionCutoff(at, days).toISOString();
+      // Anonymous = a Supabase Auth user made by signInAnonymously(). A project whose owner is
+      // not in auth.users at all is not treated as anonymous: we only delete what we can prove.
+      const expired = await db
+        .select({ id: t.projects.id })
+        .from(t.projects)
+        .where(
+          and(
+            eq(t.projects.isDemo, false),
+            sql`${t.projects.createdAt} < ${cutoff}`,
+            sql`exists (select 1 from auth.users u where u.id = ${t.projects.ownerId} and u.is_anonymous)`,
+          ),
+        );
+      const projectIds = expired.map((r) => r.id);
+      if (projectIds.length === 0) return { projectIds, files: 0 };
+      // Files first. If storage fails, the rows stay and the next run tries again; rows are
+      // never deleted while their files might remain.
+      const assets = await db
+        .select({ path: t.assetVersions.storagePath })
+        .from(t.assetVersions)
+        .where(inArray(t.assetVersions.projectId, projectIds));
+      const paths = assets.map((a) => a.path);
+      if (paths.length > 0) {
+        if (!storage) {
+          throw new StoreError(
+            "not_configured",
+            501,
+            "Storage is not configured, so stored files cannot be removed.",
+          );
+        }
+        for (let i = 0; i < paths.length; i += 100) await storage.remove(paths.slice(i, i + 100));
+      }
+      await db.delete(t.projects).where(inArray(t.projects.id, projectIds));
+      return { projectIds, files: paths.length };
     },
 
     async getReportData(actor, projectId): Promise<ReportData> {

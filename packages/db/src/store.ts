@@ -98,3 +98,30 @@ export interface ProjectStore {
   sealProject(actor: Actor, projectId: string, note?: string): Promise<Seal>;
   getReportData(actor: Actor, projectId: string): Promise<ReportData>;
 }
+
+/** What one retention run removed. Ids and counts only. */
+export interface PurgeResult {
+  projectIds: string[];
+  /** Storage objects deleted before the rows. */
+  files: number;
+}
+
+/**
+ * Housekeeping that no API caller may trigger: only the worker's timer calls it (ADR 0008).
+ * Not part of `ProjectStore`, so routes cannot reach it.
+ */
+export interface RetentionStore {
+  /**
+   * Delete every project owned by an anonymous user and created before `now - days`: its stored
+   * files first, then its rows (cascade). Signed-up users' projects and the demo are never touched.
+   */
+  purgeExpiredAnonymousProjects(now: Date, days: number): Promise<PurgeResult>;
+}
+
+/** Retention period for anonymous projects, in days (ingestion requirement 5.4). */
+export const ANONYMOUS_RETENTION_DAYS = 7;
+
+export function retentionCutoff(now: Date, days: number): Date {
+  if (!Number.isFinite(days) || days < 0) throw new RangeError("days must be zero or more");
+  return new Date(now.getTime() - days * 86_400_000);
+}
