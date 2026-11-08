@@ -81,7 +81,7 @@ export function endpoint<K extends EndpointId>(id: K, run: (ctx: Ctx<K>) => Prom
   ): Promise<Response> => {
     try {
       const params = await routeCtx.params;
-      const actor = resolveActor(req);
+      const actor = await resolveActor(req);
       const store = getStore();
       let body: unknown;
       if (spec.request) {

@@ -34,6 +34,7 @@ export const NAMESPACES = {
   purge: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0004",
   write: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0005",
   upload: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0006",
+  web: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0007",
 } as const;
 
 export const testUser = (ns: keyof typeof NAMESPACES, n: number): string =>
@@ -60,4 +61,11 @@ export async function deleteTestProjects(db: Db, ns: keyof typeof NAMESPACES): P
   await db
     .delete(t.projects)
     .where(and(eq(t.projects.isDemo, false), inArray(t.projects.ownerId, testUserIds(ns))));
+}
+
+/** Delete the non-demo projects of one owner (for auth users a test signed in as). */
+export async function deleteProjectsOwnedBy(db: Db, ownerId: string): Promise<void> {
+  await db
+    .delete(t.projects)
+    .where(and(eq(t.projects.isDemo, false), eq(t.projects.ownerId, ownerId)));
 }

@@ -7,6 +7,7 @@
         ".": "./src/index.ts",
         "./fixture": "./src/fixture/index.ts",
         "./supabase": "./src/supabase/index.ts",
+        "./testing": "./src/supabase/test-support.ts",
         "./schema": "./src/schema.ts"
     },
     "scripts": {

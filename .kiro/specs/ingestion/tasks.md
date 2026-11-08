@@ -52,7 +52,7 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Status: built and tested on the dev project (real upload works, tampered token refused, no key in the response, older evidence goes stale at once). Open: Supabase fixes signed upload URLs at 2 hours (measured 7199 s) with no setting, so the 5-minute rule in 2.4 is not met. Needs a team decision before this is ticked.
   - Requirements: 2.1, 2.4, 2.5
 
-- [ ] 8. Session actor and anonymous sign-in (needs Supabase project)
+- [x] 8. Session actor and anonymous sign-in (needs Supabase project)
   - Owner: Đăng
   - Files: `apps/web/app/api/_lib/data-source.ts`, `apps/web/app/api/_lib/supabase-server.ts`, `apps/web/app/api/_lib/api.test.ts`, `apps/web/package.json`
   - Do: add `@supabase/supabase-js` and `@supabase/ssr` (exact versions); in supabase mode `getStore()` returns the Supabase store and `resolveActor` verifies the session with `auth.getUser()`. Tell Đạt in the PR which environment variable names the browser needs; Đạt adds the browser-side `signInAnonymously()` call in `apps/web/lib` as part of review-workspace task 3.
