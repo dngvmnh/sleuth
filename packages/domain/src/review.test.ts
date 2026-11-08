@@ -48,6 +48,32 @@ describe("applyReviewDecision", () => {
     expect(r.ok && r.evidence.status).toBe("rejected");
   });
 
+  describe("with the current line and video known", () => {
+    const now = { segmentHash: ev.segmentHash, assetVersionId: ev.assetVersionId };
+
+    it("confirms evidence that matches the current line and video", () => {
+      const r = applyReviewDecision(ev, by("confirm"), now);
+      expect(r.ok && r.evidence.status).toBe("confirmed");
+    });
+
+    it("refuses to confirm a rejected candidate whose line text has changed since", () => {
+      const dismissed = { ...ev, status: "rejected" as const };
+      const r = applyReviewDecision(dismissed, by("confirm"), { ...now, segmentHash: "other" });
+      expect(r).toEqual({ ok: false, reason: "stale_needs_reanalysis" });
+    });
+
+    it("refuses to confirm a candidate built on an older video", () => {
+      const r = applyReviewDecision(ev, by("confirm"), { ...now, assetVersionId: "av2" });
+      expect(r).toEqual({ ok: false, reason: "stale_needs_reanalysis" });
+    });
+
+    it("refuses when the line is gone, but lets a person dismiss it", () => {
+      const gone = { segmentHash: undefined, assetVersionId: ev.assetVersionId };
+      expect(applyReviewDecision(ev, by("confirm"), gone).ok).toBe(false);
+      expect(applyReviewDecision(ev, by("reject"), gone).ok).toBe(true);
+    });
+  });
+
   it("does not change the source field", () => {
     const r = applyReviewDecision(ev, by("confirm"));
     expect(r.ok && r.evidence.source).toBe("ai");
