@@ -12,7 +12,7 @@ next-env.d.ts
 !.env.example
 
 # local media and worker output
-media/
+/media/
 *.mp4
 *.mov
 *.webm
