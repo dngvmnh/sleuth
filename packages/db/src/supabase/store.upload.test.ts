@@ -65,6 +65,7 @@ suite("signed upload URLs on Supabase Storage", () => {
     store.createUploadUrl(owner, projectId, {
       fileName: FILE_NAME,
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 12_000,
     });
 
@@ -194,6 +195,7 @@ suite("signed upload URLs on Supabase Storage", () => {
       const out = await late.createUploadUrl(owner, p.id, {
         fileName: FILE_NAME,
         mimeType: "video/mp4",
+        sizeBytes: 1000,
         durationMs: 12_000,
       });
       expect(Date.parse(out.expiresAt)).toBeLessThan(Date.now());

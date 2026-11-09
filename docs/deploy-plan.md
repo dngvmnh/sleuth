@@ -118,9 +118,9 @@ Run by `pnpm tsx scripts/prod-smoke.ts`. Part A needs nothing. Part B needs the 
 | No secret in the page or its JS | Proven | Fetched the page and 7 assets (584159 bytes). Zero matches for a JWT, `service_role`, `sb_secret_`, `postgres://`, a Supabase host, Deepgram, Gemini or any env name |
 | Anonymous sign-in, create, upload | **Not proven** | The web app has no sign-in screen yet and its JS holds no Supabase URL or anon key. Needs script part B |
 | Two users cannot read each other's projects | **Not proven** | Same reason. Policies reviewed in section 6; not run on production |
-| 50 MB cap and file types | **Not proven, and partly not built** | See the gap below |
+| 50 MB cap and file types | API: proven by tests. Live: **not proven** | Unit, property, store-contract and route tests cover the API. The live site needs script part B and the bucket settings check |
 
-Gap: the upload-url request has `fileName`, `mimeType` (any `video/*`) and `durationMs`. It has no size field, so the API does not enforce 50 MB. It does not limit types to `mp4`, `mov`, `webm` and `mkv` either (an unknown `video/*` type gets the extension `bin`). The only enforcement left is the bucket: file size limit 50 MB and allowed MIME types, set in the Supabase dashboard (step 1). Script part B checks that a 51 MB file and a text body are refused by the bucket.
+Fixed in the API (contract change): the upload-url request now needs `sizeBytes` (1 to 52428800) and `mimeType` must be `video/mp4`, `video/quicktime`, `video/webm` or `video/x-matroska`. Anything else gets 400 before a URL is issued. The bucket settings in step 1 stay as the second wall. Script part B checks both: the API refuses a 51 MB size claim, and the bucket refuses a 51 MB body and a text body.
 
 ### 6. Row-level security review (migrations 0000 to 0002)
 

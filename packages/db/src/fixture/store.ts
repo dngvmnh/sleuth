@@ -1,4 +1,5 @@
 import {
+  MAX_VIDEO_BYTES,
   type AssetVersion,
   type AuditEvent,
   type ChecklistItem,
@@ -110,6 +111,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
   const iso = () => now().toISOString();
   const limitConfig = {
     maxVideoMs: options.maxVideoMs ?? 180_000,
+    maxVideoBytes: MAX_VIDEO_BYTES,
     dailyAnalysisLimit: options.dailyAnalysisLimit ?? 5,
   };
   const data = new Map<string, ProjectData>();
@@ -289,11 +291,16 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
 
     async createUploadUrl(actor, projectId, input) {
       const d = writable(actor, projectId);
-      const limit = checkLimits({ durationMs: input.durationMs, config: limitConfig });
+      const limit = checkLimits({
+        durationMs: input.durationMs,
+        sizeBytes: input.sizeBytes,
+        config: limitConfig,
+      });
       if (!limit.ok) {
-        throw new StoreError("invalid_request", 400, "The video length is not allowed.", {
+        throw new StoreError("invalid_request", 400, "The video length or size is not allowed.", {
           reason: limit.code,
           maxVideoMs: limitConfig.maxVideoMs,
+          maxVideoBytes: limitConfig.maxVideoBytes,
         });
       }
       const version = d.assets.reduce((m, a) => Math.max(m, a.version), 0) + 1;

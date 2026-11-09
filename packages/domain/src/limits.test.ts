@@ -3,6 +3,29 @@ import { checkLimits, nextUtcDayMs, startOfUtcDayMs } from "./limits";
 
 const config = { maxVideoMs: 180_000, dailyAnalysisLimit: 5 };
 
+describe("checkLimits: size", () => {
+  const sized = { ...config, maxVideoBytes: 52_428_800 };
+
+  it.each([1, 1000, 52_428_800])("accepts %i bytes", (sizeBytes) => {
+    expect(checkLimits({ sizeBytes, config: sized })).toEqual({ ok: true });
+  });
+
+  it("refuses one byte over the limit", () => {
+    expect(checkLimits({ sizeBytes: 52_428_801, config: sized })).toEqual({
+      ok: false,
+      code: "video_too_large",
+    });
+  });
+
+  it.each([0, -1, 1.5, Number.NaN])("refuses the invalid size %s", (sizeBytes) => {
+    expect(checkLimits({ sizeBytes, config: sized })).toEqual({ ok: false, code: "invalid_size" });
+  });
+
+  it("skips the size cap when the config sets none", () => {
+    expect(checkLimits({ sizeBytes: 999_999_999_999, config })).toEqual({ ok: true });
+  });
+});
+
 describe("checkLimits: duration", () => {
   it.each([0, 1, 179_999, 180_000])("accepts %i ms", (durationMs) => {
     expect(checkLimits({ durationMs, config })).toEqual({ ok: true });

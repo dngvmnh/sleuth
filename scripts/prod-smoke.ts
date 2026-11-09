@@ -99,7 +99,7 @@ async function visitorPart(): Promise<void> {
     [`/projects/${DEMO}/seal`, {}],
     [
       `/projects/${DEMO}/assets/upload-url`,
-      { fileName: "a.webm", mimeType: "video/webm", durationMs: 1000 },
+      { fileName: "a.webm", mimeType: "video/webm", sizeBytes: 1000, durationMs: 1000 },
     ],
   ] as const) {
     const r = await api("POST", path, { body });
@@ -149,10 +149,10 @@ async function userPart(): Promise<void> {
     String(bWrite.status),
   );
 
-  const request = (mimeType: string, durationMs = 1000) =>
+  const request = (mimeType: string, durationMs = 1000, sizeBytes = 4096) =>
     api("POST", `/projects/${pid}/assets/upload-url`, {
       token: a.token,
-      body: { fileName: "zz-test.webm", mimeType, durationMs },
+      body: { fileName: "zz-test.webm", mimeType, durationMs, sizeBytes },
     });
 
   const ok = await request("video/webm");
@@ -190,6 +190,14 @@ async function userPart(): Promise<void> {
     const status = await putFile(big.json.uploadUrl, new Uint8Array(51 * MB), "video/webm");
     check("bucket refuses a 51 MB file", status >= 400, String(status));
   }
+
+  const oversize = await request("video/webm", 1000, 51 * MB);
+  check("API refuses a 51 MB size claim", oversize.status === 400, String(oversize.status));
+  const noSize = await api("POST", `/projects/${pid}/assets/upload-url`, {
+    token: a.token,
+    body: { fileName: "zz-test.webm", mimeType: "video/webm", durationMs: 1000 },
+  });
+  check("API refuses a request with no size", noSize.status === 400, String(noSize.status));
 
   const longVideo = await request("video/webm", 180_001);
   check("API refuses a video over 180 s", longVideo.status === 400, String(longVideo.status));

@@ -18,6 +18,15 @@ import { CoverageSummarySchema, SealBlockerSchema, SealSchema } from "./seal";
 
 export const MAX_VIDEO_SECONDS = 180;
 export const MAX_VIDEO_MS = MAX_VIDEO_SECONDS * 1000;
+/** Largest upload: 50 MB, the Supabase Free per-file limit and the worker MAX_VIDEO_BYTES default. */
+export const MAX_VIDEO_BYTES = 52_428_800;
+/** The only video types the API accepts. Keep in step with the `video-assets` bucket settings. */
+export const ALLOWED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/x-matroska",
+] as const;
 
 // ---- request and response bodies ----
 
@@ -39,7 +48,8 @@ export const GetProjectResponseSchema = z.object({
 
 export const UploadUrlRequestSchema = z.object({
   fileName: z.string().trim().min(1).max(200),
-  mimeType: z.string().regex(/^video\//),
+  mimeType: z.enum(ALLOWED_VIDEO_TYPES),
+  sizeBytes: z.number().int().positive().max(MAX_VIDEO_BYTES),
   durationMs: MsSchema.max(MAX_VIDEO_MS),
 });
 export const UploadUrlResponseSchema = z.object({

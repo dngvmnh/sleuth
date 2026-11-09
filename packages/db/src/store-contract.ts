@@ -46,6 +46,7 @@ export function runStoreContract(
     await store.createUploadUrl(actor, project.id, {
       fileName: "a.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 30_000,
     });
     await store.createScript(actor, project.id, script);
@@ -133,6 +134,7 @@ export function runStoreContract(
         store.createUploadUrl(user(1), newer.id, {
           fileName: "v.mp4",
           mimeType: "video/mp4",
+          sizeBytes: 1000,
           durationMs: -1,
         }),
       );
@@ -154,6 +156,7 @@ export function runStoreContract(
               const out = await store.createUploadUrl(user(1), a.id, {
                 fileName: "v.mp4",
                 mimeType: "video/mp4",
+                sizeBytes: 1000,
                 durationMs,
               });
               versionsA.push(out.assetVersion.version);
@@ -163,6 +166,7 @@ export function runStoreContract(
             const first = await store.createUploadUrl(user(1), b.id, {
               fileName: "v.mp4",
               mimeType: "video/mp4",
+              sizeBytes: 1000,
               durationMs: 1,
             });
             expect(first.assetVersion.version).toBe(1);
@@ -186,6 +190,7 @@ export function runStoreContract(
               store.createUploadUrl(user(1), p.id, {
                 fileName: "v.mp4",
                 mimeType: "video/mp4",
+                sizeBytes: 1000,
                 durationMs,
               }),
             );
@@ -193,6 +198,7 @@ export function runStoreContract(
             const ok = await store.createUploadUrl(user(1), p.id, {
               fileName: "v.mp4",
               mimeType: "video/mp4",
+              sizeBytes: 1000,
               durationMs: 1000,
             });
             expect(ok.assetVersion.version).toBe(1);
@@ -202,12 +208,45 @@ export function runStoreContract(
       );
     });
 
+    it("rejects any size outside 1..52428800 bytes and creates nothing", async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.oneof(
+            fc.integer({ min: -1_000_000, max: 0 }),
+            fc.integer({ min: 52_428_801, max: 500_000_000 }),
+          ),
+          async (sizeBytes) => {
+            const store = await makeStore();
+            const p = await store.createProject(user(1), { name: "p" });
+            const err = await refused(
+              store.createUploadUrl(user(1), p.id, {
+                fileName: "v.mp4",
+                mimeType: "video/mp4",
+                sizeBytes,
+                durationMs: 1000,
+              }),
+            );
+            expect(err.status).toBe(400);
+            const ok = await store.createUploadUrl(user(1), p.id, {
+              fileName: "v.mp4",
+              mimeType: "video/mp4",
+              sizeBytes: 52_428_800,
+              durationMs: 1000,
+            });
+            expect(ok.assetVersion.version).toBe(1);
+          },
+        ),
+        { numRuns: runs(15) },
+      );
+    });
+
     it("gives upload URLs that expire within five minutes and carry no secret", async () => {
       const store = await makeStore();
       const p = await store.createProject(user(1), { name: "p" });
       const out = await store.createUploadUrl(user(1), p.id, {
         fileName: "v.mp4",
         mimeType: "video/mp4",
+        sizeBytes: 1000,
         durationMs: 1000,
       });
       const ttl = Date.parse(out.expiresAt) - Date.now();
@@ -299,6 +338,7 @@ export function runStoreContract(
       await store.createUploadUrl(user(1), p.id, {
         fileName: "a.mp4",
         mimeType: "video/mp4",
+        sizeBytes: 1000,
         durationMs: 1000,
       });
       expect((await refused(store.startAnalysis(user(1), p.id, {}))).code).toBe("missing_inputs");

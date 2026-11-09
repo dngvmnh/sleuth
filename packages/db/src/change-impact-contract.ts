@@ -210,6 +210,7 @@ export function runChangeImpactContract(
                 await store.createUploadUrl(alice, id, {
                   fileName: "v.mp4",
                   mimeType: "video/mp4",
+                  sizeBytes: 1000,
                   durationMs: op.durationMs,
                 });
                 const after = await store.listEvidence(alice, id);
