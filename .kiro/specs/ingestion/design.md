@@ -40,7 +40,7 @@ route -> endpoint() -> getStore() -> ProjectStore
 
 ### Upload URLs
 
-`createUploadUrl` inserts the `AssetVersion`, then calls Supabase Storage `createSignedUploadUrl(path)` on the private `video-assets` bucket with the service role on the server. Path: `<projectId>/<version>/<random>.<ext>`; the original file name is not stored in the path (no user content in logs or paths). The URL's lifetime is the Storage default (check it is at most 5 minutes; if not, `expiresAt` in the response must still be at most 5 minutes and the bucket policy must enforce it).
+`createUploadUrl` inserts the `AssetVersion`, then calls Supabase Storage `createSignedUploadUrl(path)` on the private `video-assets` bucket with the service role on the server. Path: `<projectId>/<version>/<random>.<ext>`; the original file name is not stored in the path (no user content in logs or paths). The URL's own token lives about 2 hours (measured 7199 s) and Storage has no setting to shorten it. So `expiresAt` in the response is the end of a 5-minute upload window (`UPLOAD_WINDOW_MS`), and `startAnalysis` asks Storage when the file landed (`StorageClient.uploadedAt`): no file is 409 `upload_missing`, a file that landed after the window is 409 `upload_late`. Both clocks are server clocks (app server and the Supabase database), not the browser's.
 
 ### Limits
 

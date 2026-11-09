@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import type { ProjectStore } from "../store";
+import { StoreError, type ProjectStore } from "../store";
 import { createStorageClient, tokenExpiry, type StorageClient } from "./storage";
 import { createSupabaseStore } from "./store";
 import {
@@ -78,9 +78,10 @@ suite("signed upload URLs on Supabase Storage", () => {
     expect(everything).not.toContain("customer-secret-name");
     expect(out.assetVersion.storagePath).toMatch(new RegExp(`^${p.id}/1/[0-9a-f-]{36}\\.mp4$`));
     expect(new URL(out.uploadUrl).host).toBe(new URL(supaUrl as string).host);
-    // The reported expiry is the one inside the URL's own token, in the future.
+    // The storage token lives longer, but the reported expiry is the five-minute upload window.
     const token = new URL(out.uploadUrl).searchParams.get("token") as string;
-    expect(Date.parse(out.expiresAt)).toBe((tokenExpiry(token) as number) * 1000);
+    expect((tokenExpiry(token) as number) * 1000).toBeGreaterThan(Date.parse(out.expiresAt));
+    expect(Date.parse(out.expiresAt)).toBe(Date.parse(out.assetVersion.createdAt) + 5 * 60_000);
     expect(Date.parse(out.expiresAt)).toBeGreaterThan(Date.now());
     const events = JSON.stringify(await store.listAuditEvents(owner, p.id));
     expect(events).not.toContain("customer-secret-name");
@@ -148,7 +149,67 @@ suite("signed upload URLs on Supabase Storage", () => {
     await expect(storage.remove([])).resolves.toBeUndefined();
   });
 
-  // Supabase fixes signed upload URLs at about two hours and offers no setting for it, so the
-  // five-minute limit of requirement 2.4 cannot be met by the URL alone. See the journal.
-  it.todo("upload URL expires within five minutes (needs a design decision)");
+  describe("five-minute upload window at analysis time [2.1, decision D-1]", () => {
+    const putFile = async (out: Awaited<ReturnType<typeof upload>>) => {
+      const token = new URL(out.uploadUrl).searchParams.get("token") as string;
+      const browser = createClient(supaUrl as string, anonKey as string, {
+        auth: { persistSession: false },
+      });
+      const res = await browser.storage
+        .from(bucket)
+        .uploadToSignedUrl(out.assetVersion.storagePath, token, new Blob([new Uint8Array([7])]));
+      expect(res.error).toBeNull();
+      uploaded.push(out.assetVersion.storagePath);
+    };
+    const readyWithScript = async (s: ProjectStore, label: string) => {
+      const p = await s.createProject(owner, { name: `${TEST_PROJECT_PREFIX}${label}` });
+      await s.createScript(owner, p.id, "Open the app.\nPress export.");
+      return p;
+    };
+
+    it("accepts a file that landed inside the window", async () => {
+      const p = await readyWithScript(store, "window-ok");
+      await putFile(await upload(p.id));
+      expect((await store.startAnalysis(owner, p.id, {})).status).toBe("queued");
+    });
+
+    it("refuses analysis while nothing has been uploaded", async () => {
+      const p = await readyWithScript(store, "window-missing");
+      await upload(p.id);
+      const err = await refused(store.startAnalysis(owner, p.id, {}));
+      expect({ status: err.status, code: err.code }).toEqual({
+        status: 409,
+        code: "upload_missing",
+      });
+    });
+
+    it("refuses a file that landed after the window closed", async () => {
+      // The URL is made "ten minutes ago" by the store's clock; the file lands now.
+      const late = createSupabaseStore({
+        db: handle.db,
+        storage,
+        now: () => new Date(Date.now() - 10 * 60_000),
+      });
+      const p = await readyWithScript(late, "window-late");
+      const out = await late.createUploadUrl(owner, p.id, {
+        fileName: FILE_NAME,
+        mimeType: "video/mp4",
+        durationMs: 12_000,
+      });
+      expect(Date.parse(out.expiresAt)).toBeLessThan(Date.now());
+      await putFile(out);
+      const err = await refused(store.startAnalysis(owner, p.id, {}));
+      expect({ status: err.status, code: err.code }).toEqual({ status: 409, code: "upload_late" });
+    });
+  });
 });
+
+async function refused(p: Promise<unknown>): Promise<StoreError> {
+  try {
+    await p;
+  } catch (e) {
+    if (e instanceof StoreError) return e;
+    throw e;
+  }
+  throw new Error("expected the store to refuse this call");
+}
