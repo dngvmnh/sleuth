@@ -4,6 +4,7 @@ export * from "./explain";
 export * from "./frames";
 export * from "./match";
 export * from "./merge";
+export * from "./outside-proof-terms";
 export * from "./pipeline";
 export * from "./text";
 export * from "./thresholds";
