@@ -8,6 +8,9 @@ const EnvSchema = z.object({
   WORKER_POLL_MS: z.coerce.number().int().positive().default(2000),
   WORKER_HEARTBEAT_MS: z.coerce.number().int().positive().default(10000),
   WORKER_STALE_SECONDS: z.coerce.number().int().positive().default(60),
+  /** Anonymous-project purge (ADR 0008): how often, and after how many days. */
+  RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
+  ANONYMOUS_RETENTION_DAYS: z.coerce.number().int().positive().default(7),
 });
 
 export type WorkerConfig = z.infer<typeof EnvSchema>;

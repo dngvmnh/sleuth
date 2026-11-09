@@ -71,4 +71,5 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Files: `packages/db/src/fixture/store.ts`, `packages/db/src/supabase/store.ts`, `packages/db/src/store.ts`, tests
   - Do: `purgeExpiredAnonymousProjects(now, days)` on both stores; storage objects removed first. Decide the scheduler (Supabase cron or worker timer) and write it in an ADR (`docs/decisions/0008-anonymous-retention-purge.md`; 0007 is kept for the provider choice).
   - Done when: the fixture-store test passes with an injected clock; a manual run on the dev project removes an old anonymous project and its files.
+  - Status: purge on both stores (tests on each); the worker calls it hourly (`apps/worker/src/retention.ts`, PR reviewed by the worker owner).
   - Requirements: 5.4
