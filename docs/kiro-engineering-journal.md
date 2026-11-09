@@ -183,3 +183,10 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - What Kiro produced: `packages/media/src/ffmpeg.ts` (`probeDurationMs`, `extractAudio`, `extractFrames`, `withTempDir`, `MediaError`), `ffmpeg.test.ts` (clips built with `-f lavfi`), `validate.property.test.ts`, `frames.property.test.ts`.
 - What we had to fix or reject: the first typecheck failed because `packages/media` and `packages/evidence-engine` had no Node types; fixed with `"types": ["node"]` in both tsconfig files (no new dependency, no lockfile change). The property tests found no bug in `validate.ts`.
 - Result: FFmpeg 9.0.2 on Windows; 30 targeted tests pass (13 FFmpeg tests ran, none skipped); full gate green: lint, typecheck, `pnpm test` 317 passed and 48 skipped (database suites), `pnpm test:property` 66 passed, `pnpm check:contracts` 14 passed, ghost-scan clean.
+
+### 2026-11-09, Ph?m Qu?c B?o, evidence engine (evidence-analysis task 5)
+- Goal: replace the per-line best-match search in `analyse()` with a real script alignment (exact, changed, missing, reordered, unscripted).
+- Kiro feature used: chat with the evidence-analysis spec and steering loaded.
+- What Kiro produced: `align.ts` (greedy best-first one-to-one assignment, longest increasing subsequence for reordered lines), `thresholds.ts` (the four constants moved out of `analyse.ts`), `align.test.ts`, `align.property.test.ts`; `analyse()` now calls `align()` and returns `alignment` next to `evidence` and `findings`; a reordered line gets a note in the evidence explanation.
+- What we had to fix or reject: nothing failed. One design limit to watch on real clips: a spoken segment serves one script line, so a long spoken segment that covers two different script lines leaves the second one `missing` (requirement 3.5). The contract has no field for `reordered` or `unscripted`, so they live in `EngineOutput.alignment` and in explanation text only.
+- Result: golden contract test unchanged and green; full gate green: `pnpm test` 327 passed and 48 skipped, `pnpm test:property` 71 passed, `pnpm check:contracts` 14 passed.
