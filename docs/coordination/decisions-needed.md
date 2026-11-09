@@ -1,14 +1,12 @@
 # Decisions needed
 
-Updated Monday 9 November 2026, evening. Team rule: free options only for hosting and AI.
+Updated Tuesday 10 November 2026. Team rule: free options only for hosting and AI.
 
 ## Open
 
 | ID | Decision | Who | By | State |
 |---|---|---|---|---|
-| D-4 | AI providers on free options only | Team | Fri 13 Nov | Proposal below. Owner: Dang. Open: what visitors' videos may be sent to. |
-| D-5 | Hosting on free options only | Dang | DECIDED 9 Nov | Free tiers only ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Owner: Dang. A second free Supabase project (`sleuth-prod`) is the production database. Upload cap: 50 MB per file. Details in `docs/deploy-plan.md`. |
-| D-7 | Eligibility answers | Each member | Wed 11 Nov | Student status: all three are students (Đăng, 9 Nov). Not yet answered: Kiroween 2025 registration, age of majority. |
+| D-4 | AI providers on free options only | Đăng | Mostly decided 10 Nov | Models and data rule set (see below). Open: the AI account owner is Đăng; the "no video analysis" worker mode is a task for Bảo. |
 
 ## Decided
 
@@ -19,8 +17,17 @@ Updated Monday 9 November 2026, evening. Team rule: free options only for hostin
 | D-3 | Postgres in CI | Yes, as a throwaway local Supabase stack in the `db` job, never the shared dev project. | PR #5 |
 | D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026. The team clause also allows one person on more than one team: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
 | D-8 | Who adds the hourly purge to `apps/worker` | Đăng wrote it; Bảo owns the worker going forward. | PR #6, ADR 0008 |
+| D-5 | Hosting on free options only | Free tiers only: Vercel Hobby, a GitHub Actions worker, Supabase Free. A second free Supabase project (`sleuth-prod`) is production. Upload cap is 50 MB (52428800 bytes, the same value as `MAX_VIDEO_BYTES`). Keep the weekly reminder to open both Supabase projects so they are not paused. Owner: Đăng. | `docs/deploy-plan.md` |
+| D-7 | Eligibility answers | All three are university students and adults. Phạm Quốc Bảo and Đạt did not register for Kiroween 2025 and are above the age of majority. Đăng's answers are recorded. | Team, 10 Nov |
 
-## D-4 proposal: free AI providers
+## D-4: free AI providers (decided 10 Nov)
+
+- Gemini model: `gemini-3.8-flash` on the free tier. If the free tier refuses it, fall back to `gemini-3.6-flash` and record that here.
+- Data rule: visitors' videos go to Deepgram only. Frames are never sent to Gemini for visitors.
+- Task for Bao: add a "no video analysis" mode to the worker. Supabase mode refuses the mock providers today.
+- Owner of both accounts: Đăng. No card on either.
+
+### Original proposal
 
 The adapters exist for Deepgram (transcription) and Gemini (video analysis), PR #18. ADR 0007 picked the paid Gemini tier; the free rule changes that.
 
