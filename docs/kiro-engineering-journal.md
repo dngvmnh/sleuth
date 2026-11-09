@@ -170,3 +170,10 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Moved the merge step out of the API store into `supabase/rows.ts` (`mergeAnalysisResult`), so the API store and the worker store share one merge.
 - Contract test `worker.test.ts`: 6 passed on sleuth-dev (inputs, lease, superseded, demo, idempotent write that leaves the job `running`, targeted job that keeps other lines and resolves Poltergeists). The change-impact suite still passes after the refactor.
 - Gate: lint and typecheck clean; `pnpm test` 373 passed; property 54; contracts 14; build passed.
+### 2026-11-09, Đăng (@dngvmnh), coordination and launch prep
+- Board and decisions updated to `main`. D-1, D-2, D-3 and D-8 moved to decided.
+- D-6: the official rules page refused automated reading (HTTP 403). From a search result of the rules page I could confirm only the team clause: one person may join more than one team and also enter alone. Whether one entrant may have more than one submission is not confirmed; a person must read the page.
+- ADR 0008 now has a worker section for Phạm Quốc Bảo; `.env.example` lists the two retention settings.
+- Drafts, all marked DRAFT: `docs/deploy-plan.md` (prices read from vendor pages on 9 November), `docs/submission/` (Devpost, demo plan, blog, social). They quote only test numbers with their source and list what is still mocked.
+- No PRs from Đạt or Bảo to review yet. Review checklist in `docs/coordination/reviews/README.md`. Daily update in `docs/coordination/updates/2026-11-09-dang.md`.
+- Gate after every step: lint and typecheck clean, `pnpm test` 373 passed, build passed.
