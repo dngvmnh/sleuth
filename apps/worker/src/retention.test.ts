@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadConfig } from "./config";
-import { startRetentionTimer } from "./retention";
+import { purgeOnce, startRetentionTimer } from "./retention";
 
 describe("retention timer (ingestion 5.4, ADR 0008)", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -75,5 +75,28 @@ describe("retention timer (ingestion 5.4, ADR 0008)", () => {
     expect(
       loadConfig({ RETENTION_INTERVAL_MS: "60000", ANONYMOUS_RETENTION_DAYS: "3" }),
     ).toMatchObject({ RETENTION_INTERVAL_MS: 60_000, ANONYMOUS_RETENTION_DAYS: 3 });
+  });
+});
+
+describe("purgeOnce (scheduled --once runs)", () => {
+  it("runs one purge, awaited, and logs counts only", async () => {
+    const purge = vi.fn(async () => ({ projectIds: ["secret-id"], files: 2 }));
+    const events: [string, Record<string, string | number> | undefined][] = [];
+    await purgeOnce({ purge, intervalMs: 1, days: 7, log: (e, f) => events.push([e, f]) });
+    expect(purge).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([["retention_purged", { projects: 1, files: 2 }]]);
+  });
+
+  it("never throws and does not log the error message", async () => {
+    const events: string[] = [];
+    await purgeOnce({
+      purge: async () => {
+        throw new TypeError("path/with/secret");
+      },
+      intervalMs: 1,
+      days: 7,
+      log: (e, f) => events.push(e + JSON.stringify(f)),
+    });
+    expect(events).toEqual(['retention_failed{"error":"TypeError"}']);
   });
 });

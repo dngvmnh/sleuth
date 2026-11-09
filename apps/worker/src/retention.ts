@@ -1,4 +1,4 @@
-import type { PurgeResult } from "@sleuth/db";
+﻿import type { PurgeResult } from "@sleuth/db";
 
 export interface RetentionTimerOptions {
   /** The store's `purgeExpiredAnonymousProjects`. */
@@ -18,22 +18,31 @@ export interface RetentionTimer {
 }
 
 /**
+ * One purge, awaited. Never throws: a failure is logged. Used by `--once` runs (a scheduled
+ * GitHub Actions job), which have no timer.
+ */
+export async function purgeOnce(o: RetentionTimerOptions): Promise<void> {
+  const log = o.log ?? (() => undefined);
+  try {
+    const result = await o.purge((o.now ?? (() => new Date()))(), o.days);
+    log("retention_purged", { projects: result.projectIds.length, files: result.files });
+  } catch (err) {
+    log("retention_failed", { error: err instanceof Error ? err.name : "unknown" });
+  }
+}
+
+/**
  * Ingestion 5.4 and ADR 0008: delete anonymous projects older than `days`, once at start and then
  * every `intervalMs`. Runs never overlap. Logs counts only, never project ids or names.
  */
 export function startRetentionTimer(o: RetentionTimerOptions): RetentionTimer {
-  const now = o.now ?? (() => new Date());
-  const log = o.log ?? (() => undefined);
   let running = false;
 
   async function runOnce() {
     if (running) return;
     running = true;
     try {
-      const result = await o.purge(now(), o.days);
-      log("retention_purged", { projects: result.projectIds.length, files: result.files });
-    } catch (err) {
-      log("retention_failed", { error: err instanceof Error ? err.name : "unknown" });
+      await purgeOnce(o);
     } finally {
       running = false;
     }

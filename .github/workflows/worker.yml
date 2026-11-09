@@ -1,0 +1,59 @@
+﻿# Worker on a free GitHub Actions schedule (deploy plan, decision D-5).
+#
+# It takes queued analysis jobs from the production database, runs them, and also purges old
+# anonymous projects once per run (ADR 0008). The keys are repository secrets; see
+# docs/deploy-plan.md for the list.
+#
+# The schedule is OFF on purpose. Decision D-4 says visitors' videos go to the transcription
+# provider only, never as frames to Gemini. That "no video analysis" worker mode is not built yet,
+# so a schedule would send visitors' frames to Gemini. Until it is built, run this by hand
+# (Actions tab, "Run workflow"). Then remove the "#" before "schedule" and "cron" below.
+name: worker
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "*/5 * * * *"
+
+# One run at a time: a new run waits instead of fighting for the same jobs.
+concurrency:
+  group: worker
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    # Only on the main repository, so a fork never runs with our secrets.
+    if: github.repository == 'dngvmnh/sleuth'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - run: pnpm install --frozen-lockfile --filter "@sleuth/worker..."
+
+      - name: Take jobs once, then stop
+        run: pnpm worker -- --once
+        env:
+          SLEUTH_DATA_MODE: supabase
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_STORAGE_BUCKET: video-assets
+          TRANSCRIPTION_PROVIDER: deepgram
+          TRANSCRIPTION_API_KEY: ${{ secrets.TRANSCRIPTION_API_KEY }}
+          VIDEO_ANALYSIS_PROVIDER: gemini
+          VIDEO_ANALYSIS_API_KEY: ${{ secrets.VIDEO_ANALYSIS_API_KEY }}
+          VIDEO_ANALYSIS_MODEL: gemini-3.6-flash
+          MAX_VIDEO_BYTES: "52428800"

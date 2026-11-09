@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+﻿import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConfig } from "./config";
@@ -8,7 +8,7 @@ import { runLoop } from "./loop";
 import { createDb, createSupabaseStore, createWorkerStore, storageFromEnv } from "@sleuth/db";
 import { createPgQueue } from "./pg-queue";
 import { createProviders } from "./providers";
-import { startRetentionTimer } from "./retention";
+import { purgeOnce, startRetentionTimer } from "./retention";
 import { createSupabaseHandler } from "./supabase-handler";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -60,19 +60,20 @@ async function main() {
     config.DATABASE_URL as string,
     config.WORKER_STALE_SECONDS,
   );
-  // Retention (ingestion 5.4, ADR 0008): purge old anonymous projects hourly. Not in --once runs.
-  const retentionDb = once ? null : createDb(config.DATABASE_URL as string, { max: 1 });
-  const retention = retentionDb
-    ? startRetentionTimer({
-        purge: createSupabaseStore({
-          db: retentionDb.db,
-          storage: storageFromEnv() ?? undefined,
-        }).purgeExpiredAnonymousProjects,
-        intervalMs: config.RETENTION_INTERVAL_MS,
-        days: config.ANONYMOUS_RETENTION_DAYS,
-        log,
-      })
-    : null;
+  // Retention (ingestion 5.4, ADR 0008): purge old anonymous projects. A long-running worker does
+  // it hourly on a timer; a `--once` run (scheduled job) does one purge before it takes jobs.
+  const retentionDb = createDb(config.DATABASE_URL as string, { max: 1 });
+  const retentionOptions = {
+    purge: createSupabaseStore({
+      db: retentionDb.db,
+      storage: storageFromEnv() ?? undefined,
+    }).purgeExpiredAnonymousProjects,
+    intervalMs: config.RETENTION_INTERVAL_MS,
+    days: config.ANONYMOUS_RETENTION_DAYS,
+    log,
+  };
+  if (once) await purgeOnce(retentionOptions);
+  const retention = once ? null : startRetentionTimer(retentionOptions);
   const workerDb = createDb(config.DATABASE_URL as string, { max: 2 });
   const handler = createSupabaseHandler({
     store: createWorkerStore({ db: workerDb.db, storage: storageFromEnv() ?? undefined }),
@@ -88,7 +89,7 @@ async function main() {
   } finally {
     retention?.stop();
     await workerDb.client.end({ timeout: 5 });
-    await retentionDb?.client.end({ timeout: 5 });
+    await retentionDb.client.end({ timeout: 5 });
     await close();
   }
 }
