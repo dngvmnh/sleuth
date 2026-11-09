@@ -1,0 +1,34 @@
+{
+  "name": "clip-5",
+  "task": "evidence-analysis 15",
+  "formatStatus": "draft: follows design.md (Evaluation harness) until evidence-analysis 9 fixes the format",
+  "case": "unscripted line: the presenter adds one sentence that is not in the script",
+  "recordedBy": "Đăng (@dngvmnh)",
+  "labelledBy": null,
+  "recordedOn": null,
+  "durationMs": null,
+  "video": {
+    "fileName": "clip-5.mp4",
+    "inGit": false,
+    "storedAt": null,
+    "sha256": null
+  },
+  "script": [
+    "This is the SLEUTH API running on my laptop in fixture mode.",
+    "First I create a new project called Clip Five.",
+    "Next I save a short script with two lines.",
+    "Then I set a checklist with two items.",
+    "Now I ask for an upload link for the video.",
+    "The link is only good for five minutes.",
+    "Finally I start the analysis and check the job.",
+    "The job is queued, so the worker can pick it up."
+  ],
+  "checklist": [
+    "Create a project",
+    "Save a script",
+    "Set a checklist",
+    "Get an upload link",
+    "Start the analysis",
+    "Show the job status"
+  ]
+}
