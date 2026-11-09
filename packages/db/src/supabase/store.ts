@@ -3,7 +3,6 @@ import type {
   AssetVersion,
   CoverageSummary,
   EvidenceCandidate,
-  Finding,
   ProcessingJob,
   ReshootTask,
   ReviewDecision,
@@ -18,11 +17,8 @@ import {
   diffScriptVersions,
   invalidateForNewAssetVersion,
   invalidateForScriptChange,
-  mergeEvidence,
-  mergeFindings,
   nextUtcDayMs,
   planReanalysis,
-  resolvePoltergeists,
   sealBlockers,
   segmentScript,
   startOfUtcDayMs,
@@ -53,13 +49,13 @@ import {
   checklistOf,
   decisionOf,
   evidenceOf,
-  findingOf,
   jobOf,
   projectOf,
   reshootOf,
   scriptOf,
   sealOf,
 } from "./mappers";
+import { evidenceOfProject, findingsOfProject, mergeAnalysisResult, upsertFindings } from "./rows";
 import { UPLOAD_WINDOW_MS, type StorageClient } from "./storage";
 
 /** A database or an open transaction: both run the same queries. */
@@ -182,24 +178,6 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
     };
   }
 
-  const evidenceOfProject = async (q: Q, projectId: string): Promise<EvidenceCandidate[]> =>
-    (
-      await q
-        .select()
-        .from(t.evidenceCandidates)
-        .where(eq(t.evidenceCandidates.projectId, projectId))
-        .orderBy(asc(t.evidenceCandidates.id))
-    ).map(evidenceOf);
-
-  const findingsOfProject = async (q: Q, projectId: string): Promise<Finding[]> =>
-    (
-      await q
-        .select()
-        .from(t.findings)
-        .where(eq(t.findings.projectId, projectId))
-        .orderBy(asc(t.findings.id))
-    ).map(findingOf);
-
   const reshootsOfProject = async (q: Q, projectId: string): Promise<ReshootTask[]> =>
     (
       await q
@@ -292,56 +270,6 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
     // A finding with the same id replaces the old one: evidence that goes stale twice reopens.
     await upsertFindings(q, buildPoltergeistFindings(newlyStale, newId("run"), reason));
     return newlyStale.map((e) => e.id);
-  }
-
-  /** Insert findings; a finding with an id that already exists is replaced. */
-  async function upsertFindings(q: Q, findings: Finding[]) {
-    if (findings.length === 0) return;
-    await q
-      .insert(t.findings)
-      .values(findings)
-      .onConflictDoUpdate({
-        target: t.findings.id,
-        set: {
-          type: sql`excluded.type`,
-          plainLabel: sql`excluded.plain_label`,
-          checklistItemId: sql`excluded.checklist_item_id`,
-          scriptSegmentId: sql`excluded.script_segment_id`,
-          evidenceId: sql`excluded.evidence_id`,
-          found: sql`excluded.found`,
-          notFound: sql`excluded.not_found`,
-          limits: sql`excluded.limits`,
-          status: sql`excluded.status`,
-          analysisRunId: sql`excluded.analysis_run_id`,
-        },
-      });
-  }
-
-  /** Insert evidence; a candidate with an id that already exists is replaced. */
-  async function upsertEvidence(q: Q, evidence: EvidenceCandidate[]) {
-    if (evidence.length === 0) return;
-    await q
-      .insert(t.evidenceCandidates)
-      .values(evidence)
-      .onConflictDoUpdate({
-        target: t.evidenceCandidates.id,
-        set: {
-          checklistItemId: sql`excluded.checklist_item_id`,
-          scriptSegmentId: sql`excluded.script_segment_id`,
-          scriptVersionId: sql`excluded.script_version_id`,
-          segmentHash: sql`excluded.segment_hash`,
-          assetVersionId: sql`excluded.asset_version_id`,
-          startMs: sql`excluded.start_ms`,
-          endMs: sql`excluded.end_ms`,
-          transcriptSegmentIds: sql`excluded.transcript_segment_ids`,
-          frameObservationIds: sql`excluded.frame_observation_ids`,
-          explanation: sql`excluded.explanation`,
-          confidence: sql`excluded.confidence`,
-          status: sql`excluded.status`,
-          source: sql`excluded.source`,
-          analysisRunId: sql`excluded.analysis_run_id`,
-        },
-      });
   }
 
   /** Break the active seal, if any. Used by the revision and upload paths. */
@@ -966,37 +894,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
           .for("update");
         if (!jobRow) throw new StoreError("not_found", 404, "Job not found.");
         const job = jobOf(jobRow);
-        const planned = job.payload.segmentIds ? new Set(job.payload.segmentIds) : null;
-        // Rows must belong to this project, whatever the producer claims.
-        const evidence = produced.evidence
-          .filter((e) => !planned || planned.has(e.scriptSegmentId))
-          .map((e) => ({ ...e, projectId }));
-        const findings = produced.findings
-          .filter((f) =>
-            planned ? f.scriptSegmentId !== null && planned.has(f.scriptSegmentId) : true,
-          )
-          .map((f) => ({ ...f, projectId }));
-
-        const existing = await evidenceOfProject(tx, projectId);
-        const freshSegments = new Set(evidence.map((e) => e.scriptSegmentId));
-        const replacedEvidenceIds = existing
-          .filter((e) => e.status === "stale" && freshSegments.has(e.scriptSegmentId))
-          .map((e) => e.id);
-
-        // Write only what changed, so a repeat of the same result is a no-op.
-        const before = new Map(existing.map((e) => [e.id, JSON.stringify(e)]));
-        await upsertEvidence(
-          tx,
-          mergeEvidence(existing, evidence).filter((e) => before.get(e.id) !== JSON.stringify(e)),
-        );
-        const oldFindings = await findingsOfProject(tx, projectId);
-        const beforeF = new Map(oldFindings.map((f) => [f.id, JSON.stringify(f)]));
-        await upsertFindings(
-          tx,
-          resolvePoltergeists(mergeFindings(oldFindings, findings), replacedEvidenceIds).filter(
-            (f) => beforeF.get(f.id) !== JSON.stringify(f),
-          ),
-        );
+        const replacedEvidenceIds = await mergeAnalysisResult(tx, projectId, job, produced);
         const [done] = await tx
           .update(t.processingJobs)
           .set({

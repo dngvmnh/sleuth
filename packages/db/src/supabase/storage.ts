@@ -11,7 +11,12 @@ export interface StorageClient {
   remove(paths: string[]): Promise<void>;
   /** When the file at `path` landed in storage (ISO), or null if nothing is there. */
   uploadedAt(path: string): Promise<string | null>;
+  /** A read URL for the worker, valid at most `DOWNLOAD_URL_SECONDS`. Server and worker only. */
+  createSignedDownloadUrl(path: string): Promise<{ url: string; expiresAt: string }>;
 }
+
+/** Lifetime of a worker's download URL: long enough to fetch a 3-minute video, no longer. */
+export const DOWNLOAD_URL_SECONDS = 300;
 
 /**
  * How long after the upload URL is made the file must land (ingestion 2.1). Supabase signed upload
@@ -70,6 +75,15 @@ export function createStorageClient(config: StorageConfig): StorageClient {
       if (paths.length === 0) return;
       const { error } = await files().remove(paths);
       if (error) throw new StorageError("Could not delete files from storage.");
+    },
+
+    async createSignedDownloadUrl(path) {
+      const { data, error } = await files().createSignedUrl(path, DOWNLOAD_URL_SECONDS);
+      if (error || !data) throw new StorageError("Could not create a download URL.");
+      const token = new URL(data.signedUrl).searchParams.get("token") ?? "";
+      const exp = tokenExpiry(token);
+      if (exp === null) throw new StorageError("Storage returned a download URL with no expiry.");
+      return { url: data.signedUrl, expiresAt: new Date(exp * 1000).toISOString() };
     },
 
     async uploadedAt(path) {
