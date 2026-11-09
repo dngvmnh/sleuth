@@ -66,7 +66,21 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - uses: supabase/setup-cli@v1
+      # The CLI download from GitHub releases sometimes answers 504; try once more after a pause.
+      - name: Install Supabase CLI
+        id: cli
+        continue-on-error: true
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+
+      - name: Wait before retrying the CLI download
+        if: steps.cli.outcome == 'failure'
+        run: sleep 30
+
+      - name: Install Supabase CLI (retry)
+        if: steps.cli.outcome == 'failure'
+        uses: supabase/setup-cli@v1
         with:
           version: 3.0.0
 
@@ -114,4 +128,4 @@ jobs:
 
       - name: Stop local Supabase
         if: always()
-        run: supabase stop --no-backup
+        run: supabase stop --no-backup || true
