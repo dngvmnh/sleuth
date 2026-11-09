@@ -130,6 +130,12 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Real results: `pnpm lint` and `pnpm typecheck` clean; `pnpm test` 28 files / 354 passed, 1 todo (Postgres suites on sleuth-dev); `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed, OpenAPI regenerated and matching; `ghost-scan` clean.
 - Not done: the worker's Postgres path (`apps/worker`, Bảo) does not move `updated_at` when an analysis finishes. Contract change: needs the `contract-change` label.
 
+### 2026-11-09, Đăng (@dngvmnh), ingestion 7: five-minute upload window (decision D-1, option 3)
+- Supabase signed upload URLs live 2 hours and cannot be shortened. The store now enforces the 5-minute rule itself: `expiresAt` is the end of a 5-minute window (`UPLOAD_WINDOW_MS`), and `startAnalysis` asks Storage when the file landed (`StorageClient.uploadedAt`). No file: 409 `upload_missing`. A file that landed after the window: 409 `upload_late`. Requirement 2.1 and the design say so now.
+- Tests on sleuth-dev with real uploads: inside the window is queued; no upload is refused; a URL made "ten minutes ago" by the store's clock with the file landing now is refused as late. 8 upload tests passed; the earlier todo is gone.
+- Gate: lint and typecheck clean; `pnpm test` 28 files / 357 passed; property 54; contracts 14; build passed; ghost-scan clean.
+- For Đạt: the upload flow (review-workspace 12) should show both new 409 codes. No schema change.
+- Not verified: browser-to-server clock skew does not matter (both times are server times), but app-server versus database skew is assumed to be under a few seconds.
 ### 2026-11-09, Đăng (@dngvmnh), change-impact 9: revisions on the Supabase store
 - The revision and upload paths already ran in one transaction each (ingestion 6, 7). This task proves it with the same random-history property test the fixture store passes.
 - Built: `packages/db/src/change-impact-contract.ts` (`runChangeImpactContract`), moved out of the fixture-only property test. `applyAnalysisResult` now lives on the Supabase store too (shared `AnalysisWriter` type), in one transaction, writing only rows that changed. This is also the write path the worker's Supabase handler (evidence-analysis 12, Phạm Quốc Bảo) can call.

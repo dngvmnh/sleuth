@@ -9,7 +9,16 @@ export interface StorageClient {
   createSignedUploadUrl(path: string): Promise<{ url: string; expiresAt: string }>;
   /** Delete files. Missing files are not an error. */
   remove(paths: string[]): Promise<void>;
+  /** When the file at `path` landed in storage (ISO), or null if nothing is there. */
+  uploadedAt(path: string): Promise<string | null>;
 }
+
+/**
+ * How long after the upload URL is made the file must land (ingestion 2.1). Supabase signed upload
+ * URLs live about two hours and cannot be shortened, so the store enforces this window itself:
+ * `expiresAt` says when the window closes, and analysis refuses a file that landed after it.
+ */
+export const UPLOAD_WINDOW_MS = 5 * 60_000;
 
 export interface StorageConfig {
   /** NEXT_PUBLIC_SUPABASE_URL */
@@ -61,6 +70,17 @@ export function createStorageClient(config: StorageConfig): StorageClient {
       if (paths.length === 0) return;
       const { error } = await files().remove(paths);
       if (error) throw new StorageError("Could not delete files from storage.");
+    },
+
+    async uploadedAt(path) {
+      const cut = path.lastIndexOf("/");
+      const folder = cut < 0 ? "" : path.slice(0, cut);
+      const name = path.slice(cut + 1);
+      const { data, error } = await files().list(folder, { search: name, limit: 100 });
+      if (error) throw new StorageError("Could not check the uploaded file.");
+      // `search` matches a prefix, so pick the exact name.
+      const file = (data ?? []).find((f) => f.name === name);
+      return file?.created_at ? new Date(file.created_at).toISOString() : null;
     },
   };
 }

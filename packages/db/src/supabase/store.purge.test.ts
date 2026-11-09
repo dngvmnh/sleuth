@@ -156,6 +156,7 @@ suite("retention purge on Postgres and Storage [5.4]", () => {
       storage: {
         createSignedUploadUrl: () => Promise.reject(new Error("unused")),
         remove: () => Promise.reject(new Error("storage is down")),
+        uploadedAt: () => Promise.resolve(null),
       },
     });
     await expect(broken.purgeExpiredAnonymousProjects(NOW, 7)).rejects.toThrow("storage is down");
