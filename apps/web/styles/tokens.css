@@ -64,6 +64,22 @@
   }
 }
 
+/* Wax seal pressed onto the report after a successful Final Seal. Runs once. */
+.sleuth-seal-stamp {
+  animation: sleuth-stamp 0.5s ease-out 1 both;
+}
+
+@keyframes sleuth-stamp {
+  from {
+    transform: scale(1.6) rotate(-12deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sleuth-fog {
     animation: none;
@@ -72,6 +88,9 @@
   .sleuth-glow {
     animation: none;
     box-shadow: none;
+  }
+  .sleuth-seal-stamp {
+    animation: none;
   }
   * {
     scroll-behavior: auto !important;
