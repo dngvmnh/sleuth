@@ -130,6 +130,11 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Real results: `pnpm lint` and `pnpm typecheck` clean; `pnpm test` 28 files / 354 passed, 1 todo (Postgres suites on sleuth-dev); `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed, OpenAPI regenerated and matching; `ghost-scan` clean.
 - Not done: the worker's Postgres path (`apps/worker`, Bảo) does not move `updated_at` when an analysis finishes. Contract change: needs the `contract-change` label.
 
+### 2026-11-09, Đăng (@dngvmnh), ingestion 10: the worker now runs the purge
+- `apps/worker/src/retention.ts`: `startRetentionTimer` runs `purgeExpiredAnonymousProjects` at start and every `RETENTION_INTERVAL_MS` (default 1 hour), period `ANONYMOUS_RETENTION_DAYS` (default 7). Runs never overlap; a failure is logged by error name only and retried next tick; logs hold counts, never project ids. Supabase mode only, not in `--once`.
+- This is Phạm Quốc Bảo's area, so the PR asks for his review.
+- Tests: 4 timer tests with fake timers (schedule, retry after failure, no overlap, config defaults). Smoke run of the timer against sleuth-dev with the real store: `retention_purged {"projects":0,"files":0}` (the dev project holds only the demo). I did not run the full worker loop on the dev project: the demo's seeded job is queued and the Supabase handler is not built yet, so it would mark that job failed.
+- Gate: lint and typecheck clean; `pnpm test` 29 files / 358 passed, 1 todo; property 54; contracts 14; build passed.
 ### 2026-11-09, Đăng (@dngvmnh), ingestion 7: five-minute upload window (decision D-1, option 3)
 - Supabase signed upload URLs live 2 hours and cannot be shortened. The store now enforces the 5-minute rule itself: `expiresAt` is the end of a 5-minute window (`UPLOAD_WINDOW_MS`), and `startAnalysis` asks Storage when the file landed (`StorageClient.uploadedAt`). No file: 409 `upload_missing`. A file that landed after the window: 409 `upload_late`. Requirement 2.1 and the design say so now.
 - Tests on sleuth-dev with real uploads: inside the window is queued; no upload is refused; a URL made "ten minutes ago" by the store's clock with the file landing now is refused as late. 8 upload tests passed; the earlier todo is gone.
