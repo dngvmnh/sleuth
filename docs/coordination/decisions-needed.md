@@ -6,8 +6,8 @@ Updated Monday 9 November 2026, evening. Team rule: free options only for hostin
 
 | ID | Decision | Who | By | State |
 |---|---|---|---|---|
-| D-4 | AI providers on free options only | Team | Fri 13 Nov | Proposal below. Open: who owns the accounts; what visitors' videos may be sent to. |
-| D-5 | Hosting on free options only | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Open: owners, prod project, upload size cap. |
+| D-4 | AI providers on free options only | Team | Fri 13 Nov | Proposal below. Owner: Dang. Open: what visitors' videos may be sent to. |
+| D-5 | Hosting on free options only | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Owner: Dang. Open: second Supabase project for production, upload size cap. |
 | D-7 | Eligibility answers | Each member | Wed 11 Nov | Student status: all three are students (Đăng, 9 Nov). Not yet answered: Kiroween 2025 registration, age of majority. |
 
 ## Decided
