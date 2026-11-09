@@ -1,0 +1,21 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          { "text": "internal reasoning that must be ignored", "thought": true },
+          {
+            "text": "{\"frames\":[{\"index\":1,\"description\":\"Home screen of a notes app with a logo\",\"onScreenText\":[\"Notely\",\"Notes\"]},{\"index\":2,\"description\":\"A new empty note page\",\"onScreenText\":[\"New Note\",\"Title\"]},{\"index\":2,\"description\":\"A duplicate answer for frame 2\",\"onScreenText\":[]},{\"index\":9,\"description\":\"A frame that was never sent\",\"onScreenText\":[]},{\"index\":3,\"description\":\"   \",\"onScreenText\":[\"ignored: empty description\"]}]}"
+          }
+        ]
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2400,
+    "candidatesTokenCount": 180,
+    "thoughtsTokenCount": 60
+  }
+}

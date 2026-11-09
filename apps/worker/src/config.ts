@@ -10,6 +10,12 @@ const EnvSchema = z.object({
   /** `mock` until a real adapter is chosen (ADR 0007) and built (evidence-analysis 10). */
   TRANSCRIPTION_PROVIDER: z.string().default("mock"),
   VIDEO_ANALYSIS_PROVIDER: z.string().default("mock"),
+  /** Secrets. Held by the worker only; never logged, never put in an error. */
+  TRANSCRIPTION_API_KEY: z.string().optional(),
+  VIDEO_ANALYSIS_API_KEY: z.string().optional(),
+  /** Model ids (ADR 0007). Models change often, so they are config, not code. */
+  TRANSCRIPTION_MODEL: z.string().default("nova-3"),
+  VIDEO_ANALYSIS_MODEL: z.string().default("gemini-3.8-flash"),
   /**
    * The mock providers return the golden fixture, whatever the video says. In supabase mode that
    * would show invented results as an analysis, so the worker refuses to start with them unless

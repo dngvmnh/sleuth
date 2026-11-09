@@ -74,6 +74,7 @@ suite("Supabase handler on Postgres (evidence-analysis 12)", () => {
         TRANSCRIPTION_PROVIDER: "mock",
         VIDEO_ANALYSIS_PROVIDER: "mock",
         ALLOW_MOCK_PROVIDERS: true,
+        MAX_FRAMES_PER_VIDEO: 60,
       }),
       workerId,
       maxVideoSeconds: 180,

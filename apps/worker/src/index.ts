@@ -47,7 +47,13 @@ async function main() {
   }
 
   // Fail at start-up, not job by job, when the providers are not usable (evidence-analysis 2.1).
-  const providers = createProviders(config);
+  const providers = createProviders(config, (usage) =>
+    log("provider_usage", {
+      provider: usage.provider,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    }),
+  );
   if (config.ALLOW_MOCK_PROVIDERS)
     log("mock_providers", { warning: "results are not a real analysis" });
   const { queue, close } = createPgQueue(

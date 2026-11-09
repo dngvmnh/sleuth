@@ -11,6 +11,7 @@ import { WorkerStoreError, type JobInputs, type WorkerResult, type WorkerStore }
 import { loadGoldenFixture } from "@sleuth/db/fixture";
 import {
   MediaError,
+  ProviderError,
   createMockTranscriptionProvider,
   createMockVideoAnalysisProvider,
   type AnalyseInput,
@@ -408,6 +409,7 @@ describe("createProviders", () => {
     TRANSCRIPTION_PROVIDER: "mock",
     VIDEO_ANALYSIS_PROVIDER: "mock",
     ALLOW_MOCK_PROVIDERS: false,
+    MAX_FRAMES_PER_VIDEO: 60,
   } as const;
 
   it("gives the mock providers in fixture mode", () => {
@@ -427,6 +429,48 @@ describe("createProviders", () => {
     expect(() => createProviders({ ...base, TRANSCRIPTION_PROVIDER: "someone" })).toThrow(
       /provider_not_configured.*someone/,
     );
+  });
+
+  it("builds the real adapters when the names and keys are set, without echoing the keys", () => {
+    const real = {
+      ...base,
+      SLEUTH_DATA_MODE: "supabase",
+      TRANSCRIPTION_PROVIDER: "deepgram",
+      VIDEO_ANALYSIS_PROVIDER: "gemini",
+      TRANSCRIPTION_API_KEY: "key-one-secret",
+      VIDEO_ANALYSIS_API_KEY: "key-two-secret",
+    } as const;
+    const set = createProviders(real);
+    expect(set.transcription.name).toBe("deepgram");
+    expect(set.videoAnalysis.name).toBe("gemini");
+    // No mock is involved, so the mock guard does not apply.
+    expect(() => createProviders({ ...real, TRANSCRIPTION_API_KEY: undefined })).toThrow(
+      /TRANSCRIPTION_API_KEY is not set/,
+    );
+    const missing = (() => {
+      try {
+        createProviders({ ...real, VIDEO_ANALYSIS_API_KEY: "" });
+      } catch (e) {
+        return String(e);
+      }
+      return "";
+    })();
+    expect(missing).toMatch(/VIDEO_ANALYSIS_API_KEY is not set/);
+    expect(missing).not.toMatch(/secret/);
+  });
+
+  it("lets a real provider's failure reach the job row as 'provider: code'", async () => {
+    const providers: ProviderSet = {
+      transcription: {
+        name: "deepgram",
+        transcribe: () => Promise.reject(new ProviderError("deepgram", "rate_limited")),
+      },
+      videoAnalysis: { name: "gemini", analyse: () => Promise.resolve([]) },
+    };
+    const error = await createSupabaseHandler(
+      options(fakeStore(inputsOf()), fakeMedia(), { providers }),
+    )(job).catch((e: unknown) => e);
+    expect(describeError(error)).toBe("deepgram: rate_limited");
   });
 
   it("stamps the mock data with the job's project and video version and unique ids", async () => {

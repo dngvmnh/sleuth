@@ -37,7 +37,10 @@ export class JobFailure extends Error {
 
 /** Short, content-free error text for the job row. */
 export function describeError(err: unknown): string {
-  if (err instanceof JobFailure || (err instanceof Error && err.name === "MediaError"))
+  if (
+    err instanceof JobFailure ||
+    (err instanceof Error && (err.name === "MediaError" || err.name === "ProviderError"))
+  )
     return err.message.slice(0, 300);
   const text = err instanceof Error ? `${err.name}: ${err.message}` : "Unknown error";
   return text.slice(0, 300);
