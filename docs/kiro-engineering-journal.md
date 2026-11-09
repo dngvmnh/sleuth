@@ -135,3 +135,21 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - This is Phạm Quốc Bảo's area, so the PR asks for his review.
 - Tests: 4 timer tests with fake timers (schedule, retry after failure, no overlap, config defaults). Smoke run of the timer against sleuth-dev with the real store: `retention_purged {"projects":0,"files":0}` (the dev project holds only the demo). I did not run the full worker loop on the dev project: the demo's seeded job is queued and the Supabase handler is not built yet, so it would mark that job failed.
 - Gate: lint and typecheck clean; `pnpm test` 29 files / 358 passed, 1 todo; property 54; contracts 14; build passed.
+### 2026-11-09, Đăng (@dngvmnh), ingestion 7: five-minute upload window (decision D-1, option 3)
+- Supabase signed upload URLs live 2 hours and cannot be shortened. The store now enforces the 5-minute rule itself: `expiresAt` is the end of a 5-minute window (`UPLOAD_WINDOW_MS`), and `startAnalysis` asks Storage when the file landed (`StorageClient.uploadedAt`). No file: 409 `upload_missing`. A file that landed after the window: 409 `upload_late`. Requirement 2.1 and the design say so now.
+- Tests on sleuth-dev with real uploads: inside the window is queued; no upload is refused; a URL made "ten minutes ago" by the store's clock with the file landing now is refused as late. 8 upload tests passed; the earlier todo is gone.
+- Gate: lint and typecheck clean; `pnpm test` 28 files / 357 passed; property 54; contracts 14; build passed; ghost-scan clean.
+- For Đạt: the upload flow (review-workspace 12) should show both new 409 codes. No schema change.
+- Not verified: browser-to-server clock skew does not matter (both times are server times), but app-server versus database skew is assumed to be under a few seconds.
+### 2026-11-09, Đăng (@dngvmnh), change-impact 9: revisions on the Supabase store
+- The revision and upload paths already ran in one transaction each (ingestion 6, 7). This task proves it with the same random-history property test the fixture store passes.
+- Built: `packages/db/src/change-impact-contract.ts` (`runChangeImpactContract`), moved out of the fixture-only property test. `applyAnalysisResult` now lives on the Supabase store too (shared `AnalysisWriter` type), in one transaction, writing only rows that changed. This is also the write path the worker's Supabase handler (evidence-analysis 12, Phạm Quốc Bảo) can call.
+- Mutation check: with `resolvePoltergeists` removed from the Supabase write path, the 6 random histories still passed. I added a direct check to the deterministic case (the Poltergeist must be resolved after re-analysis); the mutant then failed with `expected 'open' to be 'resolved'`. Restored.
+- Real results: Supabase change-impact suite 2 passed on sleuth-dev (6 histories, up to 8 steps, 107 s); fixture 200 histories passed. Gate: lint and typecheck clean; `pnpm test` 29 files / 356 passed, 1 todo; `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed; build passed; ghost-scan clean.
+- Not verified in CI: the Postgres suites still skip there (next task).
+### 2026-11-09, Đăng (@dngvmnh), CI database job (decision D-3)
+- Goal: make ingestion 5, 6, 8, 9 and 10 provable by anyone, not only on my machine.
+- Built: a `db` job in `.github/workflows/ci.yml`. It starts a throwaway local Supabase stack with the CLI (3.0.0; Postgres 17 like the hosted project, Auth with anonymous sign-in, Storage with the private `video-assets` bucket from `supabase/config.toml`), applies migrations with `pnpm db:migrate`, seeds the demo, then runs `packages/db/src/supabase` and the Supabase-mode API test. It never touches the shared dev project. `SLEUTH_REQUIRE_DB=1` makes a missing setting an error, so the job cannot go green by skipping.
+- First run failed in `supabase/setup-cli` with HTTP 504 while downloading the CLI. A re-run passed, so it was the download, not our code.
+- Real result (run 42578866891): 6 files, 61 passed, 1 todo, 0 skipped. The `check` job stayed green.
+- Not verified: how often the CLI download flakes. If it keeps failing, cache the binary.

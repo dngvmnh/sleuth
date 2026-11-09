@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ListProjectsResponseSchema, CreateProjectResponseSchema } from "@sleuth/contracts";
 import {
+  DB_REQUIRED,
   deleteProjectsOwnedBy,
   deleteTestProjects,
   openTestDb,
@@ -126,6 +127,7 @@ suite("API routes in Supabase mode", () => {
       const browser = createClient(config.url, config.anonKey, { auth: { persistSession: false } });
       const { data, error } = await browser.auth.signInAnonymously();
       if (error || !data.session || !data.user) {
+        if (DB_REQUIRED) throw new Error("Anonymous sign-in failed in the CI database job.");
         console.warn("[api supabase] anonymous sign-in is not enabled on this project.");
         return t.skip();
       }

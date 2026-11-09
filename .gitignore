@@ -28,3 +28,6 @@ test-results/
 Thumbs.db
 
 # NOTE: .kiro/ is committed on purpose. Never add it here.
+
+# Supabase CLI local state
+supabase/.temp/

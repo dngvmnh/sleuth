@@ -32,6 +32,7 @@ import {
 } from "@sleuth/domain";
 import type {
   Actor,
+  AnalysisWriter,
   ProjectDetail,
   ProjectStore,
   PurgeResult,
@@ -57,29 +58,14 @@ interface ProjectData {
   seals: Seal[];
 }
 
-/** What an analysis run produced. The worker (or a test standing in for it) supplies this. */
-export interface AnalysisResult {
-  evidence: EvidenceCandidate[];
-  findings: Finding[];
-}
+export type { AnalysisResult } from "../store";
 
 /**
  * The fixture store plus two helpers that stand in for work other parts of the system do:
  * `applyAnalysisResult` plays the worker finishing a job; `breakSeal` is the internal step the
  * revision and upload paths call. Neither is part of the shared `ProjectStore` contract.
  */
-export interface FixtureStore extends ProjectStore, RetentionStore {
-  /**
-   * Simulate a finished analysis job in memory: merge the produced evidence (human decisions on an
-   * unchanged hash are kept), merge produced findings, resolve the Poltergeist findings of stale
-   * evidence that a fresh candidate now replaces, and mark the job succeeded.
-   */
-  applyAnalysisResult(
-    actor: Actor,
-    projectId: string,
-    jobId: string,
-    produced: AnalysisResult,
-  ): Promise<{ job: ProcessingJob; replacedEvidenceIds: string[] }>;
+export interface FixtureStore extends ProjectStore, RetentionStore, AnalysisWriter {
   /** Mark the project's active seal broken. Returns the broken seal, or null if there was none. */
   breakSeal(projectId: string, reason: string): Seal | null;
 }

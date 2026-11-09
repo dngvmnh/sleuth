@@ -47,3 +47,85 @@ jobs:
         run: pnpm build
         env:
           SLEUTH_DATA_MODE: fixture
+
+  # The Postgres, Auth and Storage suites (ingestion 5 to 10, change-impact 9) against a throwaway
+  # local Supabase stack. It is created for this run and destroyed with the runner, so it never
+  # touches the team's dev project. The keys it prints are the CLI's fixed local demo keys.
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The CLI download from GitHub releases sometimes answers 504; try once more after a pause.
+      - name: Install Supabase CLI
+        id: cli
+        continue-on-error: true
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+
+      - name: Wait before retrying the CLI download
+        if: steps.cli.outcome == 'failure'
+        run: sleep 30
+
+      - name: Install Supabase CLI (retry)
+        if: steps.cli.outcome == 'failure'
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+
+      - name: Start local Supabase (database, auth, storage)
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,postgres-meta,mailpit
+
+      - name: Export connection settings
+        run: |
+          supabase status -o env > /tmp/sb.env
+          set -a; . /tmp/sb.env; set +a
+          {
+            echo "DATABASE_URL=$DB_URL"
+            echo "TEST_DATABASE_URL=$DB_URL"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SUPABASE_STORAGE_BUCKET=video-assets"
+          } >> "$GITHUB_ENV"
+          rm /tmp/sb.env
+
+      - name: Create the private video bucket if the config did not
+        run: |
+          code=$(curl -s -o /tmp/bucket.json -w '%{http_code}' -X POST "$NEXT_PUBLIC_SUPABASE_URL/storage/v1/bucket" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"id":"video-assets","name":"video-assets","public":false}')
+          echo "create bucket: HTTP $code"
+          if [ "$code" != "200" ] && ! grep -qi "exist" /tmp/bucket.json; then cat /tmp/bucket.json; exit 1; fi
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed the demo project
+        run: pnpm db:seed
+
+      - name: Postgres, Auth and Storage suites
+        env:
+          SLEUTH_REQUIRE_DB: "1"
+          # The local database is fast, so run many more random change-impact histories.
+          CHANGE_IMPACT_RUNS: "50"
+        run: >-
+          pnpm exec vitest run
+          packages/db/src/supabase
+          apps/web/app/api/_lib/api.supabase.test.ts
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup || true

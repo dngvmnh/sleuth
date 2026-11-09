@@ -22,7 +22,7 @@ Today (Phase 2) all of this works against the in-memory fixture store (`packages
 
 ## 2. Upload URLs and asset versions
 
-2.1 WHEN a signed-in owner sends a file name, a `video/*` MIME type and a `durationMs` from 0 to 180000, THE SYSTEM SHALL create an `AssetVersion` and return a signed upload URL that expires within 5 minutes.
+2.1 WHEN a signed-in owner sends a file name, a `video/*` MIME type and a `durationMs` from 0 to 180000, THE SYSTEM SHALL create an `AssetVersion` and return a signed upload URL whose `expiresAt` is at most 5 minutes away, and SHALL refuse analysis (409 `upload_late`) of a file that landed after `expiresAt`, or (409 `upload_missing`) before any file landed. (Decision D-1: Supabase signed upload URLs live about 2 hours and cannot be shortened, so the window is enforced at analysis time.)
 
 2.2 IF `durationMs` is not an integer, is negative, or is above 180000, THEN THE SYSTEM SHALL answer 400 `invalid_request` and create nothing. [PBT: every value outside 0..180000 is rejected; every integer inside is accepted.]
 
