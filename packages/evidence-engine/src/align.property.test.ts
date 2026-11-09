@@ -57,7 +57,10 @@ describe("align properties", () => {
         const byTranscript = new Map<string, string[]>();
         for (const a of result.aligned) {
           if (a.transcriptId === null) continue;
-          byTranscript.set(a.transcriptId, [...(byTranscript.get(a.transcriptId) ?? []), a.segmentId]);
+          byTranscript.set(a.transcriptId, [
+            ...(byTranscript.get(a.transcriptId) ?? []),
+            a.segmentId,
+          ]);
         }
         for (const ids of byTranscript.values()) {
           const texts = new Set(ids.map((id) => textOf.get(id)));
@@ -87,7 +90,9 @@ describe("align properties", () => {
       fc.property(linesArb, linesArb, (lines, said) => {
         const transcript = spoken(said);
         const result = align(script(lines), transcript);
-        const used = new Set(result.aligned.flatMap((a) => (a.transcriptId ? [a.transcriptId] : [])));
+        const used = new Set(
+          result.aligned.flatMap((a) => (a.transcriptId ? [a.transcriptId] : [])),
+        );
         for (const id of result.unscripted) expect(used.has(id)).toBe(false);
         // Identical lines may share one spoken segment, so only the sum of distinct ids is fixed.
         expect(used.size + result.unscripted.length).toBe(transcript.length);

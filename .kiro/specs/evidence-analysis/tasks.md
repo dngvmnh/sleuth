@@ -37,7 +37,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: unit tests cover exact, changed, missing, reordered and unscripted; property tests for 3.3 and 3.5 pass; golden contract test unchanged.
   - Requirements: 3.1 to 3.5
 
-- [ ] 6. Matching, confidence rules and explanations
+- [x] 6. Matching, confidence rules and explanations
   - Owner: Bảo
   - Files: `packages/evidence-engine/src/match.ts`, `explain.ts`, `analyse.ts`, `explain.property.test.ts`, `docs/evidence-confidence.md`
   - Do: move window and confidence logic into `match.ts`; build explanations in `explain.ts`; document the confidence rules in plain English.
