@@ -105,6 +105,8 @@ jobs:
       - name: Postgres, Auth and Storage suites
         env:
           SLEUTH_REQUIRE_DB: "1"
+          # The local database is fast, so run many more random change-impact histories.
+          CHANGE_IMPACT_RUNS: "50"
         run: >-
           pnpm exec vitest run
           packages/db/src/supabase
