@@ -3,6 +3,7 @@
 One file per review, named `NNN-short-name.md`. Each records: what was checked, the commands or sources used, what was verified, what was not, and the verdict.
 
 ## Log
+- 9 November 2026, afternoon: review 001, the worker side of the retention purge (ADR 0008), by Phạm Quốc Bảo. Approved; two low follow-ups. See `001-retention-purge-worker.md`.
 - 9 November 2026, evening: no open PRs from Đạt or Bảo, and no branches from them on the remote (`gh pr list --state open`, `git fetch --prune`). Nothing to review yet.
 
 ## What Đăng checks on every PR from Đạt or Bảo
