@@ -1,16 +1,14 @@
 # Decisions needed
 
-Updated Monday 9 November 2026. Each item: who decides, by when, state.
+Updated Monday 9 November 2026, evening. Team rule: free options only for hosting and AI.
 
 ## Open
 
-| ID | Decision | Who | By | Recommendation |
+| ID | Decision | Who | By | State |
 |---|---|---|---|---|
-| D-4 | Team-owned AI provider account with a hard monthly cap. Who owns it, what cap. | Team | Fri 13 Nov | One account, one owner (Bảo), cap set before any adapter runs on real footage. |
-| D-5 | Hosting plan: web host, Docker worker host with FFmpeg, paid Supabase tier from 1 Dec. | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` (Vercel, Fly.io worker, Supabase Pro; about $32 to $52 per month before AI costs). Open: owners, payer, Hobby or Pro, prod project, region. Decide by 20 Nov. |
-| D-6 | Two entries: can one person submit both DEAD AIR and SLEUTH? | Đăng | Wed 11 Nov | NOT SETTLED. See the D-6 note below. |
-| D-7 | Eligibility answers from each member: student status, Kiroween 2025, age of majority. | Each member | Wed 11 Nov | Each posts one line. Do not guess for anyone. |
-| D-9 | Name the daily-update channel for the async post (done, contract changes, blocked, next PR). | Team | Mon 9 Nov | Any one channel. |
+| D-4 | AI providers on free options only | Team | Fri 13 Nov | Proposal below. Open: who owns the accounts; what visitors' videos may be sent to. |
+| D-5 | Hosting on free options only | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Open: owners, prod project, upload size cap. |
+| D-7 | Eligibility answers | Each member | Wed 11 Nov | Student status: all three are students (Đăng, 9 Nov). Not yet answered: Kiroween 2025 registration, age of majority. |
 
 ## Decided
 
@@ -19,18 +17,22 @@ Updated Monday 9 November 2026. Each item: who decides, by when, state.
 | D-1 | Ingestion 7 upload URL lifetime | Option 3: `expiresAt` is a 5-minute window; analysis refuses a late (`upload_late`) or missing (`upload_missing`) file. | PR #4, ingestion requirement 2.1 |
 | D-2 | How to merge PR #1 | Merge commit (`deb6dbc`). | PR #1 |
 | D-3 | Postgres in CI | Yes, as a throwaway local Supabase stack in the `db` job, never the shared dev project. | PR #5 |
+| D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026. The team clause also allows one person on more than one team: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
 | D-8 | Who adds the hourly purge to `apps/worker` | Đăng wrote it; Bảo owns the worker going forward. | PR #6, ADR 0008 |
 
-## D-6 note: what the official rules say (checked 9 November 2026)
+## D-4 proposal: free AI providers
 
-Source: the Kiroween Official Rules on Devpost, [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules).
+The adapters exist for Deepgram (transcription) and Gemini (video analysis), PR #18. ADR 0007 picked the paid Gemini tier; the free rule changes that.
 
-What I could confirm, from the eligibility part about teams and organizations:
+| Part | Free option | Limit | Data handling | Source |
+|---|---|---|---|---|
+| Transcription | Deepgram, $200 sign-up credit | One-time credit, no card needed. Without a card it cannot bill, so the credit is the cap. Estimate: about $0.013 to $0.026 per 3-minute run (ADR 0007), so several thousand runs. | `mip_opt_out=true` stops retention (ADR 0007). It may cost up to double, which uses the credit faster. | [Deepgram sign-up](https://console.deepgram.com/signup) |
+| Video analysis | Gemini API free tier | Rate-limited requests per minute and per day, per model. Check the active limits in AI Studio. | On the free tier, content may be used to improve Google's products (ADR 0007, official pricing page). | [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) |
 
-> "An Eligible Individual may join more than one Team or Organization and an Eligible Individual who is part of a Team or Organization may also enter the Hackathon on an individual basis."
+The conflict: `.kiro/steering/ai-safety.md` says users' videos are not kept or used for training. The free Gemini tier does not promise that.
 
-What this settles: one person may be on the SLEUTH team and also be on, or enter alone with, DEAD AIR.
-
-What it does not settle: whether one entrant may have more than one submission, or whether the same person may win with two. Many Devpost rule sets have a separate "multiple submissions" clause in the submission requirements. I could not read the full rules page: it refused automated access (HTTP 403), so I have not seen that section and I make no claim about it.
-
-What only Đăng can do: open the rules page in a browser, read the "Submission Requirements" and "Eligibility" sections, and search the page for "more than one" and "multiple". Record the exact section name and wording here. If the page is silent on multiple submissions, ask the organisers in the Devpost discussion forum and quote their answer.
+Recommendation:
+1. Our own recorded clips: Deepgram credit plus Gemini free tier. We own the footage and accept the terms.
+2. Visitors' videos ("try your own video"): Deepgram only, with no frames sent to Gemini. This needs a "no video analysis" mode in the worker (Bảo's area), because supabase mode refuses the mock providers today.
+3. No card on any provider account. Both accounts belong to one owner (OPEN; Bảo is the natural fit).
+4. Bảo amends ADR 0007 to match, if the team agrees.

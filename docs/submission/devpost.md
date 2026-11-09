@@ -29,16 +29,16 @@ Demo videos drift from what they claim. A line gets cut, a screen changes, a sen
 - Property tests written from the spec's `[PBT]` criteria found real bugs in our own earlier code: evidence a person had dismissed could later be confirmed on an outdated line; a dismissed candidate re-opened on every later edit; evidence going stale a second time did not reopen its Poltergeist. All three are fixed and covered.
 - TODO: a short screen capture of a spec task running, and one hook firing.
 
-## What is real and what is mocked (as of 9 November 2026)
+## What is real and what is mocked (as of 9 November 2026, evening)
 
 | Part | State |
 |---|---|
 | Backend API, both stores, change impact, Final Seal rules, reports (CSV, HTML) | Real, tested |
 | Supabase store, sign-in, row-level security, signed uploads, retention purge | Real, tested in CI against a throwaway Supabase stack |
-| Transcription and video analysis | MOCKED. Mock providers only; the real provider is not chosen yet (ADR 0007). |
-| Evidence matching | Word overlap on the golden fixture. Real alignment and matching are not built yet. |
+| Transcription and video analysis | Deepgram and Gemini adapters exist with recorded-response tests (PR #18). Not run on our own footage yet; providers not final (ADR 0007, D-4). |
+| Evidence matching | Script alignment and matching are built (evidence-analysis 5, 6). Not measured on real clips yet. |
 | Review workspace and Final Seal UI | NOT BUILT yet (one placeholder page). |
-| Worker in Supabase mode | Contract and data calls are built and tested; the handler that runs FFmpeg and providers is not built yet. |
+| Worker in Supabase mode | Built and tested (evidence-analysis 12, 16). |
 | Deployment | Not deployed. Plan in `docs/deploy-plan.md`. |
 
 Update this table before submitting. Do not claim a part is real unless it is.

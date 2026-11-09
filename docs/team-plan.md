@@ -10,7 +10,7 @@ Written 8 November 2026. Deadline: 5 December 2026, 06:00 Singapore time (4 Dece
 4. **Normalised hashing.** Typo and punctuation fixes must not mark evidence stale, or the Poltergeist feature will look noisy in the demo.
 5. **Judges must get in within 10 seconds.** A public read-only demo project with no login, plus "try your own video" behind anonymous sign-in with limits. A login wall costs score on Potential Impact and Design.
 6. **Use SLEUTH on our own submission video.** Write the demo script and checklist first, run SLEUTH on our own recording, and show the Final Seal report in the video and on Devpost. This proves the product works on real footage, and it is the strongest story for Best Demo.
-7. **Hosting must survive judging, not just the deadline.** Judging continues after 5 December. Supabase free projects pause after about a week without activity, and free web hosts put services to sleep. Budget a small paid tier (or a scheduled keep-alive) from 1 December until results, and a worker host that installs FFmpeg (a Docker host such as Fly.io, Railway or Cloud Run).
+7. **Hosting must survive judging, not just the deadline.** Judging continues after 5 December. Supabase free projects pause after about a week without activity, and free web hosts put services to sleep. Team rule: free tiers only. Keep the project active (the worker queries it every few minutes) and run the worker, with FFmpeg, as a scheduled GitHub Actions job. See `docs/deploy-plan.md`.
 8. **Keep the AI humble.** Matches are candidates; confidence is a ranking, not accuracy; "Needs Outside Proof" for claims footage cannot show. Report measured precision and recall from hand-labelled clips, never invented numbers.
 
 ## 2. Ownership (nobody edits another area without a pull request review from its owner)
@@ -118,7 +118,7 @@ The same roles exist as custom agents in `.kiro/agents/` (`frontend-builder`, `b
 1. Accept the GitHub invite and request your own Kiro credits.
 2. Confirm: are you a current student (school, degree, year)? Did you register for Kiroween 2025? Are you above the age of majority where you live?
 3. Wait for the scaffold merge (target 9 November night), then follow section 8 to clone and run the app, and open your spec.
-4. Post a short async update in the team channel each day: done, contract changes, blocked, next pull request.
+4. Write a short daily update in `docs/coordination/updates/`: done, contract changes, blocked, next pull request.
 
 ## 8. Setup on a fresh Windows machine (everyone)
 
@@ -166,7 +166,7 @@ Each task is in `.kiro/specs/<spec>/tasks.md`. Do them in the order shown. Start
 
 ### Đăng (@dngvmnh): ingestion and change-impact
 
-Before day 1 (scaffold owner): push the repo, add branch protection on `main` (CI green and one review), invite the two teammates, replace the TODO notes if any, and turn on the CODEOWNERS review requirement.
+Before day 1 (scaffold owner): push the repo, invite the two teammates, replace the TODO notes if any, and turn on the CODEOWNERS review requirement.
 
 | Day | Task | Spec and task | Files |
 |---|---|---|---|
@@ -208,7 +208,7 @@ First pull request: `feat/media-ffmpeg-probe` (evidence-analysis task 1).
 
 ### The first three pull requests, in order
 
-1. Đăng: scaffold merge, plus branch protection and invites (before day 1).
+1. Đăng: scaffold merge, plus invites (before day 1).
 2. Đăng: `feat/domain-segment-state`.
 3. Bảo: `feat/media-ffmpeg-probe`, and Đạt: `feat/web-test-tooling`, reviewed within the day.
 
@@ -223,7 +223,7 @@ Every pull request: small, CI green, the template filled in, `contract-change` l
 5. **AI cost and keys.** One team-owned account with a hard monthly cap, set before the provider adapters run on anything. Judges' "try your own video" runs spend our money; the limits in ingestion 1 and 3 must exist before the public link does.
 6. **No video file in the repo.** The player runs on a simulated clock in fixture mode. We need our own recorded clips (evidence-analysis 11) before the demo looks real.
 7. **Shared-file conflicts.** `pnpm-lock.yaml`, root configs and `.github/` need review from Đăng and one person adds dependencies at a time. Review-workspace task 1 touches them on day 1.
-8. **Contract changes ripple.** Ingestion 3, change-impact 5 and final-seal 1 are contract changes. Land them early in the week, announce them in the team channel, and regenerate the fixture and OpenAPI file in the same pull request.
-9. **Hosting must outlive judging.** Supabase free projects pause when idle; worker needs a Docker host with FFmpeg. Budget a small paid tier from 1 December until results.
+8. **Contract changes ripple.** Ingestion 3, change-impact 5 and final-seal 1 are contract changes. Land them early in the week, announce them in the pull request and the daily update, and regenerate the fixture and OpenAPI file in the same pull request.
+9. **Hosting must outlive judging.** Supabase free projects pause when idle; the worker needs FFmpeg. Free tiers only: see `docs/deploy-plan.md`.
 10. **Time.** Four weeks, three people, five specs. If we slip, cut in this order: ingestion 10 (retention), review-workspace 12 (upload polish), evidence-analysis 12 only if real providers are not ready. Do not cut the Poltergeist flow, the Final Seal or the evaluation numbers.
 11. **Age of majority and eligibility** (section 5) still need answers from each member before we rely on any prize.

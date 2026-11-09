@@ -1,6 +1,6 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Monday 9 November 2026, evening SGT. Source: git, GitHub and files at `main` `8085557`.
+Owner: coordinator session. Updated: Monday 9 November 2026, 20:30 SGT. Source: git, GitHub and files at `main` `31d09ee`.
 
 Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
@@ -8,40 +8,32 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 
 | Item | State |
 |---|---|
-| `origin/main` | `8085557`. CI green (`check` and `db` jobs). |
-| PRs | #1 to #6 and #8 merged. #7 was a CI preview, closed. No open PRs. |
-| PRs from Đạt or Bảo | None yet. No branches from them on the remote. |
-| CI | `check`: lint, typecheck, unit, property, contracts, build. `db`: a throwaway local Supabase stack runs every Postgres, Auth and Storage suite; a missing setting fails the job. |
-| Branch protection on `main` | NONE. Đăng allows direct commits to `main` for coordination work. |
+| `origin/main` | `31d09ee`. CI green (`check` and `db` jobs). |
+| PRs | #1 to #6 and #8 to #19 merged (#9 to #19 by Phạm Quốc Bảo). #7 was a CI preview, closed. No open PRs. |
+| CI | `check`: lint, typecheck, unit, property, contracts, build. `db`: a throwaway local Supabase stack runs every Postgres, Auth and Storage suite. |
 | Label `contract-change` | Exists. |
-| Stale remote branches | `chore/coordination`, `feat/change-impact-9-supabase`, `feat/ci-supabase-db`, `feat/ea-15-clip-prep`, `feat/ingestion-10-worker-purge`, `feat/ingestion-7-upload-window`. All merged; safe to delete. |
 
 ## 2. Ticked versus really done
 
-PROVEN = a check anyone can see passes (CI). NOT BUILT = unticked, nothing to check.
-
-| Spec | Ticked | Verdict |
+| Spec | Ticked | Open |
 |---|---|---|
-| ingestion 1-10 | all | PROVEN. Fixture parts in `check`; Supabase parts (5-10) in the `db` job. |
-| change-impact 1-3, 5-10 | yes | PROVEN. Task 9 runs the random-history property test on both stores. |
-| change-impact 4 | no | NOT BUILT. Engine ignores `segmentIds`. Bảo. |
-| final-seal 1-5 | yes | PROVEN (fixture in `check`, Supabase seal paths in `db`). |
-| final-seal 6-10 | no | NOT BUILT. UI. Đạt. |
-| review-workspace 1-14 | no | NOT BUILT. Đạt. |
-| evidence-analysis 1-14, 16 | no | NOT BUILT. Bảo (14 is Đạt's). |
-| evidence-analysis 15 | no | Prepared, not recorded. Moved to Đạt. Folder `tests/evaluation/clips/clip-5` has the recording script, demo script and checks; the clip and labels are missing on purpose. |
+| ingestion | 10/10 | none |
+| change-impact | 10/10 | none |
+| final-seal | 5/10 | 6-10 (UI, Đạt) |
+| review-workspace | 0/14 | all (Đạt) |
+| evidence-analysis | 9/16 | 3 (ADR 0007 proposed, not accepted), 7, 10 (adapters merged in PR #18, not ticked), 11, 13 (Bảo); 14, 15 (clips, Đạt) |
 
-Đăng's coding lane is complete. What is left for Đăng is coordination, review and launch prep.
+Đăng's coding lane is complete.
 
 ## 3. Blockers today
 
 | Person | Blocker | Fix |
 |---|---|---|
-| Bảo | Has not started. Needs FFmpeg installed, a provider decision (ADR 0007, D-4) and keys for real adapters. | Start ea 1 to 4 now; none of them need keys. |
-| Đạt | Nothing on the backend side. Everything the UI needs is on `main` (segment states, `updatedAt`, Final Seal endpoints, Supabase store). | Start rw 1. |
-| ea 15 (Đạt) | Clip format is not fixed until Bảo's ea 9 and 11 land. | Record any time; label after ea 9 and 11. |
-| Team | No daily-update channel named (D-9). Eligibility answers missing (D-7). | Each member answers. |
-
+| Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | Settle D-4, then amend ADR 0007 and tick ea 3. |
+| Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | A "no video analysis" mode in the worker. |
+| Đạt | Review UI not started (rw 1-14, fs 6-10). Nothing on the backend side blocks it. | Start rw 1. |
+| Đạt | ea 14, 15: clips not recorded. | Record per `tests/evaluation/clips/clip-5/RECORDING.md` and the protocol from ea 9. |
+| Team | D-7: Kiroween 2025 registration and age of majority not answered. | Each member answers. |
 ## 4. Critical path to a working end-to-end demo
 
 1. Real analysis: FFmpeg probe and frames (ea 1, 2), provider ADR (ea 3), alignment and matching (ea 5, 6), real adapters (ea 10). Bảo. Longest chain, biggest risk.
@@ -55,9 +47,9 @@ PROVEN = a check anyone can see passes (CI). NOT BUILT = unticked, nothing to ch
 
 1. Word-overlap matching is weak on real transcripts (ea 5, 6). Test on real clips by 20 Nov.
 2. Bảo's lane has not started and has the longest chain. Only one person on it.
-3. AI cost and keys. No team-owned account or spend cap yet (D-4). Public "try your own video" must not go live before limits and a cap.
-4. Hosting not chosen (D-5). Deploy must be rehearsed before 30 Nov.
-5. Eligibility (D-7) and the two-entry question (D-6) are not settled.
+3. Free tiers only. Gemini free tier may use content to improve its products, so visitors' videos must not reach it (D-4). Deepgram's free credit runs out once.
+4. Free hosting (D-5): the GitHub Actions worker starts jobs up to 5 minutes late or more, and Supabase Free pauses idle projects. Rehearse before 30 Nov.
+5. Eligibility (D-7) is half answered.
 
 ## 6. Week plan, 9-15 November
 
@@ -67,7 +59,7 @@ Rule for all lanes: small PRs, CI green, journal entry, tick `tasks.md` in the s
 | Day | Work |
 |---|---|
 | Mon 9 | Done: BRIEF 001 and 002, all backend tasks, CI database job. Board, D-6 answer, worker contract, deploy plan, submission drafts. |
-| Tue 10 to Fri 13 | Review PRs from Đạt and Bảo (shared files, `contract-change` label). Pair on fresh-clone setup. Collect D-4, D-5, D-7, D-9 answers. |
+| Tue 10 to Fri 13 | Review PRs from Đạt and Bảo (shared files, `contract-change` label). Pair on fresh-clone setup. Collect D-4, D-5 and D-7 answers. |
 | Sat-Sun 14-15 | Review only. |
 
 ### Lane FRONTEND: Đạt (@phatdat220707)
@@ -95,7 +87,7 @@ Target by Sun 15: probe a real video, extract audio and frames, ADR written.
 
 ### Cross-cutting this week
 - Everyone answers the day-one questions (student, Kiroween 2025, age of majority). Owner: Đăng collects. Do not guess for anyone.
-- Hosting and AI-key plan (D-4, D-5). Draft: `docs/deploy-plan.md`.
+- Free hosting and AI plan (D-4, D-5): `docs/deploy-plan.md`, `decisions-needed.md`.
 
 ## 7. Open PRs and reviews
 - No open PRs. Review notes go in `reviews/`.
