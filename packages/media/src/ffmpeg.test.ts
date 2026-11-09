@@ -3,20 +3,22 @@ import { access, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  MediaError,
-  extractAudio,
-  extractFrames,
-  probeDurationMs,
-  withTempDir,
-} from "./ffmpeg";
+import { MediaError, extractAudio, extractFrames, probeDurationMs, withTempDir } from "./ffmpeg";
 
 const hasFfmpeg =
   spawnSync("ffmpeg", ["-version"]).status === 0 && spawnSync("ffprobe", ["-version"]).status === 0;
 
 function makeClip(dir: string, withAudio: boolean): string {
   const out = join(dir, withAudio ? "clip.mp4" : "silent.mp4");
-  const args = ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=duration=3:size=320x240:rate=10"];
+  const args = [
+    "-v",
+    "error",
+    "-y",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc=duration=3:size=320x240:rate=10",
+  ];
   if (withAudio) args.push("-f", "lavfi", "-i", "sine=frequency=440:duration=3", "-shortest");
   args.push("-pix_fmt", "yuv420p", out);
   const result = spawnSync("ffmpeg", args);
@@ -129,7 +131,9 @@ describe.skipIf(!hasFfmpeg)("FFmpeg on a generated clip", () => {
     const bad = join(workDir, "bad.mp4");
     await writeFile(bad, "not a video");
     await expect(probeDurationMs(bad)).rejects.toMatchObject({ step: "probe" });
-    await expect(probeDurationMs(bad)).rejects.toThrow(/^probe: (ffmpeg_failed|duration_unreadable)$/);
+    await expect(probeDurationMs(bad)).rejects.toThrow(
+      /^probe: (ffmpeg_failed|duration_unreadable)$/,
+    );
   });
 
   it("extracts mono 16 kHz audio that lasts about as long as the clip", async () => {
@@ -167,6 +171,26 @@ describe.skipIf(!hasFfmpeg)("FFmpeg on a generated clip", () => {
     const files = await readdir(outDir);
     expect(files).toHaveLength(3);
     for (const frame of frames) expect(await pathExists(frame.path ?? "")).toBe(true);
+  });
+
+  it("leaves out a timestamp at the very end that has no picture, and keeps the others", async () => {
+    const outDir = join(workDir, "frames-end");
+    await mkdir(outDir);
+    const duration = await probeDurationMs(clip);
+    const frames = await extractFrames(clip, [0, 1000, duration], outDir);
+    expect(frames.length).toBeGreaterThanOrEqual(2);
+    expect(frames.slice(0, 2).map((f) => f.timestampMs)).toEqual([0, 1000]);
+  });
+
+  it("fails with no_frames when the file has no picture at all", async () => {
+    const outDir = join(workDir, "frames-bad");
+    await mkdir(outDir);
+    const bad = join(workDir, "bad-frames.mp4");
+    await writeFile(bad, "not a video");
+    await expect(extractFrames(bad, [0, 1000], outDir)).rejects.toMatchObject({
+      step: "frames",
+      code: "no_frames",
+    });
   });
 
   it("gives timeout when the call runs out of time", async () => {

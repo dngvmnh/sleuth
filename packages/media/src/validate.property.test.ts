@@ -12,7 +12,11 @@ const msLike = fc.oneof(
   fc.constantFrom(Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY),
 );
 
-const wordLike = fc.record({ text: fc.string({ minLength: 1, maxLength: 6 }), startMs: msLike, endMs: msLike });
+const wordLike = fc.record({
+  text: fc.string({ minLength: 1, maxLength: 6 }),
+  startMs: msLike,
+  endMs: msLike,
+});
 
 const transcriptItem = fc.oneof(
   fc.record({
