@@ -177,3 +177,9 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Drafts, all marked DRAFT: `docs/deploy-plan.md` (prices read from vendor pages on 9 November), `docs/submission/` (Devpost, demo plan, blog, social). They quote only test numbers with their source and list what is still mocked.
 - No PRs from Đạt or Bảo to review yet. Review checklist in `docs/coordination/reviews/README.md`. Daily update in `docs/coordination/updates/2026-11-09-dang.md`.
 - Gate after every step: lint and typecheck clean, `pnpm test` 373 passed, build passed.
+### 2026-11-09, Ph?m Qu?c B?o, media worker (evidence-analysis tasks 1, 2, 4)
+- Goal: FFmpeg wrapper, frame extraction with guaranteed cleanup, and property tests for the validators and the frame plan.
+- Kiro feature used: chat with the evidence-analysis spec and steering loaded.
+- What Kiro produced: `packages/media/src/ffmpeg.ts` (`probeDurationMs`, `extractAudio`, `extractFrames`, `withTempDir`, `MediaError`), `ffmpeg.test.ts` (clips built with `-f lavfi`), `validate.property.test.ts`, `frames.property.test.ts`.
+- What we had to fix or reject: the first typecheck failed because `packages/media` and `packages/evidence-engine` had no Node types; fixed with `"types": ["node"]` in both tsconfig files (no new dependency, no lockfile change). The property tests found no bug in `validate.ts`.
+- Result: FFmpeg 9.0.2 on Windows; 30 targeted tests pass (13 FFmpeg tests ran, none skipped); full gate green: lint, typecheck, `pnpm test` 317 passed and 48 skipped (database suites), `pnpm test:property` 66 passed, `pnpm check:contracts` 14 passed, ghost-scan clean.
