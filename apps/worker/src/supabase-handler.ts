@@ -4,6 +4,7 @@ import { planFrames, runPipeline } from "@sleuth/evidence-engine";
 import { WorkerStoreError, type WorkerStore } from "@sleuth/db";
 import {
   MediaError,
+  ProviderError,
   extractAudio,
   extractFrames,
   probeDurationMs,
@@ -55,7 +56,12 @@ async function step<T>(name: string, work: () => Promise<T>): Promise<T> {
   try {
     return await work();
   } catch (error) {
-    if (error instanceof JobFailure || error instanceof MediaError) throw error;
+    if (
+      error instanceof JobFailure ||
+      error instanceof MediaError ||
+      error instanceof ProviderError
+    )
+      throw error;
     if (error instanceof WorkerStoreError) throw new JobFailure(name, error.code);
     throw new JobFailure(name, "failed");
   }
