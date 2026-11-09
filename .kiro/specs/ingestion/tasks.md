@@ -44,12 +44,12 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Done when: the full contract suite passes on the Supabase store.
   - Requirements: 1.1, 1.2, 1.5, 3.1 to 3.5, 4.1 to 4.3, 5.2
 
-- [ ] 7. Signed upload URLs (needs Supabase project)
+- [x] 7. Signed upload URLs (needs Supabase project)
   - Owner: Đăng
   - Files: `packages/db/src/supabase/storage.ts`, `packages/db/src/supabase/store.ts`, `.env.example` (check only; no values)
   - Do: private `video-assets` bucket; `createSignedUploadUrl`; path without file name; `expiresAt` at most 5 minutes; invalidate evidence on older asset versions in the same transaction.
   - Done when: a real upload to the signed URL works from a script; a URL older than its expiry is refused; the response never contains the service-role key (test on the JSON).
-  - Status: built and tested on the dev project (real upload works, tampered token refused, no key in the response, older evidence goes stale at once). Open: Supabase fixes signed upload URLs at 2 hours (measured 7199 s) with no setting, so the 5-minute rule in 2.4 is not met. Needs a team decision before this is ticked.
+  - Status: done with decision D-1 (option 3): the 5-minute window is enforced at analysis time, because Supabase signed upload URLs live 2 hours.
   - Requirements: 2.1, 2.4, 2.5
 
 - [x] 8. Session actor and anonymous sign-in (needs Supabase project)
@@ -71,4 +71,5 @@ All tasks are Đăng's (@dngvmnh), each half a day or less. Tasks 1 to 4 run ful
   - Files: `packages/db/src/fixture/store.ts`, `packages/db/src/supabase/store.ts`, `packages/db/src/store.ts`, tests
   - Do: `purgeExpiredAnonymousProjects(now, days)` on both stores; storage objects removed first. Decide the scheduler (Supabase cron or worker timer) and write it in an ADR (`docs/decisions/0008-anonymous-retention-purge.md`; 0007 is kept for the provider choice).
   - Done when: the fixture-store test passes with an injected clock; a manual run on the dev project removes an old anonymous project and its files.
+  - Status: purge on both stores (tests on each); the worker calls it hourly (`apps/worker/src/retention.ts`, PR reviewed by the worker owner).
   - Requirements: 5.4

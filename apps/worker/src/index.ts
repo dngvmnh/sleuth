@@ -5,7 +5,9 @@ import { loadConfig } from "./config";
 import { createFixtureQueue } from "./fixture-queue";
 import { createFixtureHandler, supabaseHandler } from "./handlers";
 import { runLoop } from "./loop";
+import { createDb, createSupabaseStore, storageFromEnv } from "@sleuth/db";
 import { createPgQueue } from "./pg-queue";
+import { startRetentionTimer } from "./retention";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const config = loadConfig(process.env);
@@ -46,9 +48,24 @@ async function main() {
     config.DATABASE_URL as string,
     config.WORKER_STALE_SECONDS,
   );
+  // Retention (ingestion 5.4, ADR 0008): purge old anonymous projects hourly. Not in --once runs.
+  const retentionDb = once ? null : createDb(config.DATABASE_URL as string, { max: 1 });
+  const retention = retentionDb
+    ? startRetentionTimer({
+        purge: createSupabaseStore({
+          db: retentionDb.db,
+          storage: storageFromEnv() ?? undefined,
+        }).purgeExpiredAnonymousProjects,
+        intervalMs: config.RETENTION_INTERVAL_MS,
+        days: config.ANONYMOUS_RETENTION_DAYS,
+        log,
+      })
+    : null;
   try {
     await runLoop({ ...common, queue, handler: supabaseHandler });
   } finally {
+    retention?.stop();
+    await retentionDb?.client.end({ timeout: 5 });
     await close();
   }
 }
