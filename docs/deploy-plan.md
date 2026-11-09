@@ -26,8 +26,8 @@ Total: $0 per month. Nothing can be charged because no plan holds a card.
 - Fly.io: no free plan; it bills for what runs.
 
 ## OPEN choices
-1. Production database: a second free Supabase project (`sleuth-prod`), or reuse `sleuth-dev`. Recommendation: a second project. Free allows 2 active projects, and tests then never touch judged data.
-2. Per-file size cap on uploads, so 1 GB of storage is not filled by a few large files.
+1. Production database: DECIDED (9 Nov): a second free Supabase project (`sleuth-prod`). Free allows 2 active projects, and tests then never touch judged data.
+2. DECIDED (9 Nov): per-file upload cap of 50 MB, so 1 GB of storage is not filled by a few large files. Still to build: enforce it in the bucket and in the upload route.
 3. Who owns each account.
 4. Public "try your own video" goes live only after D-4 is settled (what happens to visitors' videos).
 

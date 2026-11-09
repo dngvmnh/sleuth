@@ -7,7 +7,7 @@ Updated Monday 9 November 2026, evening. Team rule: free options only for hostin
 | ID | Decision | Who | By | State |
 |---|---|---|---|---|
 | D-4 | AI providers on free options only | Team | Fri 13 Nov | Proposal below. Owner: Dang. Open: what visitors' videos may be sent to. |
-| D-5 | Hosting on free options only | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Owner: Dang. Open: second Supabase project for production, upload size cap. |
+| D-5 | Hosting on free options only | Dang | DECIDED 9 Nov | Free tiers only ($0: Vercel Hobby, GitHub Actions worker, Supabase Free). Owner: Dang. A second free Supabase project (`sleuth-prod`) is the production database. Upload cap: 50 MB per file. Details in `docs/deploy-plan.md`. |
 | D-7 | Eligibility answers | Each member | Wed 11 Nov | Student status: all three are students (Đăng, 9 Nov). Not yet answered: Kiroween 2025 registration, age of majority. |
 
 ## Decided
