@@ -13,5 +13,21 @@ ADR 0006 lets visitors try their own video through Supabase anonymous sign-in. T
 
 ## Consequences
 - The worker runs the purge at start and then hourly (`apps/worker/src/retention.ts`, settings `RETENTION_INTERVAL_MS` and `ANONYMOUS_RETENTION_DAYS`), only in supabase mode and not in `--once` runs. Đăng wired it in; Phạm Quốc Bảo reviews it as the worker owner.
-- A failed purge leaves data for up to one more hour; it logs ids and counts only.
+- A failed purge leaves data for up to one more hour. Logs hold counts and the error name only, never project ids or paths.
 - Signed-up users' projects are never deleted by this job.
+
+## Worker side (for Phạm Quốc Bảo)
+
+| Item | Value |
+|---|---|
+| Code | `apps/worker/src/retention.ts` (`startRetentionTimer`), started in `apps/worker/src/index.ts` |
+| Runs | once when the worker starts, then every `RETENTION_INTERVAL_MS` (default `3600000`). Never two runs at once in one worker. |
+| Period | `ANONYMOUS_RETENTION_DAYS` (default `7`) |
+| When | `SLEUTH_DATA_MODE=supabase` only, and not with `--once` |
+| Needs | `DATABASE_URL`; `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so stored files can be removed |
+| Logs | `retention_purged {projects, files}` or `retention_failed {error}` (error name only) |
+| Tests | `apps/worker/src/retention.test.ts` (timer), `packages/db/src/supabase/store.purge.test.ts` (purge on Postgres and Storage, CI `db` job) |
+
+- Without the storage settings, a purge that finds files fails with the store error `not_configured` and keeps the rows; the log shows `retention_failed {"error":"StoreError"}`. Set the storage settings on the worker host.
+- Several workers each run their own timer. That is safe: deleting a file that is already gone is not an error, and deleting rows twice deletes nothing the second time. One worker is enough.
+- To check it by hand: start the worker in supabase mode and look for one `retention_purged` line at start.
