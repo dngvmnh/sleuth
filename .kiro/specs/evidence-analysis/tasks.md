@@ -101,7 +101,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Requirements: 7.1
 
 - [ ] 15. Record and label one clip with an unscripted line
-  - Owner: Đăng (@dngvmnh)
+  - Owner: Đạt (@phatdat220707)
   - Files: `tests/evaluation/clips/clip-5`
   - Do: record a 60 to 120 second demo of the API or database flow in which the presenter adds a sentence that is not in the script. Label it by watching, before running the tool.
   - Done when: the clip folder is merged with labels; Bảo reviews the format only.

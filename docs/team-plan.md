@@ -190,6 +190,7 @@ First pull request: `feat/domain-segment-state` (change-impact task 2). It is sm
 | 2 | Pure timeline helpers | review-workspace 4 | `apps/web/features/timeline/geometry.ts`, `segment-at.ts` and property tests |
 | 3 | Player port and simulated player | review-workspace 5 | `apps/web/features/player/*` |
 | 3 | Workspace data hook and page skeleton | review-workspace 6 | `apps/web/app/(workspace)/projects/[id]/page.tsx`, `apps/web/features/workspace/*` |
+| Any | Record and label the clip with an unscripted line (moved from Đăng; Bảo reviews the format only; tick only after evidence-analysis 9 and 11 are on main) | evidence-analysis 15 | `tests/evaluation/clips/clip-5` |
 
 First pull request: `feat/web-test-tooling` (review-workspace task 1, plus task 2 if small). Tell the team before you change `pnpm-lock.yaml`.
 

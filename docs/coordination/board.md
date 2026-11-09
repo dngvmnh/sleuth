@@ -95,6 +95,7 @@ Rule for all lanes: small PRs, CI green, journal entry, tick `tasks.md` in the s
 | Thu 12 | rw 5 (player port), rw 6 (workspace hook and page). |
 | Fri 13 | rw 7 (timeline with keyboard). |
 | Sat-Sun 14-15 | rw 8 (sentence list). Stretch: rw 9. |
+| Any day | ea 15: record clip-5 with the unscripted line, follow `tests/evaluation/clips/clip-5/RECORDING.md`. Moved from Đăng. Tick only after Bảo's ea 9 and ea 11 are on main. |
 Target by Sun 15: workspace page shows the demo project timeline on fixtures.
 
 ### Lane MEDIA: Phạm Quốc Bảo (@baofrovn)
