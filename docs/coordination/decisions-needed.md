@@ -22,7 +22,7 @@ Updated Tuesday 10 November 2026. Team rule: free options only for hosting and A
 
 ## D-4: free AI providers (decided 10 Nov)
 
-- Gemini model: `gemini-3.8-flash` on the free tier. If the free tier refuses it, fall back to `gemini-3.6-flash` and record that here.
+- Gemini model: `gemini-3.8-flash` on the free tier. Checked on 10 Nov with `pnpm tsx scripts/provider-check.ts`: `gemini-3.8-flash` failed 3 of 3 tries on the free tier (timeout, server error, timeout). `gemini-3.6-flash` worked in 3 of 4 runs (3 frames in, 3 observations, 6 text items; the 4th run hit a server error). Use `gemini-3.6-flash` until `gemini-3.8-flash` answers; set `VIDEO_ANALYSIS_MODEL` to change it. The code default in `apps/worker/src/config.ts` still says 3.8, which is the worker owner's call.
 - Data rule: visitors' videos go to Deepgram only. Frames are never sent to Gemini for visitors.
 - Task for Bao: add a "no video analysis" mode to the worker. Supabase mode refuses the mock providers today.
 - Owner of both accounts: Đăng. No card on either.
