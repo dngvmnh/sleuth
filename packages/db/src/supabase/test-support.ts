@@ -51,6 +51,7 @@ export const NAMESPACES = {
   write: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0005",
   upload: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0006",
   web: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0007",
+  impact: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0008",
   // Reserved for the ingestion tasks still to come.
 } as const;
 
