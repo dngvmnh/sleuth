@@ -9,6 +9,8 @@ import {
   type ScriptSegment,
   type TranscriptSegment,
 } from "@sleuth/contracts";
+import { align, type AlignmentResult } from "./align";
+import { CHECKLIST_MIN_COVERAGE, FRAME_WINDOW_MS, SPOKEN_STRONG_COVERAGE } from "./thresholds";
 import { contentTokens, coverage, formatMs, needsOutsideProof } from "./text";
 
 export interface EngineInput {
@@ -25,14 +27,9 @@ export interface EngineInput {
 export interface EngineOutput {
   evidence: EvidenceCandidate[];
   findings: Finding[];
+  /** How each script line lines up with the speech, and which spoken lines no script line uses. */
+  alignment: AlignmentResult;
 }
-
-/** A script line counts as spoken when this share of its content words appears in one transcript segment. */
-export const SPOKEN_MIN_COVERAGE = 0.6;
-export const SPOKEN_STRONG_COVERAGE = 0.85;
-/** Frames within this many ms of the spoken line count as "on screen while said". */
-export const FRAME_WINDOW_MS = 2000;
-const CHECKLIST_MIN_COVERAGE = 0.5;
 
 const clamp = (n: number, max: number) => Math.min(Math.max(Math.round(n), 0), max);
 
@@ -69,17 +66,18 @@ export function analyse(input: EngineInput): EngineOutput {
   const checklistHasVisual = new Set<string>();
   const checklistHasOutsideProof = new Set<string>();
   const checklistHasLine = new Set<string>();
+  const alignment = align(input.segments, input.transcript);
+  const alignedBySegment = new Map(alignment.aligned.map((a) => [a.segmentId, a]));
+  const transcriptById = new Map(input.transcript.map((t) => [t.id, t]));
 
   for (const segment of input.segments) {
     const segTokens = contentTokens(segment.text);
 
-    // 1. Was the line spoken?
-    let spoken: { seg: TranscriptSegment; score: number } | null = null;
-    for (const t of input.transcript) {
-      const score = coverage(segTokens, contentTokens(t.text));
-      if (score >= SPOKEN_MIN_COVERAGE && (!spoken || score > spoken.score))
-        spoken = { seg: t, score };
-    }
+    // 1. Was the line spoken? (`align` decides, one spoken segment per line.)
+    const aligned = alignedBySegment.get(segment.id);
+    const matchedSeg = aligned?.transcriptId ? transcriptById.get(aligned.transcriptId) : undefined;
+    const spoken: { seg: TranscriptSegment; score: number } | null =
+      aligned && matchedSeg ? { seg: matchedSeg, score: aligned.coverage } : null;
 
     // 2. Which checklist item does the line serve?
     let item: ChecklistItem | null = null;
@@ -149,9 +147,10 @@ export function analyse(input: EngineInput): EngineOutput {
     }
 
     const spokenNote = `Spoken at ${formatMs(spoken.seg.startMs)}-${formatMs(spoken.seg.endMs)} (${Math.round(spoken.score * 100)}% of the line's key words).`;
+    const orderNote = aligned?.label === "reordered" ? " It was spoken out of the script's order." : "";
     const explanation = outsideProof
-      ? `${spokenNote} This claim cannot be proven by footage, so it needs proof from outside the video.`
-      : `${spokenNote} ${matched.length} nearby frame${matched.length === 1 ? "" : "s"} share${matched.length === 1 ? "s" : ""} up to ${bestScore} key word${bestScore === 1 ? "" : "s"} with the line. Confidence ranks this match; a person must confirm it.`;
+      ? `${spokenNote}${orderNote} This claim cannot be proven by footage, so it needs proof from outside the video.`
+      : `${spokenNote}${orderNote} ${matched.length} nearby frame${matched.length === 1 ? "" : "s"} share${matched.length === 1 ? "s" : ""} up to ${bestScore} key word${bestScore === 1 ? "" : "s"} with the line. Confidence ranks this match; a person must confirm it.`;
 
     const ev: EvidenceCandidate = {
       id: `ev-${segment.id}-${input.assetVersionId}`,
@@ -206,5 +205,5 @@ export function analyse(input: EngineInput): EngineOutput {
     );
   }
 
-  return { evidence, findings };
+  return { evidence, findings, alignment };
 }

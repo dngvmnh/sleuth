@@ -30,7 +30,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: after validation every kept item satisfies the bounds and integers; rejected counts are correct.
   - Requirements: 2.2, 4.2
 
-- [ ] 5. Script alignment
+- [x] 5. Script alignment
   - Owner: Bảo
   - Files: `packages/evidence-engine/src/align.ts`, `thresholds.ts`, `align.test.ts`, `align.property.test.ts`, `analyse.ts`
   - Do: implement `align()` as designed; refactor `analyse()` to use it with no change to golden output.
