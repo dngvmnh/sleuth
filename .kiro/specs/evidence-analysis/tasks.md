@@ -58,7 +58,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: no duplicates, human decisions with unchanged hash survive, timestamps stay in bounds.
   - Requirements: 5.7
 
-- [ ] 9. Evaluation harness skeleton with mock providers
+- [x] 9. Evaluation harness skeleton with mock providers
   - Owner: Bảo
   - Files: `tests/evaluation/run.ts`, `report.ts`, `tests/evaluation/clips/example/clip.json`, `labels.json`, `mock-inputs.json`, `package.json` (`eval` script), `.gitignore` (results folder)
   - Do: harness as designed with one tiny example clip written by hand (text only, no video); prints precision and recall per finding type and every disagreement; header names provider and clip count.
