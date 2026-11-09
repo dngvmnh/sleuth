@@ -1,7 +1,15 @@
 import type { EvidenceCandidate, ScriptSegment } from "@sleuth/contracts";
 
+/**
+ * Everything a person could still rely on goes stale. Two statuses stay as they are:
+ * `stale` (already done) and `rejected` (a person already said no, or dismissed stale evidence;
+ * flipping it back to stale on the next edit would reopen a finding nobody asked to see again).
+ * Rejected evidence can never be confirmed later: see `applyReviewDecision`.
+ */
 function markStale(evidence: EvidenceCandidate): EvidenceCandidate {
-  return evidence.status === "stale" ? evidence : { ...evidence, status: "stale" };
+  return evidence.status === "stale" || evidence.status === "rejected"
+    ? evidence
+    : { ...evidence, status: "stale" };
 }
 
 /**

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EvidenceCandidateSchema, FindingSchema, GoldenFixtureSchema } from "@sleuth/contracts";
 import { fixtureToRows } from "@sleuth/db";
 import { createFixtureStore, loadGoldenFixture } from "@sleuth/db/fixture";
-import { segmentScript } from "@sleuth/domain";
+import { canSeal, computeCoverage, segmentScript } from "@sleuth/domain";
 import { runPipeline } from "@sleuth/evidence-engine";
 import { createMockTranscriptionProvider, createMockVideoAnalysisProvider } from "@sleuth/media";
 import { buildGoldenFixture, DURATION_MS, RUN_ID } from "../../fixtures/golden/build";
@@ -84,6 +84,43 @@ describe("frontend data source (fixture store) serves the expected output", () =
     const findings = await store.listFindings({ userId: null }, id);
     expect(evidence.map((e) => EvidenceCandidateSchema.parse(e))).toEqual(fixture.expectedEvidence);
     expect(findings.map((f) => FindingSchema.parse(f))).toEqual(fixture.expectedFindings);
+  });
+});
+
+describe("final-seal rules on the golden fixture", () => {
+  it("gives 4 items needs_review (one engine-proposed outside proof) and 1 uncovered, with nothing proven", () => {
+    const out = computeCoverage(fixture.checklist, fixture.script, fixture.expectedEvidence, []);
+    expect(out.totals).toEqual({
+      proven: 0,
+      needs_review: 4,
+      outside_proof: 0,
+      reshoot: 0,
+      uncovered: 1,
+    });
+    expect(out.items.find((i) => i.checklistItemId === "ck-4")?.state).toBe("uncovered");
+    expect(out.outsideProof).toEqual([
+      expect.objectContaining({ scriptSegmentId: "seg-5", acknowledged: false }),
+    ]);
+  });
+
+  it("refuses to seal the untouched fixture", () => {
+    const coverage = computeCoverage(
+      fixture.checklist,
+      fixture.script,
+      fixture.expectedEvidence,
+      [],
+    );
+    const r = canSeal({
+      coverage,
+      evidence: fixture.expectedEvidence,
+      jobs: [],
+      hasAnalysis: true,
+    });
+    expect(r).toEqual({ ok: false, blockers: ["undecided_candidates", "uncovered_items"] });
+  });
+
+  it("has a Poltergeist-free baseline and no seal-related state", () => {
+    expect(fixture.expectedFindings.some((f) => f.type === "poltergeist")).toBe(false);
   });
 });
 

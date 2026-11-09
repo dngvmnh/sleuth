@@ -1,0 +1,75 @@
+import { createClient } from "@supabase/supabase-js";
+
+/** What the store needs from file storage. */
+export interface StorageClient {
+  /**
+   * A one-use URL the browser can upload to. `expiresAt` is the real expiry of the URL, read from
+   * its token, not a promise made up by this code.
+   */
+  createSignedUploadUrl(path: string): Promise<{ url: string; expiresAt: string }>;
+  /** Delete files. Missing files are not an error. */
+  remove(paths: string[]): Promise<void>;
+}
+
+export interface StorageConfig {
+  /** NEXT_PUBLIC_SUPABASE_URL */
+  url: string;
+  /** SUPABASE_SERVICE_ROLE_KEY. Server only: it never appears in a URL or a response. */
+  serviceRoleKey: string;
+  /** Private bucket. Default `video-assets` (SUPABASE_STORAGE_BUCKET). */
+  bucket?: string;
+}
+
+/** A storage failure. The message never carries the key, the URL or the file path. */
+export class StorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StorageError";
+  }
+}
+
+/** The `exp` claim (seconds) of a JWT, or null if the token is not one. */
+export function tokenExpiry(token: string): number | null {
+  const part = token.split(".")[1];
+  if (!part) return null;
+  try {
+    const claims = JSON.parse(Buffer.from(part, "base64url").toString("utf8")) as { exp?: unknown };
+    return typeof claims.exp === "number" ? claims.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Supabase Storage through the service role. Server and worker only. */
+export function createStorageClient(config: StorageConfig): StorageClient {
+  const bucket = config.bucket ?? "video-assets";
+  const client = createClient(config.url, config.serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const files = () => client.storage.from(bucket);
+
+  return {
+    async createSignedUploadUrl(path) {
+      const { data, error } = await files().createSignedUploadUrl(path);
+      if (error || !data) throw new StorageError("Could not create an upload URL.");
+      const exp = tokenExpiry(data.token);
+      if (exp === null) throw new StorageError("Storage returned an upload URL with no expiry.");
+      return { url: data.signedUrl, expiresAt: new Date(exp * 1000).toISOString() };
+    },
+
+    async remove(paths) {
+      if (paths.length === 0) return;
+      const { error } = await files().remove(paths);
+      if (error) throw new StorageError("Could not delete files from storage.");
+    },
+  };
+}
+
+/** Build a storage client from the environment, or null when storage is not configured. */
+export function storageFromEnv(env: NodeJS.ProcessEnv = process.env): StorageClient | null {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !serviceRoleKey) return null;
+  const bucket = env.SUPABASE_STORAGE_BUCKET?.trim();
+  return createStorageClient({ url, serviceRoleKey, ...(bucket ? { bucket } : {}) });
+}

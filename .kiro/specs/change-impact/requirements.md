@@ -10,7 +10,7 @@ This is the main idea of SLEUTH: when one script sentence changes, only the evid
 
 1.1 WHEN a new script version is saved, THE SYSTEM SHALL compare it with the current version by segment id and hash and return which segments were added, modified, removed and unchanged.
 
-1.2 WHEN a segment's normalised text hash changes, THE SYSTEM SHALL mark every evidence candidate attached to that segment `stale`. [PBT: a word change always stales that segment's evidence.]
+1.2 WHEN a segment's normalised text hash changes, THE SYSTEM SHALL mark every evidence candidate attached to that segment `stale`, except one a person already rejected: a rejection (including dismissing stale evidence) stays `rejected`. [PBT: a word change always stales that segment's non-rejected evidence.]
 
 1.3 WHEN only case, spacing or sentence punctuation changes, THE SYSTEM SHALL mark nothing stale. [PBT: any cosmetic edit leaves every candidate unchanged.]
 
@@ -24,7 +24,7 @@ This is the main idea of SLEUTH: when one script sentence changes, only the evid
 
 ## 2. Video re-upload
 
-2.1 WHEN a new asset version is created, THE SYSTEM SHALL mark every candidate tied to an older asset version `stale`, including confirmed ones. [PBT: after any upload, no non-stale candidate refers to an older asset version.]
+2.1 WHEN a new asset version is created, THE SYSTEM SHALL mark every candidate tied to an older asset version `stale`, including confirmed ones, except one a person already rejected. [PBT: after any upload, no candidate other than a rejected one is fresh while referring to an older asset version.]
 
 2.2 THE SYSTEM SHALL keep the old asset version's transcript and observations for history and SHALL NOT use them for new matching.
 
@@ -50,7 +50,7 @@ This is the main idea of SLEUTH: when one script sentence changes, only the evid
 
 4.3 THE SYSTEM SHALL provide a pure function that gives each script segment a display state for the timeline: `covered`, `needs_review`, `stale`, `uncovered`, `outside_proof`. [PBT: every segment gets exactly one state; a segment with any stale candidate and no fresh one is `stale`.]
 
-4.4 THE SYSTEM SHALL NEVER present a stale candidate as valid evidence or let it be confirmed (see `applyReviewDecision`).
+4.4 THE SYSTEM SHALL NEVER present a stale candidate as valid evidence or let it be confirmed (see `applyReviewDecision`). This holds after a stale candidate was dismissed: `applyReviewDecision` is told the current line hash and video, and refuses anything but a dismissal for evidence built on an older one. [PBT: store-level, over random histories.]
 
 ## 5. Audit trail
 

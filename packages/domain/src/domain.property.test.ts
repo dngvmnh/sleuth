@@ -125,17 +125,42 @@ describe("change impact", () => {
           scriptVersionId: "sv2",
           previous: segments,
         });
-        expect(invalidateForScriptChange(evidence, next)[k]?.status).toBe("stale");
+        // A person's rejection sticks; everything else that could be relied on goes stale.
+        const before = evidence[k]?.status;
+        const after = invalidateForScriptChange(evidence, next)[k]?.status;
+        expect(after).toBe(before === "rejected" ? "rejected" : "stale");
       }),
     );
   });
 
-  it("makes every candidate on the old video stale when a new video arrives", () => {
+  it("makes every candidate on the old video stale when a new video arrives (rejected ones stay rejected)", () => {
     fc.assert(
       fc.property(sentencesArb, (sentences) => {
         const { evidence } = evidenceFor(sentences.join("\n"));
         const out = invalidateForNewAssetVersion(evidence, "av2");
-        expect(out.every((e) => e.status === "stale")).toBe(true);
+        out.forEach((e, i) => {
+          expect(e.status).toBe(evidence[i]?.status === "rejected" ? "rejected" : "stale");
+        });
+      }),
+    );
+  });
+
+  it("does not undo a dismissal when the script changes again", () => {
+    fc.assert(
+      fc.property(sentencesArb, fc.nat(), (sentences, at) => {
+        const k = at % sentences.length;
+        const { evidence, segments } = evidenceFor(sentences.join("\n"));
+        const dismissed = evidence.map((e, i) =>
+          i === k ? { ...e, status: "rejected" as const } : e,
+        );
+        const edited = sentences.map((s, i) => (i === k ? `${s} changedword` : s));
+        const next = segmentScript(edited.join("\n"), {
+          scriptVersionId: "sv2",
+          previous: segments,
+        });
+        const once = invalidateForScriptChange(dismissed, next);
+        expect(once[k]?.status).toBe("rejected");
+        expect(invalidateForScriptChange(once, next)).toEqual(once);
       }),
     );
   });
@@ -166,6 +191,42 @@ describe("review state machine", () => {
           if (ev.status === "confirmed") expect(sawHumanConfirm).toBe(true);
         }
       }),
+    );
+  });
+
+  it("refuses every decision except a dismissal while the line or video no longer matches, whatever the status", () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom<EvidenceStatus>(
+          "candidate",
+          "confirmed",
+          "rejected",
+          "stale",
+          "needs_reshoot",
+          "needs_outside_proof",
+        ),
+        fc.constantFrom("confirm", "reject", "needs_reshoot", "needs_outside_proof"),
+        fc.constantFrom("hash", "asset", "both", "gone"),
+        (status, decision, what) => {
+          const ev = makeEvidence({ scriptSegmentId: "a", status });
+          const current = {
+            segmentHash:
+              what === "hash" || what === "both"
+                ? "something-else"
+                : what === "gone"
+                  ? undefined
+                  : ev.segmentHash,
+            assetVersionId: what === "asset" || what === "both" ? "av-other" : ev.assetVersionId,
+          };
+          const r = applyReviewDecision(
+            ev,
+            { evidenceId: ev.id, decision, reviewerId: "user-1" },
+            current,
+          );
+          expect(r.ok).toBe(decision === "reject");
+          if (r.ok) expect(r.evidence.status).toBe("rejected");
+        },
+      ),
     );
   });
 

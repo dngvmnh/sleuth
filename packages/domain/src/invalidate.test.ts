@@ -47,6 +47,14 @@ describe("invalidateForNewAssetVersion", () => {
     expect(out.map((e) => e.status)).toEqual(["stale", "candidate"]);
   });
 
+  it("leaves rejected evidence rejected, so a dismissal sticks", () => {
+    const rejected = makeEvidence({ scriptSegmentId: "a", status: "rejected" });
+    expect(invalidateForNewAssetVersion([rejected], "av2")[0]).toEqual(rejected);
+    expect(invalidateForScriptChange([rejected], [{ id: "a", hash: "changed" }])[0]).toEqual(
+      rejected,
+    );
+  });
+
   it("also stales confirmed evidence", () => {
     const confirmed = makeEvidence({ scriptSegmentId: "a", status: "confirmed" });
     expect(invalidateForNewAssetVersion([confirmed], "av2")[0]?.status).toBe("stale");

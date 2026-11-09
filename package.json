@@ -22,6 +22,7 @@
     "build": "pnpm -r --if-present build",
     "check:contracts": "vitest run tests/contract && tsx scripts/generate-openapi.ts --check",
     "db:generate": "pnpm --filter @sleuth/db generate",
+    "db:migrate": "pnpm --filter @sleuth/db migrate",
     "db:seed": "pnpm --filter @sleuth/db seed"
   },
   "devDependencies": {

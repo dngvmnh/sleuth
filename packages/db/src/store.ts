@@ -1,16 +1,20 @@
 import type {
   AssetVersion,
+  AuditEvent,
   ChecklistItem,
   CreateReshootRequest,
   CreateScriptResponse,
+  CoverageSummary,
   EvidenceCandidate,
   Finding,
+  GetCoverageResponse,
   ProcessingJob,
   Project,
   ReshootTask,
   ReviewDecision,
   ReviewRequest,
   ScriptVersion,
+  Seal,
   StartAnalysisRequest,
   UploadUrlRequest,
 } from "@sleuth/contracts";
@@ -23,7 +27,7 @@ export interface Actor {
 export class StoreError extends Error {
   constructor(
     public readonly code: string,
-    public readonly status: 400 | 401 | 403 | 404 | 409 | 501,
+    public readonly status: 400 | 401 | 403 | 404 | 409 | 429 | 501,
     message: string,
     public readonly details?: unknown,
   ) {
@@ -43,6 +47,11 @@ export interface ReportData extends ProjectDetail {
   evidence: EvidenceCandidate[];
   findings: Finding[];
   reshoots: ReshootTask[];
+  /** Every review decision, oldest first. Who confirmed what, and when. */
+  decisions: ReviewDecision[];
+  /** The latest seal, active or broken. */
+  seal: Seal | null;
+  coverage: CoverageSummary;
 }
 
 /**
@@ -70,11 +79,49 @@ export interface ProjectStore {
   getJob(actor: Actor, projectId: string, jobId: string): Promise<ProcessingJob>;
   listEvidence(actor: Actor, projectId: string): Promise<EvidenceCandidate[]>;
   listFindings(actor: Actor, projectId: string): Promise<Finding[]>;
+  /** Owner only. Events hold ids and counts, never content (ingestion requirement 6.1). */
+  listAuditEvents(actor: Actor, projectId: string): Promise<AuditEvent[]>;
   reviewEvidence(
     actor: Actor,
     evidenceId: string,
     input: ReviewRequest,
   ): Promise<{ evidence: EvidenceCandidate; decision: ReviewDecision }>;
   createReshoot(actor: Actor, projectId: string, input: CreateReshootRequest): Promise<ReshootTask>;
+  listReshoots(actor: Actor, projectId: string): Promise<ReshootTask[]>;
+  /** Owner only. Marking a reshoot done does not make its item proven. */
+  updateReshoot(actor: Actor, reshootId: string, status: "open" | "done"): Promise<ReshootTask>;
+  getCoverage(actor: Actor, projectId: string): Promise<GetCoverageResponse>;
+  /**
+   * The Final Seal. Signed-in owner of a non-demo project only. Refuses with 409 `seal_blocked`
+   * (details.blockers) while the sealing rules are not met.
+   */
+  sealProject(actor: Actor, projectId: string, note?: string): Promise<Seal>;
   getReportData(actor: Actor, projectId: string): Promise<ReportData>;
+}
+
+/** What one retention run removed. Ids and counts only. */
+export interface PurgeResult {
+  projectIds: string[];
+  /** Storage objects deleted before the rows. */
+  files: number;
+}
+
+/**
+ * Housekeeping that no API caller may trigger: only the worker's timer calls it (ADR 0008).
+ * Not part of `ProjectStore`, so routes cannot reach it.
+ */
+export interface RetentionStore {
+  /**
+   * Delete every project owned by an anonymous user and created before `now - days`: its stored
+   * files first, then its rows (cascade). Signed-up users' projects and the demo are never touched.
+   */
+  purgeExpiredAnonymousProjects(now: Date, days: number): Promise<PurgeResult>;
+}
+
+/** Retention period for anonymous projects, in days (ingestion requirement 5.4). */
+export const ANONYMOUS_RETENTION_DAYS = 7;
+
+export function retentionCutoff(now: Date, days: number): Date {
+  if (!Number.isFinite(days) || days < 0) throw new RangeError("days must be zero or more");
+  return new Date(now.getTime() - days * 86_400_000);
 }

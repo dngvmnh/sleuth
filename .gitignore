@@ -3,7 +3,8 @@ node_modules/
 .next/
 dist/
 out/
-coverage/
+# Root only: an unanchored `coverage/` also hid the /projects/[id]/coverage API route.
+/coverage/
 *.tsbuildinfo
 next-env.d.ts
 
@@ -12,7 +13,7 @@ next-env.d.ts
 !.env.example
 
 # local media and worker output
-media/
+/media/
 *.mp4
 *.mov
 *.webm

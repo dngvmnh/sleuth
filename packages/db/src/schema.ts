@@ -11,11 +11,13 @@ import {
   timestamp,
   boolean,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { anonRole, authenticatedRole, authUid } from "drizzle-orm/supabase";
 import type {
   Confidence,
+  CoverageSummary,
   EvidenceStatus,
   FindingType,
   ReviewDecisionKind,
@@ -64,6 +66,8 @@ export const projects = pgTable(
     currentScriptVersionId: text("current_script_version_id"),
     currentAssetVersionId: text("current_asset_version_id"),
     createdAt: createdAt(),
+    /** Last change to the project or anything in it. Set by the store on every write. */
+    updatedAt: ts("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("projects_owner_idx").on(t.ownerId),
@@ -325,6 +329,11 @@ export const processingJobs = pgTable(
     lockedBy: text("locked_by"),
     heartbeatAt: ts("heartbeat_at"),
     error: text("error"),
+    /**
+     * Which request this job answers: `<asset>|<script>|<sorted segment ids, or "full">`. Null on
+     * rows made before the column existed. Two active jobs may not share a key (ingestion 4.3).
+     */
+    requestKey: text("request_key"),
     payload: jsonb("payload")
       .$type<{ assetVersionId: string; scriptVersionId: string; segmentIds?: string[] }>()
       .notNull(),
@@ -335,6 +344,10 @@ export const processingJobs = pgTable(
     check("job_status", sql`${t.status} in ('queued','running','succeeded','failed')`),
     // The worker's claim query scans by status and age.
     index("jobs_claim_idx").on(t.status, t.createdAt),
+    // At most one queued or running job per project and request: repeat requests get that job.
+    uniqueIndex("jobs_one_active_per_request")
+      .on(t.projectId, t.requestKey)
+      .where(sql`${t.status} in ('queued', 'running')`),
     ...projectPolicies("processing_jobs"),
   ],
 ).enableRLS();
@@ -352,4 +365,34 @@ export const auditEvents = pgTable(
     createdAt: createdAt(),
   },
   () => [...projectPolicies("audit_events")],
+).enableRLS();
+
+export const seals = pgTable(
+  "seals",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    /** A person. Never blank. */
+    sealedBy: text("sealed_by").notNull(),
+    sealedAt: ts("sealed_at").notNull(),
+    scriptVersionId: text("script_version_id").notNull(),
+    assetVersionId: text("asset_version_id").notNull(),
+    /** Coverage as it was at sign-off. */
+    coverage: jsonb("coverage").$type<CoverageSummary>().notNull(),
+    note: text("note"),
+    status: text("status").$type<"active" | "broken">().notNull(),
+    brokenAt: ts("broken_at"),
+    brokenReason: text("broken_reason"),
+  },
+  (t) => [
+    check("seal_status", sql`${t.status} in ('active','broken')`),
+    check("seal_signer_present", sql`length(trim(${t.sealedBy})) > 0`),
+    // One active seal per project; older seals stay as history.
+    uniqueIndex("seals_one_active_per_project")
+      .on(t.projectId)
+      .where(sql`${t.status} = 'active'`),
+    ...projectPolicies("seals"),
+  ],
 ).enableRLS();

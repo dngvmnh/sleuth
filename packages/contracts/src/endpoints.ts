@@ -14,6 +14,7 @@ import {
   ReviewDecisionSchema,
   ScriptVersionSchema,
 } from "./entities";
+import { CoverageSummarySchema, SealBlockerSchema, SealSchema } from "./seal";
 
 export const MAX_VIDEO_SECONDS = 180;
 export const MAX_VIDEO_MS = MAX_VIDEO_SECONDS * 1000;
@@ -57,6 +58,8 @@ export const CreateScriptResponseSchema = z.object({
     unchanged: z.array(IdSchema),
   }),
   staleEvidenceIds: z.array(IdSchema),
+  /** Segment ids worth re-analysing now: modified, added, or with only stale evidence. */
+  reanalysisPlan: z.array(IdSchema).optional(),
 });
 
 export const SetChecklistRequestSchema = z.object({
@@ -94,6 +97,22 @@ export const CreateReshootRequestSchema = z.object({
   findingId: IdSchema.optional(),
 });
 export const CreateReshootResponseSchema = z.object({ reshoot: ReshootTaskSchema });
+
+export const ListReshootsResponseSchema = z.object({ reshoots: z.array(ReshootTaskSchema) });
+
+export const UpdateReshootRequestSchema = z.object({ status: z.enum(["open", "done"]) });
+export const UpdateReshootResponseSchema = z.object({ reshoot: ReshootTaskSchema });
+
+export const GetCoverageResponseSchema = z.object({
+  coverage: CoverageSummarySchema,
+  /** The latest seal, active or broken. Null if the project was never sealed. */
+  seal: SealSchema.nullable(),
+  /** Why sealing is refused right now. Empty means it would be allowed. */
+  blockers: z.array(SealBlockerSchema),
+});
+
+export const SealProjectRequestSchema = z.object({ note: z.string().trim().max(1000).optional() });
+export const SealProjectResponseSchema = z.object({ seal: SealSchema });
 
 // ---- endpoint registry (drives OpenAPI and the API client) ----
 
@@ -217,6 +236,40 @@ export const ENDPOINTS = [
     successStatus: 201,
   },
   {
+    id: "listReshoots",
+    method: "GET",
+    path: "/projects/{id}/reshoots",
+    summary: "List reshoot tasks",
+    response: ListReshootsResponseSchema,
+    successStatus: 200,
+  },
+  {
+    id: "updateReshoot",
+    method: "PATCH",
+    path: "/reshoots/{id}",
+    summary: "Mark a reshoot task done or open again (owner only)",
+    request: UpdateReshootRequestSchema,
+    response: UpdateReshootResponseSchema,
+    successStatus: 200,
+  },
+  {
+    id: "getCoverage",
+    method: "GET",
+    path: "/projects/{id}/coverage",
+    summary: "Coverage of the checklist, the latest seal, and what blocks sealing",
+    response: GetCoverageResponseSchema,
+    successStatus: 200,
+  },
+  {
+    id: "sealProject",
+    method: "POST",
+    path: "/projects/{id}/seal",
+    summary: "Apply the Final Seal (a signed-in owner only). 409 seal_blocked lists the blockers",
+    request: SealProjectRequestSchema,
+    response: SealProjectResponseSchema,
+    successStatus: 201,
+  },
+  {
     id: "reportCsv",
     method: "GET",
     path: "/projects/{id}/report.csv",
@@ -244,3 +297,6 @@ export type CreateScriptResponse = z.infer<typeof CreateScriptResponseSchema>;
 export type StartAnalysisRequest = z.infer<typeof StartAnalysisRequestSchema>;
 export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 export type CreateReshootRequest = z.infer<typeof CreateReshootRequestSchema>;
+export type UpdateReshootRequest = z.infer<typeof UpdateReshootRequestSchema>;
+export type GetCoverageResponse = z.infer<typeof GetCoverageResponseSchema>;
+export type SealProjectRequest = z.infer<typeof SealProjectRequestSchema>;

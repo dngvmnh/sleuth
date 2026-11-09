@@ -50,6 +50,7 @@ function buildPaths() {
         "403": errorResponse("Not allowed (for example, the demo project is read-only)"),
         "404": errorResponse("Not found"),
         "409": errorResponse("Conflict with current state"),
+        "429": errorResponse("Daily limit reached; details.resetsAt says when it resets"),
       },
     };
     if ("request" in ep) {
