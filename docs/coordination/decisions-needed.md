@@ -7,7 +7,7 @@ Updated Monday 9 November 2026. Each item: who decides, by when, state.
 | ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
 | D-4 | Team-owned AI provider account with a hard monthly cap. Who owns it, what cap. | Team | Fri 13 Nov | One account, one owner (Bảo), cap set before any adapter runs on real footage. |
-| D-5 | Hosting plan: web host, Docker worker host with FFmpeg, paid Supabase tier from 1 Dec. | Team | Fri 20 Nov | See `docs/deploy-plan.md`. Decide by 20 Nov so deploy is rehearsed before 30 Nov. |
+| D-5 | Hosting plan: web host, Docker worker host with FFmpeg, paid Supabase tier from 1 Dec. | Team | Fri 20 Nov | Proposal in `docs/deploy-plan.md` (Vercel, Fly.io worker, Supabase Pro; about $32 to $52 per month before AI costs). Open: owners, payer, Hobby or Pro, prod project, region. Decide by 20 Nov. |
 | D-6 | Two entries: can one person submit both DEAD AIR and SLEUTH? | Đăng | Wed 11 Nov | NOT SETTLED. See the D-6 note below. |
 | D-7 | Eligibility answers from each member: student status, Kiroween 2025, age of majority. | Each member | Wed 11 Nov | Each posts one line. Do not guess for anyone. |
 | D-9 | Name the daily-update channel for the async post (done, contract changes, blocked, next PR). | Team | Mon 9 Nov | Any one channel. |
