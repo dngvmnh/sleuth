@@ -159,3 +159,9 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - First run failed in `supabase/setup-cli` with HTTP 504 while downloading the CLI. A re-run passed, so it was the download, not our code.
 - Real result (run 42578866891): 6 files, 61 passed, 1 todo, 0 skipped. The `check` job stayed green.
 - Not verified: how often the CLI download flakes. If it keeps failing, cache the binary.
+
+### 2026-11-09, Đăng (@dngvmnh), evidence-analysis 15 prepared, clip not recorded
+- Waiting on: evidence-analysis 9 (Phạm Quốc Bảo, harness and the `clip.json` / `labels.json` format) and 11 (`docs/evaluation-protocol.md`). Neither exists on `main` at `27cea3a`, so the clip format is not set. `clip.json` follows the fields in the evidence-analysis design (script, checklist, durationMs, source video file name) and says it is a draft.
+- Built in `tests/evaluation/clips/clip-5`: `RECORDING.md` (one-page recording script: 60 to 120 s, MP4 H.264/AAC, `clip-5.mp4` kept out of Git, where to put it, 8 lines to read and one unplanned sentence after step 3), `demo.ps1` (the on-screen API flow, step by step), `finalise.ps1` (fills length, date, SHA-256 and storage link from the real file), `clip.test.ts` (script splits into its own lines, matches `RECORDING.md`, recorded fields all empty or all filled, no labels before a recording).
+- Checked: `demo.ps1 -NoPause` ran all six steps against `pnpm dev` in fixture mode (job queued). `finalise.ps1` on a generated 61 s test clip in a scratch folder wrote 61000 ms and a hash; a 30 s clip was refused; with no clip it stops. The test clip was deleted. No real clip exists.
+- Not done: the recording and `labels.json`. Task 15 stays unticked.
