@@ -3,7 +3,8 @@ node_modules/
 .next/
 dist/
 out/
-coverage/
+# Root only: an unanchored `coverage/` also hid the /projects/[id]/coverage API route.
+/coverage/
 *.tsbuildinfo
 next-env.d.ts
 
