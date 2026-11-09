@@ -125,6 +125,7 @@ jobs:
           pnpm exec vitest run
           packages/db/src/supabase
           apps/web/app/api/_lib/api.supabase.test.ts
+          apps/worker/src/pg-queue.test.ts
 
       - name: Stop local Supabase
         if: always()
