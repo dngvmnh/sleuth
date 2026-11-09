@@ -1,7 +1,7 @@
-import { randomBytes } from "node:crypto";
+﻿import { randomBytes } from "node:crypto";
 import { testDatabaseUrl } from "@sleuth/db/testing";
 import postgres from "postgres";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createPgQueue } from "./pg-queue";
 
 /**
@@ -106,8 +106,14 @@ suite("pg-queue claim on Postgres (evidence-analysis 16)", () => {
     }
   });
 
+  // Close each test's queues at once. A hosted pooler caps open clients (15 on Supabase Free), and
+  // two connections per queue across 13 tests would pass that.
+  afterEach(async () => {
+    await Promise.all(open.splice(0).map((q) => q.close()));
+  });
+
   afterAll(async () => {
-    await Promise.all(open.map((q) => q.close()));
+    await Promise.all(open.splice(0).map((q) => q.close()));
     await admin.unsafe(`drop schema if exists ${SCHEMA} cascade`);
     await admin.end({ timeout: 5 });
   });
