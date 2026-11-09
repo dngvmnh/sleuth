@@ -29,6 +29,16 @@ export interface EngineInput {
   checklist: readonly ChecklistItem[];
   transcript: readonly TranscriptSegment[];
   observations: readonly FrameObservation[];
+  /**
+   * Analyse only these script lines (a re-analysis). The lines are still aligned against the whole
+   * script, so a targeted result equals the same lines of a full run. Omit for a full run.
+   */
+  segmentIds?: readonly string[];
+  /**
+   * Evidence already stored for the project. A targeted run reads it to tell whether a checklist
+   * item is still served by a line it did not analyse. Ignored on a full run.
+   */
+  existingEvidence?: readonly EvidenceCandidate[];
 }
 
 export interface EngineOutput {
@@ -76,6 +86,7 @@ export function analyse(input: EngineInput): EngineOutput {
   const alignment = align(input.segments, input.transcript);
   const alignedBySegment = new Map(alignment.aligned.map((a) => [a.segmentId, a]));
   const transcriptById = new Map(input.transcript.map((t) => [t.id, t]));
+  const wanted = input.segmentIds ? new Set(input.segmentIds) : null;
 
   for (const segment of input.segments) {
     const segTokens = contentTokens(segment.text);
@@ -95,6 +106,11 @@ export function analyse(input: EngineInput): EngineOutput {
       }
     }
     if (item) checklistHasLine.add(item.id);
+    if (wanted && !wanted.has(segment.id)) {
+      // A claim on a line we skip still covers its checklist item; that needs only the text.
+      if (item && needsOutsideProof(segment.text)) checklistHasOutsideProof.add(item.id);
+      continue;
+    }
 
     const outsideProof = needsOutsideProof(segment.text);
 
@@ -173,7 +189,21 @@ export function analyse(input: EngineInput): EngineOutput {
     }
   }
 
-  for (const c of input.checklist) {
+  // A targeted run did not look at the other lines: stored evidence says what they still cover.
+  // Without it a targeted run cannot tell, so it raises no Ghost findings at all.
+  if (wanted && input.existingEvidence) {
+    for (const e of input.existingEvidence) {
+      if (wanted.has(e.scriptSegmentId) || e.checklistItemId === null) continue;
+      if (e.status === "needs_outside_proof") checklistHasOutsideProof.add(e.checklistItemId);
+      else if (
+        (e.status === "candidate" || e.status === "confirmed") &&
+        e.frameObservationIds.length > 0
+      )
+        checklistHasVisual.add(e.checklistItemId);
+    }
+  }
+
+  for (const c of wanted && !input.existingEvidence ? [] : input.checklist) {
     if (checklistHasVisual.has(c.id) || checklistHasOutsideProof.has(c.id)) continue;
     findings.push(
       finding(input, "ghost", c.id, {

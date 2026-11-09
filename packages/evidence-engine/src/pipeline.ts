@@ -1,4 +1,4 @@
-import type { ChecklistItem, ScriptSegment } from "@sleuth/contracts";
+import type { ChecklistItem, EvidenceCandidate, ScriptSegment } from "@sleuth/contracts";
 import {
   validateObservations,
   validateTranscript,
@@ -19,6 +19,10 @@ export interface PipelineOptions {
   videoAnalysis: VideoAnalysisProvider;
   frameIntervalMs: number;
   maxFrames: number;
+  /** Analyse only these script lines (a re-analysis). Omit for a full run. */
+  segmentIds?: readonly string[];
+  /** Evidence already stored for the project; a targeted run uses it for the Ghost check. */
+  existingEvidence?: readonly EvidenceCandidate[];
 }
 
 export interface PipelineResult extends EngineOutput {
@@ -57,6 +61,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     checklist: options.checklist,
     transcript: transcript.valid,
     observations: observations.valid,
+    ...(options.segmentIds ? { segmentIds: options.segmentIds } : {}),
+    ...(options.existingEvidence ? { existingEvidence: options.existingEvidence } : {}),
   });
   return {
     ...out,

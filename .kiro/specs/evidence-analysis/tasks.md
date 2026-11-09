@@ -51,7 +51,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: no ordinary step is flagged; the finding text names the kind of proof.
   - Requirements: 6.1 to 6.3
 
-- [ ] 8. Idempotency property tests through the pipeline
+- [x] 8. Idempotency property tests through the pipeline
   - Owner: Bảo
   - Files: `packages/evidence-engine/src/pipeline.property.test.ts`
   - Do: run `runPipeline` twice with mock providers on random inputs and merge; also with a human decision applied between runs.
