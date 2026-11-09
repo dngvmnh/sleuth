@@ -129,3 +129,10 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Test: a new contract case runs on both stores (order after creation, after a checklist change, and after a refused upload).
 - Real results: `pnpm lint` and `pnpm typecheck` clean; `pnpm test` 28 files / 354 passed, 1 todo (Postgres suites on sleuth-dev); `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed, OpenAPI regenerated and matching; `ghost-scan` clean.
 - Not done: the worker's Postgres path (`apps/worker`, Bảo) does not move `updated_at` when an analysis finishes. Contract change: needs the `contract-change` label.
+
+### 2026-11-09, Đăng (@dngvmnh), CI database job (decision D-3)
+- Goal: make ingestion 5, 6, 8, 9 and 10 provable by anyone, not only on my machine.
+- Built: a `db` job in `.github/workflows/ci.yml`. It starts a throwaway local Supabase stack with the CLI (3.0.0; Postgres 17 like the hosted project, Auth with anonymous sign-in, Storage with the private `video-assets` bucket from `supabase/config.toml`), applies migrations with `pnpm db:migrate`, seeds the demo, then runs `packages/db/src/supabase` and the Supabase-mode API test. It never touches the shared dev project. `SLEUTH_REQUIRE_DB=1` makes a missing setting an error, so the job cannot go green by skipping.
+- First run failed in `supabase/setup-cli` with HTTP 504 while downloading the CLI. A re-run passed, so it was the download, not our code.
+- Real result (run 42578866891): 6 files, 61 passed, 1 todo, 0 skipped. The `check` job stayed green.
+- Not verified: how often the CLI download flakes. If it keeps failing, cache the binary.
