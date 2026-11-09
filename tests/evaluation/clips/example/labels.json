@@ -1,0 +1,18 @@
+{
+  "clip": "example",
+  "labelledBy": "example (hand-written, not watched)",
+  "labelledOn": "2026-11-09",
+  "findings": [
+    { "type": "phantom_dialogue", "scriptLine": 4, "note": "Nobody says the Share line." },
+    { "type": "ghost", "checklistItem": 4, "note": "Sharing is never shown." },
+    { "type": "needs_outside_proof", "scriptLine": 5, "note": "A claim about encryption." },
+    {
+      "type": "cursed_frame",
+      "scriptLine": 2,
+      "note": "Said out of order, so a person should check it."
+    },
+    { "type": "cursed_frame", "scriptLine": 7, "note": "Only a closing slide is on screen." }
+  ],
+  "unscripted": [{ "atMs": 16000, "note": "The presenter mentions an old laptop." }],
+  "reordered": [2]
+}

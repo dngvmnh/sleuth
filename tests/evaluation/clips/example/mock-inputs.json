@@ -1,0 +1,34 @@
+{
+  "transcript": [
+    { "startMs": 1000, "endMs": 4000, "text": "Welcome to Notely, a simple notes app." },
+    { "startMs": 5000, "endMs": 8000, "text": "Type a title and some text into the note." },
+    { "startMs": 9000, "endMs": 14000, "text": "Click New Note to start a page." },
+    { "startMs": 15000, "endMs": 18000, "text": "By the way this runs on my old laptop." },
+    { "startMs": 19000, "endMs": 22000, "text": "Your notes are always encrypted." },
+    { "startMs": 23000, "endMs": 27000, "text": "Open the Settings page to change the theme." },
+    { "startMs": 28000, "endMs": 30000, "text": "Thanks for watching." }
+  ],
+  "observations": [
+    {
+      "timestampMs": 2000,
+      "description": "Notely home screen with a logo",
+      "onScreenText": ["Notely", "Notes"]
+    },
+    {
+      "timestampMs": 6000,
+      "description": "Note page with a title typed in",
+      "onScreenText": ["Title", "Meeting notes"]
+    },
+    {
+      "timestampMs": 10000,
+      "description": "New note page with an empty title",
+      "onScreenText": ["New Note", "Title"]
+    },
+    {
+      "timestampMs": 24000,
+      "description": "Settings page with a theme switch",
+      "onScreenText": ["Settings", "Theme"]
+    },
+    { "timestampMs": 29000, "description": "Closing slide", "onScreenText": ["Thanks"] }
+  ]
+}

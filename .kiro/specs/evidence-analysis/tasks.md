@@ -58,7 +58,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: no duplicates, human decisions with unchanged hash survive, timestamps stay in bounds.
   - Requirements: 5.7
 
-- [ ] 9. Evaluation harness skeleton with mock providers
+- [x] 9. Evaluation harness skeleton with mock providers
   - Owner: Bảo
   - Files: `tests/evaluation/run.ts`, `report.ts`, `tests/evaluation/clips/example/clip.json`, `labels.json`, `mock-inputs.json`, `package.json` (`eval` script), `.gitignore` (results folder)
   - Do: harness as designed with one tiny example clip written by hand (text only, no video); prints precision and recall per finding type and every disagreement; header names provider and clip count.
@@ -107,7 +107,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: the clip folder is merged with labels; Bảo reviews the format only.
   - Requirements: 7.1
 
-- [ ] 16. Queue claim test on a real Postgres (needs database; after ingestion task 5)
+- [x] 16. Queue claim test on a real Postgres (needs database; after ingestion task 5)
   - Owner: Bảo
   - Files: `apps/worker/src/pg-queue.test.ts`
   - Do: start two `createPgQueue` claimers against one queued job and prove only one gets it; prove a job whose heartbeat is older than `WORKER_STALE_SECONDS` is claimed again, and one with no attempts left is marked failed. Skip when `TEST_DATABASE_URL` is unset. This is the first time the claim SQL runs against Postgres: record the result in the journal.

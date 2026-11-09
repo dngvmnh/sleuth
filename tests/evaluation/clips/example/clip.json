@@ -1,0 +1,23 @@
+{
+  "name": "example",
+  "note": "Hand-written example that tests the harness. There is no video: the transcript and frames in mock-inputs.json are written by hand.",
+  "durationMs": 32000,
+  "labelledBy": "example (hand-written, not watched)",
+  "script": [
+    "Welcome to Notely, a simple notes app.",
+    "Click New Note to start a page.",
+    "Type a title and some text into the note.",
+    "Click Share to send the note to a teammate.",
+    "Your notes are always encrypted.",
+    "Open the Settings page to change the theme.",
+    "Thanks for watching."
+  ],
+  "checklist": [
+    "Welcome to Notely",
+    "Create a new note",
+    "Type a title and text",
+    "Share the note",
+    "State that notes are encrypted",
+    "Change the theme in Settings"
+  ]
+}
