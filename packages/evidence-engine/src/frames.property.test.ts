@@ -11,7 +11,9 @@ describe("planFrames properties", () => {
   it("never plans more frames than the budget", () => {
     fc.assert(
       fc.property(durationArb, budgetArb, intervalArb, (durationMs, maxFrames, intervalMs) => {
-        expect(planFrames(durationMs, { intervalMs, maxFrames }).length).toBeLessThanOrEqual(maxFrames);
+        expect(planFrames(durationMs, { intervalMs, maxFrames }).length).toBeLessThanOrEqual(
+          maxFrames,
+        );
       }),
     );
   });

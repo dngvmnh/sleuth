@@ -4,8 +4,7 @@ import { segmentScript } from "@sleuth/domain";
 import { align } from "./align";
 import { SPOKEN_MIN_COVERAGE, SPOKEN_STRONG_COVERAGE } from "./thresholds";
 
-const script = (lines: string[]) =>
-  segmentScript(lines.join("\n"), { scriptVersionId: "sv-1" });
+const script = (lines: string[]) => segmentScript(lines.join("\n"), { scriptVersionId: "sv-1" });
 
 const spoken = (lines: string[]): TranscriptSegment[] =>
   lines.map((text, i) => ({
