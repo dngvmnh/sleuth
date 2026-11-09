@@ -14,6 +14,22 @@ import * as t from "../schema";
 
 loadLocalEnv();
 
+/**
+ * CI's database job sets SLEUTH_REQUIRE_DB=1. Then a missing setting is an error, not a skip,
+ * so the job can never go green without running the suites.
+ */
+export const DB_REQUIRED = process.env.SLEUTH_REQUIRE_DB === "1";
+if (DB_REQUIRED) {
+  for (const key of [
+    "TEST_DATABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ]) {
+    if (!process.env[key]?.trim()) throw new Error(`SLEUTH_REQUIRE_DB=1 but ${key} is not set.`);
+  }
+}
+
 export const TEST_PROJECT_PREFIX = "contract-test-";
 
 /** RFC 4122 version 5 UUID: the same name always gives the same id. */
@@ -35,6 +51,7 @@ export const NAMESPACES = {
   write: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0005",
   upload: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0006",
   web: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0007",
+  impact: "0f6d2f4e-5a1e-4c0b-9a57-5e17e57c0008",
   // Reserved for the ingestion tasks still to come.
 } as const;
 

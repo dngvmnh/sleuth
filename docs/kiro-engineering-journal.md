@@ -136,3 +136,15 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Gate: lint and typecheck clean; `pnpm test` 28 files / 357 passed; property 54; contracts 14; build passed; ghost-scan clean.
 - For Đạt: the upload flow (review-workspace 12) should show both new 409 codes. No schema change.
 - Not verified: browser-to-server clock skew does not matter (both times are server times), but app-server versus database skew is assumed to be under a few seconds.
+### 2026-11-09, Đăng (@dngvmnh), change-impact 9: revisions on the Supabase store
+- The revision and upload paths already ran in one transaction each (ingestion 6, 7). This task proves it with the same random-history property test the fixture store passes.
+- Built: `packages/db/src/change-impact-contract.ts` (`runChangeImpactContract`), moved out of the fixture-only property test. `applyAnalysisResult` now lives on the Supabase store too (shared `AnalysisWriter` type), in one transaction, writing only rows that changed. This is also the write path the worker's Supabase handler (evidence-analysis 12, Phạm Quốc Bảo) can call.
+- Mutation check: with `resolvePoltergeists` removed from the Supabase write path, the 6 random histories still passed. I added a direct check to the deterministic case (the Poltergeist must be resolved after re-analysis); the mutant then failed with `expected 'open' to be 'resolved'`. Restored.
+- Real results: Supabase change-impact suite 2 passed on sleuth-dev (6 histories, up to 8 steps, 107 s); fixture 200 histories passed. Gate: lint and typecheck clean; `pnpm test` 29 files / 356 passed, 1 todo; `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed; build passed; ghost-scan clean.
+- Not verified in CI: the Postgres suites still skip there (next task).
+### 2026-11-09, Đăng (@dngvmnh), CI database job (decision D-3)
+- Goal: make ingestion 5, 6, 8, 9 and 10 provable by anyone, not only on my machine.
+- Built: a `db` job in `.github/workflows/ci.yml`. It starts a throwaway local Supabase stack with the CLI (3.0.0; Postgres 17 like the hosted project, Auth with anonymous sign-in, Storage with the private `video-assets` bucket from `supabase/config.toml`), applies migrations with `pnpm db:migrate`, seeds the demo, then runs `packages/db/src/supabase` and the Supabase-mode API test. It never touches the shared dev project. `SLEUTH_REQUIRE_DB=1` makes a missing setting an error, so the job cannot go green by skipping.
+- First run failed in `supabase/setup-cli` with HTTP 504 while downloading the CLI. A re-run passed, so it was the download, not our code.
+- Real result (run 42578866891): 6 files, 61 passed, 1 todo, 0 skipped. The `check` job stayed green.
+- Not verified: how often the CLI download flakes. If it keeps failing, cache the binary.

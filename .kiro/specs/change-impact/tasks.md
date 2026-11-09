@@ -60,7 +60,7 @@ Tasks are Đăng's (@dngvmnh) unless marked. Each is half a day or less and runs
   - Done when: exactly one stale candidate and one Poltergeist appear after the edit, none after the re-analysis resolves them.
   - Requirements: 1.2, 1.4, 4.1, 4.2
 
-- [ ] 9. Supabase transaction for revisions (needs database; after ingestion task 6)
+- [x] 9. Supabase transaction for revisions (needs database; after ingestion task 6)
   - Owner: Đăng
   - Files: `packages/db/src/supabase/store.ts`, shared contract suite
   - Do: implement the revision and upload invalidation in one transaction; add the store-level property test to the shared suite so it runs on both stores.
