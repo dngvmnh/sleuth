@@ -21,6 +21,7 @@ next-env.d.ts
 
 # tests
 playwright-report/
+/tests/evaluation/results/
 test-results/
 
 # OS and editor noise
