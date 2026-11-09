@@ -31,6 +31,9 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 |---|---|---|
 | Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | D-4 is decided (free tiers). Amend ADR 0007 to match, then tick ea 3. Check result: Deepgram and `gemini-3.6-flash` work; `gemini-3.8-flash` failed 3 of 3 tries on the free tier. |
 | Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | A "no video analysis" mode in the worker. |
+| Đăng | Production is only partly proven (10 Nov): the signed-out view, forged-header refusal and secret scan pass on the live site. Anonymous sign-in, two-user isolation and the upload limits are not proven. | Run part B of `scripts/prod-smoke.ts` (see `docs/deploy-plan.md` section 5). |
+| Đạt | The web app has no sign-in screen, and its JS holds no Supabase URL or anon key, so a visitor cannot yet reach "Try your own video". | Add anonymous sign-in with `@supabase/ssr` in the browser client (rw 1 or a small task before launch). |
+| Đăng | The upload-url request has no size field and accepts any `video/*` type, so the 50 MB cap and the type list rest on the Supabase bucket settings alone. | Decide: add `sizeBytes` and a type list to the contract (a contract change), or rely on the bucket. |
 | Đạt | Review UI not started (rw 1-14, fs 6-10). Nothing on the backend side blocks it. | Start rw 1. |
 | Đạt | ea 14, 15: clips not recorded. | Record per `tests/evaluation/clips/clip-5/RECORDING.md` and the protocol from ea 9. |
 ## 4. Critical path to a working end-to-end demo

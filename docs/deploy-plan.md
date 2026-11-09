@@ -106,6 +106,57 @@ Deploy, then open the public demo signed out. It must load without a login.
 3. Run the worker workflow by hand (Actions tab). The job reaches `succeeded`.
 4. A second browser cannot see the first browser's project.
 
+### 5. Production check, 10 November 2026 (`https://sleuth-eight.vercel.app`)
+
+Run by `pnpm tsx scripts/prod-smoke.ts`. Part A needs nothing. Part B needs the public Project URL and anon key in your own shell (instructions at the top of the script). It never loads `.env.local`, starts no analysis job and sends nothing to Deepgram or Gemini.
+
+| Check | Status | How |
+|---|---|---|
+| Site is in Supabase mode | Proven | A forged `x-fixture-user` header gets 401, so the fixture mode is off |
+| Signed-out visitor sees only the demo | Proven | Script part A: list holds one project; demo, evidence, findings, coverage and report.csv return 200; an unknown id returns 404 |
+| Signed-out visitor cannot write | Proven | Script part A: create 401; scripts, analysis, seal and upload-url 403; a forged bearer token 401 |
+| No secret in the page or its JS | Proven | Fetched the page and 7 assets (584159 bytes). Zero matches for a JWT, `service_role`, `sb_secret_`, `postgres://`, a Supabase host, Deepgram, Gemini or any env name |
+| Anonymous sign-in, create, upload | **Not proven** | The web app has no sign-in screen yet and its JS holds no Supabase URL or anon key. Needs script part B |
+| Two users cannot read each other's projects | **Not proven** | Same reason. Policies reviewed in section 6; not run on production |
+| 50 MB cap and file types | **Not proven, and partly not built** | See the gap below |
+
+Gap: the upload-url request has `fileName`, `mimeType` (any `video/*`) and `durationMs`. It has no size field, so the API does not enforce 50 MB. It does not limit types to `mp4`, `mov`, `webm` and `mkv` either (an unknown `video/*` type gets the extension `bin`). The only enforcement left is the bucket: file size limit 50 MB and allowed MIME types, set in the Supabase dashboard (step 1). Script part B checks that a 51 MB file and a text body are refused by the bucket.
+
+### 6. Row-level security review (migrations 0000 to 0002)
+
+All 14 tables in `public` have RLS on: `asset_versions`, `audit_events`, `checklist_items`, `evidence_candidates`, `findings`, `frame_observations`, `processing_jobs`, `projects`, `reshoot_tasks`, `review_decisions`, `script_segments`, `script_versions`, `seals`, `transcript_segments`.
+
+- 13 tables have two policies: `<table>_read` (anon and authenticated: the project is the demo, or you own it) and `<table>_write` (authenticated only, for all commands: you own the project and it is not the demo).
+- `projects` has four: `projects_read`, `projects_insert`, `projects_modify` and `projects_delete`. Insert, update and delete need `owner_id = auth.uid()` and not demo.
+- Nobody but the server role can write the demo, and `anon` has no write policy anywhere.
+- Gaps and notes:
+  - The web server connects with a role that bypasses RLS, so the app code enforces access too. RLS is the second layer.
+  - `owner_id` is not a foreign key to `auth.users`, so deleting a user does not remove the projects. The 7-day purge is what removes anonymous data.
+  - An owner can write `audit_events` and `review_decisions` of their own project through the Data API. That only affects their own data.
+  - Storage: no policies on `storage.objects` are created by the migrations. With RLS on and no policy, clients cannot read or write the bucket directly. Check the bucket is private (step 1).
+  - Policy tests live in `packages/db/src/supabase/rls.test.ts` and ran on the dev project and in CI. They were not run on production.
+
+To run them once on production, in your own shell (the suite adds rows with a test prefix and removes them):
+
+```powershell
+cd C:\Data\Singapore\SMU\Sleuth\sleuth
+$env:TEST_DATABASE_URL = Read-Host "Production session pooler URL"
+pnpm vitest run packages/db/src/supabase/rls.test.ts
+Remove-Item Env:TEST_DATABASE_URL
+```
+
+### 7. Remove test data
+
+The API has no delete route. After a smoke run, open the Supabase dashboard, SQL Editor, `sleuth-prod`, and run:
+
+```sql
+-- List first. Only zz-test- rows should appear, never proofpay-demo.
+select id, name, owner_id, created_at from projects where name like 'zz-test-%';
+delete from projects where name like 'zz-test-%' and not is_demo;
+```
+
+Child rows go with the project (cascade). Then Storage, `video-assets`: open each folder named with a deleted project id and delete it. Optionally, Authentication, Users: delete the anonymous users made today.
+
 ## Vercel Hobby terms (read 10 November 2026)
 
 Vercel's [fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage) limit Hobby teams to non-commercial personal use. Commercial use means a deployment used for the financial gain of anyone involved in any part of its production. The listed examples are payments from visitors, advertising a sale, paid hosting or coding work, affiliate links, and ads. Asking for donations is not commercial.
