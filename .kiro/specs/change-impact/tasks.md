@@ -24,7 +24,7 @@ Tasks are Đăng's (@dngvmnh) unless marked. Each is half a day or less and runs
   - Done when: findings for replaced evidence become `resolved`, others unchanged.
   - Requirements: 4.1, 4.2
 
-- [ ] 4. Engine honours `segmentIds`
+- [x] 4. Engine honours `segmentIds`
   - Owner: Phạm Quốc Bảo (@baofrovn)
   - Files: `packages/evidence-engine/src/analyse.ts`, `pipeline.ts`, `analyse.test.ts`, `pipeline.property.test.ts`
   - Do: optional `segmentIds` filter; ghost check takes `existingEvidence`; output for a full run stays identical (golden test).
