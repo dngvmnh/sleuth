@@ -89,7 +89,23 @@ jobs:
           version: 3.0.0
 
       - name: Start local Supabase (database, auth, storage)
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,postgres-meta,mailpit
+        # Runners sometimes still hold a Supabase port (54320 to 54329) from an earlier job.
+        # Free them, then try up to 3 times, cleaning up between tries.
+        run: |
+          sudo systemctl stop postgresql 2>/dev/null || true
+          for p in 54320 54321 54322 54323 54324 54329; do
+            pid=$(sudo lsof -t -i :"$p" -sTCP:LISTEN 2>/dev/null || true)
+            [ -n "$pid" ] && sudo kill -9 $pid || true
+          done
+          docker ps -q | xargs -r docker rm -f || true
+          for i in 1 2 3; do
+            if supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,postgres-meta,mailpit; then exit 0; fi
+            echo "supabase start failed (try $i of 3)"
+            supabase stop --no-backup || true
+            docker ps -q | xargs -r docker rm -f || true
+            sleep 10
+          done
+          exit 1
 
       - name: Export connection settings
         run: |
