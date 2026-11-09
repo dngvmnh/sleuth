@@ -5,6 +5,20 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().optional(),
   MAX_VIDEO_SECONDS: z.coerce.number().int().positive().default(180),
   MAX_FRAMES_PER_VIDEO: z.coerce.number().int().positive().default(60),
+  /** Largest video the worker downloads. Matches the storage bucket limit (50 MiB). */
+  MAX_VIDEO_BYTES: z.coerce.number().int().positive().default(52_428_800),
+  /** `mock` until a real adapter is chosen (ADR 0007) and built (evidence-analysis 10). */
+  TRANSCRIPTION_PROVIDER: z.string().default("mock"),
+  VIDEO_ANALYSIS_PROVIDER: z.string().default("mock"),
+  /**
+   * The mock providers return the golden fixture, whatever the video says. In supabase mode that
+   * would show invented results as an analysis, so the worker refuses to start with them unless
+   * this is set. For local testing only.
+   */
+  ALLOW_MOCK_PROVIDERS: z
+    .enum(["0", "1"])
+    .default("0")
+    .transform((v) => v === "1"),
   WORKER_POLL_MS: z.coerce.number().int().positive().default(2000),
   WORKER_HEARTBEAT_MS: z.coerce.number().int().positive().default(10000),
   WORKER_STALE_SECONDS: z.coerce.number().int().positive().default(60),

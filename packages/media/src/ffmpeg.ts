@@ -11,6 +11,7 @@ export type MediaErrorCode =
   | "ffmpeg_failed"
   | "timeout"
   | "duration_unreadable"
+  | "duration_exceeded"
   | "no_audio_stream"
   | "invalid_timestamp"
   | "no_frames";
@@ -95,7 +96,8 @@ export async function probeDurationMs(
     options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   );
   const seconds = Number.parseFloat(stdout.trim());
-  if (!Number.isFinite(seconds) || seconds < 0) throw new MediaError("probe", "duration_unreadable");
+  if (!Number.isFinite(seconds) || seconds < 0)
+    throw new MediaError("probe", "duration_unreadable");
   return Math.round(seconds * 1000);
 }
 
@@ -125,7 +127,10 @@ export async function extractAudio(
       resolve(outputPath),
     ],
     options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    (stderr) => (/does not contain any stream|matches no streams/i.test(stderr) ? "no_audio_stream" : undefined),
+    (stderr) =>
+      /does not contain any stream|matches no streams/i.test(stderr)
+        ? "no_audio_stream"
+        : undefined,
   );
 }
 
@@ -147,26 +152,33 @@ export async function extractFrames(
   const frames: SampledFrame[] = [];
   for (const [index, timestampMs] of timestampsMs.entries()) {
     const path = resolve(join(outDir, `frame-${String(index).padStart(4, "0")}.jpg`));
-    await run(
-      "frames",
-      options.ffmpegPath ?? "ffmpeg",
-      [
-        "-nostdin",
-        "-y",
-        "-v",
-        "error",
-        "-ss",
-        (timestampMs / 1000).toFixed(3),
-        "-i",
-        input,
-        "-frames:v",
-        "1",
-        "-q:v",
-        "5",
-        path,
-      ],
-      options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    );
+    try {
+      await run(
+        "frames",
+        options.ffmpegPath ?? "ffmpeg",
+        [
+          "-nostdin",
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          (timestampMs / 1000).toFixed(3),
+          "-i",
+          input,
+          "-frames:v",
+          "1",
+          "-q:v",
+          "5",
+          path,
+        ],
+        options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+      );
+    } catch (error) {
+      // Seeking to the very end of a file leaves nothing to decode and FFmpeg exits with an error.
+      // That is "no picture here", not a broken file; a broken file ends in `no_frames` below.
+      // A missing binary or a timeout is still a failure.
+      if (!(error instanceof MediaError && error.code === "ffmpeg_failed")) throw error;
+    }
     if (await exists(path)) frames.push({ timestampMs, path });
   }
   if (timestampsMs.length > 0 && frames.length === 0) throw new MediaError("frames", "no_frames");
@@ -186,7 +198,10 @@ async function exists(path: string): Promise<boolean> {
  * Runs `fn` with a fresh temporary folder and always deletes the folder afterwards, including
  * when `fn` throws.
  */
-export async function withTempDir<T>(fn: (dir: string) => Promise<T>, prefix = "sleuth-"): Promise<T> {
+export async function withTempDir<T>(
+  fn: (dir: string) => Promise<T>,
+  prefix = "sleuth-",
+): Promise<T> {
   const dir = await mkdtemp(join(tmpdir(), prefix));
   try {
     return await fn(dir);

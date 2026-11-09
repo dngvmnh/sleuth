@@ -46,10 +46,3 @@ export function createFixtureHandler(options: FixtureHandlerOptions): JobHandler
     );
   };
 }
-
-/** Supabase mode processing arrives with the evidence-analysis spec. Until then jobs fail loudly. */
-export const supabaseHandler: JobHandler = async () => {
-  throw new Error(
-    "Supabase-mode processing is not implemented yet (see .kiro/specs/evidence-analysis).",
-  );
-};

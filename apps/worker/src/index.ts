@@ -3,11 +3,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConfig } from "./config";
 import { createFixtureQueue } from "./fixture-queue";
-import { createFixtureHandler, supabaseHandler } from "./handlers";
+import { createFixtureHandler } from "./handlers";
 import { runLoop } from "./loop";
-import { createDb, createSupabaseStore, storageFromEnv } from "@sleuth/db";
+import { createDb, createSupabaseStore, createWorkerStore, storageFromEnv } from "@sleuth/db";
 import { createPgQueue } from "./pg-queue";
+import { createProviders } from "./providers";
 import { startRetentionTimer } from "./retention";
+import { createSupabaseHandler } from "./supabase-handler";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const config = loadConfig(process.env);
@@ -44,6 +46,10 @@ async function main() {
     return;
   }
 
+  // Fail at start-up, not job by job, when the providers are not usable (evidence-analysis 2.1).
+  const providers = createProviders(config);
+  if (config.ALLOW_MOCK_PROVIDERS)
+    log("mock_providers", { warning: "results are not a real analysis" });
   const { queue, close } = createPgQueue(
     config.DATABASE_URL as string,
     config.WORKER_STALE_SECONDS,
@@ -61,10 +67,21 @@ async function main() {
         log,
       })
     : null;
+  const workerDb = createDb(config.DATABASE_URL as string, { max: 2 });
+  const handler = createSupabaseHandler({
+    store: createWorkerStore({ db: workerDb.db, storage: storageFromEnv() ?? undefined }),
+    providers,
+    workerId,
+    maxVideoSeconds: config.MAX_VIDEO_SECONDS,
+    maxVideoBytes: config.MAX_VIDEO_BYTES,
+    maxFrames: config.MAX_FRAMES_PER_VIDEO,
+    log,
+  });
   try {
-    await runLoop({ ...common, queue, handler: supabaseHandler });
+    await runLoop({ ...common, queue, handler });
   } finally {
     retention?.stop();
+    await workerDb.client.end({ timeout: 5 });
     await retentionDb?.client.end({ timeout: 5 });
     await close();
   }

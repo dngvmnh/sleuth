@@ -21,8 +21,24 @@ export function statusAfterFailure(
   return job.attempts >= job.maxAttempts ? "failed" : "queued";
 }
 
+/**
+ * A failure whose message is already safe to store on the job row: `step: code`, with no paths,
+ * text or URLs. `MediaError` (packages/media) follows the same shape.
+ */
+export class JobFailure extends Error {
+  constructor(
+    public readonly step: string,
+    public readonly code: string,
+  ) {
+    super(`${step}: ${code}`);
+    this.name = "JobFailure";
+  }
+}
+
 /** Short, content-free error text for the job row. */
 export function describeError(err: unknown): string {
+  if (err instanceof JobFailure || (err instanceof Error && err.name === "MediaError"))
+    return err.message.slice(0, 300);
   const text = err instanceof Error ? `${err.name}: ${err.message}` : "Unknown error";
   return text.slice(0, 300);
 }
