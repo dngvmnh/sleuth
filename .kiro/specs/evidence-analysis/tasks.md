@@ -79,7 +79,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: three clips with labels exist and the protocol is merged. Tasks 14 and 15 add two more.
   - Requirements: 7.1
 
-- [ ] 12. Supabase worker handler (needs ingestion tasks 5 to 7)
+- [x] 12. Supabase worker handler (needs ingestion tasks 5 to 7)
   - Owner: Bảo
   - Files: `apps/worker/src/handlers.ts`, `apps/worker/src/supabase-handler.ts`, `apps/worker/src/supabase-handler.test.ts`
   - Do: handler as designed; download video, run FFmpeg and pipeline, merge in a transaction, clean up in `finally`; honour `segmentIds`.
