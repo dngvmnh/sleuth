@@ -66,6 +66,8 @@ export const projects = pgTable(
     currentScriptVersionId: text("current_script_version_id"),
     currentAssetVersionId: text("current_asset_version_id"),
     createdAt: createdAt(),
+    /** Last change to the project or anything in it. Set by the store on every write. */
+    updatedAt: ts("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("projects_owner_idx").on(t.ownerId),

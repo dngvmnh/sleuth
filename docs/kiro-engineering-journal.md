@@ -122,3 +122,10 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
   - Task 7 stays unticked. Supabase signed upload URLs live 2 hours (measured 7199 s) and the SDK has no setting for it, so requirement 2.4's five-minute limit is not met. `expiresAt` reports the real expiry from the token, not a made-up five minutes. Options: accept 2 hours, upload through our own short-lived endpoint, or refuse at analysis time files that landed more than five minutes after the URL was made. Needs a team decision.
   - The hourly purge call in `apps/worker` is Bảo's to add (ADR 0008). The worker's Postgres queue is still unrun (evidence-analysis 16).
   - CI has no Postgres service, so these suites skip in CI.
+
+### 2026-11-09, Đăng (@dngvmnh), `Project.updatedAt` for review-workspace 1.2
+- Asked by Đạt: requirement 1.2 lists "last change", newest first, but `Project` had only `createdAt`. I kept the requirement and added the field instead of renaming the column to "Created".
+- Built: `updatedAt` on `ProjectSchema` (required) and the golden fixture; `projects.updated_at` column in migration `0002_fancy_dracula.sql`, which backfills `updated_at = created_at`, applied with `pnpm db:migrate` (3 migrations recorded). Both stores move it on every audited write plus reviews, reshoots and (fixture) finished analyses. A refused write does not move it. `listProjects` returns the demo first, then newest change first. Copies of the demo now get their own `createdAt` in the fixture store too.
+- Test: a new contract case runs on both stores (order after creation, after a checklist change, and after a refused upload).
+- Real results: `pnpm lint` and `pnpm typecheck` clean; `pnpm test` 28 files / 354 passed, 1 todo (Postgres suites on sleuth-dev); `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed, OpenAPI regenerated and matching; `ghost-scan` clean.
+- Not done: the worker's Postgres path (`apps/worker`, Bảo) does not move `updated_at` when an analysis finishes. Contract change: needs the `contract-change` label.

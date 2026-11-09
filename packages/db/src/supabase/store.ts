@@ -253,6 +253,12 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
       data,
       createdAt: iso(),
     });
+    await touch(q, projectId);
+  }
+
+  /** Every change to a project or anything in it moves its "last change" time. */
+  async function touch(q: Q, projectId: string) {
+    await q.update(t.projects).set({ updatedAt: iso() }).where(eq(t.projects.id, projectId));
   }
 
   /** Mark evidence stale and open its Poltergeist findings. Returns the ids that just went stale. */
@@ -374,9 +380,14 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             ? eq(t.projects.isDemo, true)
             : or(eq(t.projects.isDemo, true), eq(t.projects.ownerId, me)),
         )
-        .orderBy(asc(t.projects.createdAt), asc(t.projects.id));
-      // The demo first, then the caller's own projects in the order they were made.
-      return rows.map(projectOf).sort((a, b) => Number(b.isDemo) - Number(a.isDemo));
+        .orderBy(
+          desc(t.projects.isDemo),
+          desc(t.projects.updatedAt),
+          desc(t.projects.createdAt),
+          desc(t.projects.id),
+        );
+      // The demo first, then the most recently changed (review-workspace 1.2).
+      return rows.map(projectOf);
     },
 
     async getProjectDetail(actor, projectId) {
@@ -399,6 +410,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             ownerId: me,
             isDemo: false,
             createdAt: stamp,
+            updatedAt: stamp,
           });
           await tx.insert(t.assetVersions).values(rows.assetVersions);
           await tx.insert(t.scriptVersions).values(rows.scriptVersions);
@@ -419,6 +431,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             ownerId: me,
             isDemo: false,
             createdAt: stamp,
+            updatedAt: stamp,
           });
         }
         await record(tx, id, actor, "project_created", {
@@ -759,6 +772,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
           .set({ status: result.evidence.status })
           .where(eq(t.evidenceCandidates.id, evidenceId));
         await tx.insert(t.reviewDecisions).values({ ...decision, projectId: found.projectId });
+        await touch(tx, found.projectId);
         await tx
           .update(t.findings)
           .set({ status: "resolved" })
@@ -783,6 +797,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             createdAt: iso(),
           })
           .returning();
+        await touch(tx, projectId);
         return reshootOf(row as typeof t.reshootTasks.$inferSelect);
       });
     },
@@ -813,6 +828,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
           .where(eq(t.reshootTasks.id, reshootId))
           .returning();
         if (!row) throw notFound;
+        await touch(tx, found.projectId);
         return reshootOf(row);
       });
     },

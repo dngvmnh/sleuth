@@ -14,6 +14,11 @@ export const ProjectSchema = z.object({
   currentScriptVersionId: IdSchema.nullable(),
   currentAssetVersionId: IdSchema.nullable(),
   createdAt: IsoDateSchema,
+  /**
+   * Last change: any new video, script, checklist, review, reshoot, seal or finished analysis.
+   * Equals `createdAt` until the first change. Project lists sort by this, newest first.
+   */
+  updatedAt: IsoDateSchema,
 });
 export type Project = z.infer<typeof ProjectSchema>;
 

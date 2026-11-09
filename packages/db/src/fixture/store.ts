@@ -107,6 +107,17 @@ function upsertFindings(existing: readonly Finding[], incoming: readonly Finding
   return [...byId.values()];
 }
 
+/** The demo first, then the most recently changed (review-workspace 1.2). Ties: newest made first. */
+export function sortProjects(projects: Project[]): Project[] {
+  return [...projects].sort(
+    (a, b) =>
+      Number(b.isDemo) - Number(a.isDemo) ||
+      Date.parse(b.updatedAt) - Date.parse(a.updatedAt) ||
+      Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+      b.id.localeCompare(a.id),
+  );
+}
+
 /** In-memory store backed by the golden fixture. No database, no keys. Resets when the process restarts. */
 export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureStore {
   const now = options.now ?? (() => new Date());
@@ -153,6 +164,12 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       data: eventData,
       createdAt: iso(),
     });
+    touch(d);
+  }
+
+  /** Every change to a project or anything in it moves its "last change" time. */
+  function touch(d: ProjectData) {
+    d.project = { ...d.project, updatedAt: iso() };
   }
 
   /** Accepted analysis requests by this user today (UTC), across all their projects. */
@@ -237,7 +254,9 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
 
   return {
     async listProjects(actor) {
-      return [...data.values()].filter((d) => canRead(d, actor)).map((d) => d.project);
+      return sortProjects(
+        [...data.values()].filter((d) => canRead(d, actor)).map((d) => d.project),
+      );
     },
 
     async getProjectDetail(actor, projectId) {
@@ -250,6 +269,9 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       const id = nextId("proj");
       if (input.copyFromDemo) {
         seed(cloneWithPrefix(golden, id), actor.userId, false, input.name);
+        // The copy is a new project: it was made now, not when the demo was.
+        const copy = data.get(id) as ProjectData;
+        copy.project = { ...copy.project, createdAt: iso(), updatedAt: iso() };
       } else {
         data.set(id, {
           project: {
@@ -260,6 +282,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
             currentScriptVersionId: null,
             currentAssetVersionId: null,
             createdAt: iso(),
+            updatedAt: iso(),
           },
           assets: [],
           scripts: [],
@@ -525,6 +548,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       }
       d.evidence[index] = result.evidence;
       d.decisions.push(decision);
+      touch(d);
       d.findings = d.findings.map((f) =>
         f.evidenceId === evidenceId ? { ...f, status: "resolved" as const } : f,
       );
@@ -544,6 +568,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
         createdAt: iso(),
       };
       d.reshoots.push(reshoot);
+      touch(d);
       return reshoot;
     },
 
@@ -558,6 +583,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       const i = d.reshoots.findIndex((r) => r.id === reshootId);
       const updated: ReshootTask = { ...(d.reshoots[i] as ReshootTask), status };
       d.reshoots[i] = updated;
+      touch(d);
       return updated;
     },
 
@@ -654,6 +680,7 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
         updatedAt: iso(),
       };
       d.jobs[i] = done;
+      touch(d);
       return { job: done, replacedEvidenceIds };
     },
 

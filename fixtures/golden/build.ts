@@ -119,6 +119,7 @@ export function buildGoldenFixture(): GoldenFixture {
       currentScriptVersionId: SCRIPT_ID,
       currentAssetVersionId: ASSET_ID,
       createdAt: CREATED,
+      updatedAt: CREATED,
     },
     assetVersion: {
       id: ASSET_ID,

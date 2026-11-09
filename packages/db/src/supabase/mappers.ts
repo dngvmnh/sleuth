@@ -45,6 +45,7 @@ export const projectOf = (r: typeof t.projects.$inferSelect): Project => ({
   currentScriptVersionId: r.currentScriptVersionId,
   currentAssetVersionId: r.currentAssetVersionId,
   createdAt: toIso(r.createdAt),
+  updatedAt: toIso(r.updatedAt),
 });
 
 export const assetOf = (r: typeof t.assetVersions.$inferSelect): AssetVersion => ({

@@ -110,6 +110,34 @@ export function runStoreContract(
       const store = await makeStore();
       expect((await store.getProjectDetail(anon, DEMO)).project.isDemo).toBe(true);
     });
+
+    it("lists the demo first, then projects by last change, newest first [review-workspace 1.2]", async () => {
+      const store = await makeStore();
+      const tick = () => new Promise((r) => setTimeout(r, 15));
+      const older = await store.createProject(user(1), { name: "older" });
+      await tick();
+      const newer = await store.createProject(user(1), { name: "newer" });
+      expect(Date.parse(newer.updatedAt)).toBeGreaterThanOrEqual(Date.parse(newer.createdAt));
+      const order = async () => (await store.listProjects(user(1))).map((p) => p.id);
+      expect(await order()).toEqual([DEMO, newer.id, older.id]);
+
+      await tick();
+      await store.setChecklist(user(1), older.id, ["Show the export"]);
+      const changed = (await store.getProjectDetail(user(1), older.id)).project;
+      expect(Date.parse(changed.updatedAt)).toBeGreaterThan(Date.parse(changed.createdAt));
+      expect(await order()).toEqual([DEMO, older.id, newer.id]);
+
+      // A refused write is not a change.
+      await tick();
+      await refused(
+        store.createUploadUrl(user(1), newer.id, {
+          fileName: "v.mp4",
+          mimeType: "video/mp4",
+          durationMs: -1,
+        }),
+      );
+      expect(await order()).toEqual([DEMO, older.id, newer.id]);
+    });
   });
 
   describe(`${name}: asset versions`, () => {
