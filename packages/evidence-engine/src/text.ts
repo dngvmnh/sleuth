@@ -1,4 +1,5 @@
 import { tokenise } from "@sleuth/domain";
+import { classify } from "./outside-proof-terms";
 
 const STOPWORDS = new Set(
   (
@@ -25,26 +26,7 @@ export function formatMs(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
-/** Claims that footage alone cannot prove (see ai-safety.md). */
-const OUTSIDE_PROOF_TERMS = new Set([
-  "encrypted",
-  "encryption",
-  "secure",
-  "secured",
-  "security",
-  "guarantee",
-  "guaranteed",
-  "compliant",
-  "compliance",
-  "gdpr",
-  "hipaa",
-  "certified",
-  "uptime",
-  "fastest",
-  "always",
-  "never",
-]);
-
+/** True when the text makes a claim that footage alone cannot prove (see `outside-proof-terms.ts`). */
 export function needsOutsideProof(text: string): boolean {
-  return tokenise(text).some((t) => OUTSIDE_PROOF_TERMS.has(t));
+  return classify(text) !== null;
 }
