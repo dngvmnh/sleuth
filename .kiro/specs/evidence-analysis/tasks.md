@@ -2,14 +2,14 @@
 
 All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 9 run against fixtures, generated clips and recorded responses with no keys. Task 10 and 11 need keys or the ingestion work. After every task: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts` (the golden fixture test must stay green; if it must change, ask Đăng).
 
-- [ ] 1. FFmpeg wrapper: probe and audio extraction
+- [x] 1. FFmpeg wrapper: probe and audio extraction
   - Owner: Bảo
   - Files: `packages/media/src/ffmpeg.ts`, `packages/media/src/ffmpeg.test.ts`, `packages/media/src/index.ts`
   - Do: `probeDurationMs`, `extractAudio` with `execFile` and argument arrays; `MediaError(step, code)`; tests build a 3-second clip with `ffmpeg -f lavfi` in a temp dir, skip when FFmpeg is missing.
   - Done when: tests pass on your machine (FFmpeg 9.0.1 is installed) and a missing binary gives a clear `ffmpeg_missing` error.
   - Requirements: 1.1, 1.2, 1.5
 
-- [ ] 2. Frame extraction and cleanup
+- [x] 2. Frame extraction and cleanup
   - Owner: Bảo
   - Files: `packages/media/src/ffmpeg.ts`, `packages/media/src/ffmpeg.test.ts`, `packages/evidence-engine/src/frames.property.test.ts`
   - Do: `extractFrames(path, timestampsMs, outDir)`; a `withTempDir(fn)` helper that always deletes; property test for `planFrames`.
@@ -23,7 +23,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: ADR merged with the choice and the per-run cost estimate; Đăng sets the hard monthly spending limit on the team account.
   - Requirements: 2.1, 4.1, 4.3
 
-- [ ] 4. Output validation hardening
+- [x] 4. Output validation hardening
   - Owner: Bảo
   - Files: `packages/media/src/validate.ts`, `packages/media/src/validate.property.test.ts`
   - Do: property tests for 2.2 and 4.2 (random segments and observations, including NaN, negative, fractional and out-of-range values).
