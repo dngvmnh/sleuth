@@ -56,7 +56,7 @@ import {
   scriptOf,
   sealOf,
 } from "./mappers";
-import type { StorageClient } from "./storage";
+import { UPLOAD_WINDOW_MS, type StorageClient } from "./storage";
 
 /** A database or an open transaction: both run the same queries. */
 export type Q = PgDatabase<PostgresJsQueryResultHKT, typeof schema>;
@@ -353,6 +353,27 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
     };
   }
 
+  /**
+   * Ingestion 2.1: the video must have landed within five minutes of its upload URL being made.
+   * Without storage configured nothing is uploaded, so there is nothing to check.
+   */
+  async function checkUploadWindow(asset: AssetVersion) {
+    if (!storage) return;
+    const landed = await storage.uploadedAt(asset.storagePath);
+    if (landed === null) {
+      throw new StoreError("upload_missing", 409, "The video has not been uploaded yet.");
+    }
+    const late = Date.parse(landed) - (Date.parse(asset.createdAt) + UPLOAD_WINDOW_MS);
+    if (late > 0) {
+      throw new StoreError(
+        "upload_late",
+        409,
+        "The video arrived after its five-minute upload link ran out. Upload it again.",
+        { uploadWindowMs: UPLOAD_WINDOW_MS },
+      );
+    }
+  }
+
   /** Accepted analysis requests by this user today (UTC), across all their projects. */
   async function analysesToday(q: Q, userId: string): Promise<number> {
     const start = new Date(startOfUtcDayMs(now().getTime())).toISOString();
@@ -506,7 +527,12 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             "Evidence changed after sign-off: a new video was uploaded.",
           );
         }
-        return { assetVersion, uploadUrl: signed.url, expiresAt: signed.expiresAt };
+        // The storage URL itself may live longer; the upload window is what counts (2.1).
+        const windowEnds = Date.parse(assetVersion.createdAt) + UPLOAD_WINDOW_MS;
+        const expiresAt = new Date(
+          Math.min(windowEnds, Date.parse(signed.expiresAt)),
+        ).toISOString();
+        return { assetVersion, uploadUrl: signed.url, expiresAt };
       });
     },
 
@@ -614,6 +640,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
             );
           }
         }
+        await checkUploadWindow(asset);
         // "Same request" = same video version, script version and set of segments (4.3).
         const segmentsKey =
           input.segmentIds === undefined ? "full" : [...new Set(input.segmentIds)].sort().join(",");
