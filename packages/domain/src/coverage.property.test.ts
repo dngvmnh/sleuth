@@ -36,16 +36,14 @@ const DECISIONS: ReviewDecisionKind[] = [
   "needs_outside_proof",
 ];
 
-const checklistArb = fc
-  .integer({ min: 0, max: 6 })
-  .map((n): ChecklistItem[] =>
-    Array.from({ length: n }, (_, i) => ({
-      id: `c${i}`,
-      projectId: "p1",
-      label: `Item ${i}`,
-      position: i,
-    })),
-  );
+const checklistArb = fc.integer({ min: 0, max: 6 }).map((n): ChecklistItem[] =>
+  Array.from({ length: n }, (_, i) => ({
+    id: `c${i}`,
+    projectId: "p1",
+    label: `Item ${i}`,
+    position: i,
+  })),
+);
 
 const evidenceArb = (itemCount: number) =>
   fc

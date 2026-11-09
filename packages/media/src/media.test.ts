@@ -56,7 +56,10 @@ describe("validation", () => {
   });
 
   it("drops observations past the video duration and non-integer timestamps", () => {
-    const r = validateObservations([obs(), obs({ id: "f2", timestampMs: 6000 }), obs({ id: "f3", timestampMs: 1.5 })], 5000);
+    const r = validateObservations(
+      [obs(), obs({ id: "f2", timestampMs: 6000 }), obs({ id: "f3", timestampMs: 1.5 })],
+      5000,
+    );
     expect(r.valid.map((o) => o.id)).toEqual(["f1"]);
   });
 });
