@@ -29,13 +29,13 @@ Demo videos drift from what they claim. A line gets cut, a screen changes, a sen
 - Property tests written from the spec's `[PBT]` criteria found real bugs in our own earlier code: evidence a person had dismissed could later be confirmed on an outdated line; a dismissed candidate re-opened on every later edit; evidence going stale a second time did not reopen its Poltergeist. All three are fixed and covered.
 - TODO: a short screen capture of a spec task running, and one hook firing.
 
-## What is real and what is mocked (as of 9 November 2026, evening)
+## What is real and what is mocked (as of 10 November 2026)
 
 | Part | State |
 |---|---|
 | Backend API, both stores, change impact, Final Seal rules, reports (CSV, HTML) | Real, tested |
 | Supabase store, sign-in, row-level security, signed uploads, retention purge | Real, tested in CI against a throwaway Supabase stack |
-| Transcription and video analysis | Deepgram and Gemini adapters exist with recorded-response tests (PR #18). Not run on our own footage yet; providers not final (ADR 0007, D-4). |
+| Transcription and video analysis | Deepgram and Gemini adapters exist with recorded-response tests (PR #18). Run once on a 6-second clip we made ourselves (synthetic speech over a plain screen): Deepgram returned 2 segments and 14 words, and Gemini `gemini-3.6-flash` returned 3 observations and 6 text items for 3 frames. This proves the keys and adapters work. It says nothing about accuracy. `gemini-3.8-flash` failed 3 of 3 tries on the free tier. No video of a real product has been analysed yet. |
 | Evidence matching | Script alignment and matching are built (evidence-analysis 5, 6). Not measured on real clips yet. |
 | Review workspace and Final Seal UI | NOT BUILT yet (one placeholder page). |
 | Worker in Supabase mode | Built and tested (evidence-analysis 12, 16). |
@@ -47,10 +47,11 @@ Update this table before submitting. Do not claim a part is real unless it is.
 
 | Number | Printed by |
 |---|---|
-| 373 unit tests passed | `pnpm test`, local run on `main`, 9 November 2026 (with the shared dev database) |
-| 54 property tests passed | `pnpm test:property`, same day |
+| 532 unit tests passed | `pnpm test`, local run on `main`, 10 November 2026 (with the shared dev database) |
+| 92 property tests passed | `pnpm test:property`, same day |
 | 14 contract tests passed; OpenAPI matches the contracts | `pnpm check:contracts`, same day |
-| 66 Postgres, Auth and Storage tests passed, 0 skipped | CI `db` job, run 42580335599 |
+| 66 Postgres, Auth and Storage tests passed, 0 skipped | CI `db` job, run 42580335599 (9 November 2026; not re-counted since) |
+| Deepgram 2 segments and 14 words; Gemini 3 observations and 6 text items, on one 6 s own clip | `pnpm tsx scripts/provider-check.ts`, 10 November 2026 |
 
 No accuracy, precision or recall numbers yet: the evaluation harness (evidence-analysis 9) and our recorded clips do not exist yet. Quote only numbers `pnpm eval` prints, with the clip count and provider named.
 

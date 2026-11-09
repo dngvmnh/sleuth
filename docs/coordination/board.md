@@ -1,6 +1,6 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Monday 9 November 2026, 20:30 SGT. Source: git, GitHub and files at `main` `31d09ee`.
+Owner: coordinator session. Updated: Tuesday 10 November 2026. Source: git, GitHub and files at `main` `89ea240`.
 
 Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
@@ -8,7 +8,7 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 
 | Item | State |
 |---|---|
-| `origin/main` | `31d09ee`. CI green (`check` and `db` jobs). |
+| `origin/main` | `89ea240`. CI green (`check` and `db` jobs). |
 | PRs | #1 to #6 and #8 to #19 merged (#9 to #19 by Phạm Quốc Bảo). #7 was a CI preview, closed. No open PRs. |
 | CI | `check`: lint, typecheck, unit, property, contracts, build. `db`: a throwaway local Supabase stack runs every Postgres, Auth and Storage suite. |
 | Label `contract-change` | Exists. |
@@ -29,11 +29,10 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 
 | Person | Blocker | Fix |
 |---|---|---|
-| Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | Settle D-4, then amend ADR 0007 and tick ea 3. |
+| Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | D-4 is decided (free tiers). Amend ADR 0007 to match, then tick ea 3. Check result: Deepgram and `gemini-3.6-flash` work; `gemini-3.8-flash` failed 3 of 3 tries on the free tier. |
 | Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | A "no video analysis" mode in the worker. |
 | Đạt | Review UI not started (rw 1-14, fs 6-10). Nothing on the backend side blocks it. | Start rw 1. |
 | Đạt | ea 14, 15: clips not recorded. | Record per `tests/evaluation/clips/clip-5/RECORDING.md` and the protocol from ea 9. |
-| Team | D-7: Kiroween 2025 registration and age of majority not answered. | Each member answers. |
 ## 4. Critical path to a working end-to-end demo
 
 1. Real analysis: FFmpeg probe and frames (ea 1, 2), provider ADR (ea 3), alignment and matching (ea 5, 6), real adapters (ea 10). Bảo. Longest chain, biggest risk.
@@ -49,7 +48,7 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 2. Bảo's lane has not started and has the longest chain. Only one person on it.
 3. Free tiers only. Gemini free tier may use content to improve its products, so visitors' videos must not reach it (D-4). Deepgram's free credit runs out once.
 4. Free hosting (D-5): the GitHub Actions worker starts jobs up to 5 minutes late or more, and Supabase Free pauses idle projects. Rehearse before 30 Nov.
-5. Eligibility (D-7) is half answered.
+5. Gemini free tier: `gemini-3.8-flash` did not answer in 3 tries, and `gemini-3.6-flash` failed 1 of 4. Retries and a fallback model are needed in the worker.
 
 ## 6. Week plan, 9-15 November
 
@@ -90,5 +89,8 @@ Target by Sun 15: probe a real video, extract audio and frames, ADR written.
 - Free hosting and AI plan (D-4, D-5): `docs/deploy-plan.md`, `decisions-needed.md`.
 
 ## 7. Open PRs and reviews
-- No open PRs. Review notes go in `reviews/`.
+- No open PRs on 10 November. Review notes go in `reviews/`.
+- Decisions: D-4, D-5 and D-7 are decided (`decisions-needed.md`). D-4 still has one task for the worker owner: a "no video analysis" mode, so visitors' videos never reach Gemini.
+- Deploy prep is written: `docs/deploy-plan.md` (production Supabase, Vercel variables, secrets) and `.github/workflows/worker.yml` (manual run only until the mode above exists).
+- Manual provider check: `pnpm tsx scripts/provider-check.ts <clip>` prints counts only.
 - Briefs 001 and 002 are complete.
