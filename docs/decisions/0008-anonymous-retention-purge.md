@@ -12,6 +12,6 @@ ADR 0006 lets visitors try their own video through Supabase anonymous sign-in. T
 - Running the timer at most one hour late is fine: the rule is "older than 7 days", not "exactly at 7 days".
 
 ## Consequences
-- The worker owner (Bảo) adds the hourly call; until then nothing is purged automatically. The function is tested on the dev project (`store.purge.test.ts`) and in the fixture store with an injected clock.
+- The worker runs the purge at start and then hourly (`apps/worker/src/retention.ts`, settings `RETENTION_INTERVAL_MS` and `ANONYMOUS_RETENTION_DAYS`), only in supabase mode and not in `--once` runs. Đăng wired it in; Phạm Quốc Bảo reviews it as the worker owner.
 - A failed purge leaves data for up to one more hour; it logs ids and counts only.
 - Signed-up users' projects are never deleted by this job.
