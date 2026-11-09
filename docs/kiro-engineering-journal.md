@@ -177,50 +177,50 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Drafts, all marked DRAFT: `docs/deploy-plan.md` (prices read from vendor pages on 9 November), `docs/submission/` (Devpost, demo plan, blog, social). They quote only test numbers with their source and list what is still mocked.
 - No PRs from Đạt or Bảo to review yet. Review checklist in `docs/coordination/reviews/README.md`. Daily update in `docs/coordination/updates/2026-11-09-dang.md`.
 - Gate after every step: lint and typecheck clean, `pnpm test` 373 passed, build passed.
-### 2026-11-09, Ph?m Qu?c B?o, media worker (evidence-analysis tasks 1, 2, 4)
+### 2026-11-09, Phạm Quốc Bảo, media worker (evidence-analysis tasks 1, 2, 4)
 - Goal: FFmpeg wrapper, frame extraction with guaranteed cleanup, and property tests for the validators and the frame plan.
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `packages/media/src/ffmpeg.ts` (`probeDurationMs`, `extractAudio`, `extractFrames`, `withTempDir`, `MediaError`), `ffmpeg.test.ts` (clips built with `-f lavfi`), `validate.property.test.ts`, `frames.property.test.ts`.
 - What we had to fix or reject: the first typecheck failed because `packages/media` and `packages/evidence-engine` had no Node types; fixed with `"types": ["node"]` in both tsconfig files (no new dependency, no lockfile change). The property tests found no bug in `validate.ts`.
 - Result: FFmpeg 9.0.2 on Windows; 30 targeted tests pass (13 FFmpeg tests ran, none skipped); full gate green: lint, typecheck, `pnpm test` 317 passed and 48 skipped (database suites), `pnpm test:property` 66 passed, `pnpm check:contracts` 14 passed, ghost-scan clean.
 
-### 2026-11-09, Ph?m Qu?c B?o, evidence engine (evidence-analysis task 5)
+### 2026-11-09, Phạm Quốc Bảo, evidence engine (evidence-analysis task 5)
 - Goal: replace the per-line best-match search in `analyse()` with a real script alignment (exact, changed, missing, reordered, unscripted).
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `align.ts` (greedy best-first one-to-one assignment, longest increasing subsequence for reordered lines), `thresholds.ts` (the four constants moved out of `analyse.ts`), `align.test.ts`, `align.property.test.ts`; `analyse()` now calls `align()` and returns `alignment` next to `evidence` and `findings`; a reordered line gets a note in the evidence explanation.
 - What we had to fix or reject: nothing failed. One design limit to watch on real clips: a spoken segment serves one script line, so a long spoken segment that covers two different script lines leaves the second one `missing` (requirement 3.5). The contract has no field for `reordered` or `unscripted`, so they live in `EngineOutput.alignment` and in explanation text only.
 - Result: golden contract test unchanged and green; full gate green: `pnpm test` 327 passed and 48 skipped, `pnpm test:property` 71 passed, `pnpm check:contracts` 14 passed.
 
-### 2026-11-09, Ph?m Qu?c B?o, evidence engine (evidence-analysis task 6)
+### 2026-11-09, Phạm Quốc Bảo, evidence engine (evidence-analysis task 6)
 - Goal: move the frame window and confidence rules out of `analyse()`, build every explanation from typed inputs, and write the confidence rules in plain English.
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `match.ts` (`matchFrames`, `rankConfidence`), `explain.ts` (one builder per finding type and for evidence), `docs/evidence-confidence.md`, `match.test.ts` (includes a test that reads the doc and checks it states the same constants as the code), `explain.property.test.ts`.
-- What we had to fix or reject: the design rule "high needs a strong frame inside the spoken time" and the old code ("strong frame anywhere in the 2 s margin") differ, so the engine now follows the design and treats a reordered line like a changed one (medium). The golden output did not change under either rule. Requirements 5.6 (Ghost names the frames checked) and 6.3 (outside-proof names the kind of proof) would change locked golden text, so they are not done here; they need a `contract-change` PR with �ang.
+- What we had to fix or reject: the design rule "high needs a strong frame inside the spoken time" and the old code ("strong frame anywhere in the 2 s margin") differ, so the engine now follows the design and treats a reordered line like a changed one (medium). The golden output did not change under either rule. Requirements 5.6 (Ghost names the frames checked) and 6.3 (outside-proof names the kind of proof) would change locked golden text, so they are not done here; they need a `contract-change` PR with �ang.
 - Result: golden contract test unchanged and green; `pnpm test` 336 passed and 48 skipped, `pnpm test:property` 79 passed, `pnpm check:contracts` 14 passed, lint and typecheck clean.
 
-### 2026-11-09, Ph?m Qu?c B?o, evidence engine (evidence-analysis task 7, first part)
+### 2026-11-09, Phạm Quốc Bảo, evidence engine (evidence-analysis task 7, first part)
 - Goal: move the outside-proof term list into its own file that the team can extend, with a proof hint per kind of claim.
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `outside-proof-terms.ts` (five groups: security, compliance, guarantee, performance, absolute; `classify(text)` returns the word, the kind and the proof hint), `needsOutsideProof` now calls `classify`, `outside-proof.test.ts` (12 phrases that must be flagged, 12 ordinary steps that must not). "GDPR-compliant" is now matched piece by piece; before, the hyphenated word slipped through.
-- What we had to fix or reject: task 7 stays unticked. "The finding text names the kind of proof" changes locked golden text, so it goes in a separate `contract-change` PR for �ang to review. The term list also flags a script line like "Open the Security tab", which is an ordinary step; the finding says so in its limits only after that PR.
+- What we had to fix or reject: task 7 stays unticked. "The finding text names the kind of proof" changes locked golden text, so it goes in a separate `contract-change` PR for �ang to review. The term list also flags a script line like "Open the Security tab", which is an ordinary step; the finding says so in its limits only after that PR.
 - Result: golden contract test unchanged and green; `pnpm test` 366 passed and 48 skipped, `pnpm test:property` 79 passed, `pnpm check:contracts` 14 passed.
 
-### 2026-11-09, Ph?m Qu?c B?o, evidence engine (change-impact task 4 and evidence-analysis task 8)
+### 2026-11-09, Phạm Quốc Bảo, evidence engine (change-impact task 4 and evidence-analysis task 8)
 - Goal: make the engine honour `segmentIds` (re-analysis) and prove that running the pipeline twice is idempotent.
 - Kiro feature used: chat with the change-impact and evidence-analysis specs and steering loaded.
 - What Kiro produced: `EngineInput` and `PipelineOptions` take optional `segmentIds` and `existingEvidence`. A targeted run still aligns against the whole script and then keeps only the chosen lines, so its evidence equals those lines of a full run. The Ghost check reads `existingEvidence` (candidate or confirmed rows with frames, or needs_outside_proof rows) for lines it did not analyse; a claim on a skipped line covers its item from the script text. Without `existingEvidence` a targeted run raises no Ghost findings. `pipeline.property.test.ts` has 13 properties.
 - What we had to fix or reject: the first version of the Ghost property failed because a skipped line with an outside-proof claim covers its checklist item without any stored evidence; the engine now reads that from the text. A targeted run's Ghost findings are still dropped by the stores (they have no script line), so this is for callers that want them.
 - Result: golden contract test unchanged and green. The change-impact tasks file named `analyse.test.ts`, which does not exist; the tests are in `pipeline.property.test.ts`.
 
-### 2026-11-09, Ph?m Qu?c B?o, evaluation (evidence-analysis task 9, plus the format part of task 11)
+### 2026-11-09, Phạm Quốc Bảo, evaluation (evidence-analysis task 9, plus the format part of task 11)
 - Goal: an evaluation harness that scores the pipeline against labels a person wrote, and fixes the clip format that clips 1 to 5 follow.
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `tests/evaluation/schema.ts` (Zod formats for `clip.json`, `labels.json`, `mock-inputs.json`), `report.ts` (precision and recall per finding type plus unscripted and reordered lines, every disagreement listed, header names the providers and the clip count), `run.ts` (`pnpm eval`, mock providers only; `--providers real` is refused with `provider_not_configured` until task 10), a hand-written `clips/example`, `evaluation.test.ts` (20 tests, run by `pnpm test`), `docs/evaluation-protocol.md`, the `eval` script in the root `package.json` and the results folder in `.gitignore`.
-- What we had to fix or reject: precision and recall print `n/a` when the denominator is zero instead of 0%. The mock video provider filters frames by the sampled timestamps, so the harness uses its own provider that returns the hand-written frames as given; the report says mock numbers test the plumbing and the matching, not speech or vision quality. The example clip is hand-written, so its labels were not made by watching a video; the protocol and the clip say so, and it does not count as one of the five clips. Clip 5 (�ang's draft) loads with this format and is listed as "not recorded yet".
+- What we had to fix or reject: precision and recall print `n/a` when the denominator is zero instead of 0%. The mock video provider filters frames by the sampled timestamps, so the harness uses its own provider that returns the hand-written frames as given; the report says mock numbers test the plumbing and the matching, not speech or vision quality. The example clip is hand-written, so its labels were not made by watching a video; the protocol and the clip say so, and it does not count as one of the five clips. Clip 5 (�ang's draft) loads with this format and is listed as "not recorded yet".
 - Result: `pnpm eval` on the example clip finds all 6 labelled rows with 0 disagreements; a deliberately wrong label is reported as a disagreement (tested). Task 11 stays open: clips 1 to 3 must be recorded and labelled by a person.
-### 2026-11-09, Ph?m Qu?c B?o, worker (evidence-analysis task 16)
+### 2026-11-09, Phạm Quốc Bảo, worker (evidence-analysis task 16)
 - Goal: run the queue's claim SQL against a real Postgres for the first time.
 - Kiro feature used: chat with the evidence-analysis spec and steering loaded.
 - What Kiro produced: `apps/worker/src/pg-queue.test.ts` (13 tests) and the file added to the `db` job in `.github/workflows/ci.yml`. The suite builds a private schema with `create table ... (like public.processing_jobs including all)` and sets `search_path` on the queue's connection, so it cannot claim another test's job or the demo job; it stops before any claim if the setting did not reach the server.
 - What we had to fix or reject: I have no local database (Docker is not running, the local Postgres needs a password I do not have), so the CI `db` job on the pull request was the first run. Two workers asking at once for one job: exactly one got it. A stale heartbeat was claimed again with `attempts` 2. A stale job with no attempts left became `failed` with "Worker stopped sending heartbeats.". The claim SQL needed no change.
-- Result: the CI `db` job on the PR ran `apps/worker/src/pg-queue.test.ts`: 13 passed, in 466 ms, as part of 9 files and 85 tests, all passing. Still open for �ang: the claim query takes any queued job, including the seeded `job-demo-1`; in supabase mode the worker would claim it and fail it three times.
+- Result: the CI `db` job on the PR ran `apps/worker/src/pg-queue.test.ts`: 13 passed, in 466 ms, as part of 9 files and 85 tests, all passing. Still open for �ang: the claim query takes any queued job, including the seeded `job-demo-1`; in supabase mode the worker would claim it and fail it three times.
