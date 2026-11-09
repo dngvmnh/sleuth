@@ -99,6 +99,27 @@ export interface ProjectStore {
   getReportData(actor: Actor, projectId: string): Promise<ReportData>;
 }
 
+/** What an analysis run produced. The worker (or a test standing in for it) supplies this. */
+export interface AnalysisResult {
+  evidence: EvidenceCandidate[];
+  findings: Finding[];
+}
+
+/**
+ * The worker's write path, not an API route. Merges the produced evidence (human decisions on an
+ * unchanged hash are kept), merges findings, resolves the Poltergeists of stale evidence that a
+ * fresh candidate now replaces, and marks the job succeeded. A targeted job (`segmentIds`) only
+ * writes about its own lines; checklist-level findings (Ghosts) come only from full runs.
+ */
+export interface AnalysisWriter {
+  applyAnalysisResult(
+    actor: Actor,
+    projectId: string,
+    jobId: string,
+    produced: AnalysisResult,
+  ): Promise<{ job: ProcessingJob; replacedEvidenceIds: string[] }>;
+}
+
 /** What one retention run removed. Ids and counts only. */
 export interface PurgeResult {
   projectIds: string[];
