@@ -130,6 +130,12 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Real results: `pnpm lint` and `pnpm typecheck` clean; `pnpm test` 28 files / 354 passed, 1 todo (Postgres suites on sleuth-dev); `pnpm test:property` 54 passed; `pnpm check:contracts` 14 passed, OpenAPI regenerated and matching; `ghost-scan` clean.
 - Not done: the worker's Postgres path (`apps/worker`, Bảo) does not move `updated_at` when an analysis finishes. Contract change: needs the `contract-change` label.
 
+### 2026-11-09, Đăng (@dngvmnh), BRIEF 001: one shared green main
+- Merged PR #1 (`feat/backend-milestones-1-3`) with a merge commit: `deb6dbc`. Local `main` now tracks `origin/main` and fast-forwarded cleanly.
+- CI on `origin/main` at `deb6dbc`: green (run 42575333370). The earlier red run at `30f588e` failed because `packages/media` was missing (typecheck: `Cannot find module '@sleuth/media'`); the PR's own red runs failed because `.gitignore` `coverage/` hid the coverage route. Both are fixed on `main` now.
+- Created the `contract-change` label and added it to PR #1. Deleted the merged remote branches `fix/track-packages-media` and `feat/backend-milestones-1-3`.
+- Not done: branch protection on `main`. I chose to wait, so `main` is still unprotected.
+- Added the coordinator agent and the first status board in this PR.
 ### 2026-11-09, Đăng (@dngvmnh), ingestion 10: the worker now runs the purge
 - `apps/worker/src/retention.ts`: `startRetentionTimer` runs `purgeExpiredAnonymousProjects` at start and every `RETENTION_INTERVAL_MS` (default 1 hour), period `ANONYMOUS_RETENTION_DAYS` (default 7). Runs never overlap; a failure is logged by error name only and retried next tick; logs hold counts, never project ids. Supabase mode only, not in `--once`.
 - This is Phạm Quốc Bảo's area, so the PR asks for his review.
