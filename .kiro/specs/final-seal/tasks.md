@@ -39,7 +39,7 @@ Tasks 1 to 5 are Đăng's (@dngvmnh, backend and contracts). Tasks 6 to 10 are �
   - Requirements: 5.1 to 5.5, 6.1, 6.2, 4.2 (text)
   - Depends on: task 4
 
-- [ ] 6. Client methods and report data hook
+- [x] 6. Client methods and report data hook
   - Owner: Đạt
   - Files: `apps/web/lib/api-client.ts`, `api-client.test.ts`, `apps/web/features/report/use-report.ts`
   - Do: `getCoverage`, `listReshoots`, `updateReshoot`, `sealProject`; hook that loads coverage, findings, reshoots.
@@ -47,28 +47,28 @@ Tasks 1 to 5 are Đăng's (@dngvmnh, backend and contracts). Tasks 6 to 10 are �
   - Requirements: 4.1
   - Depends on: tasks 1 and 4
 
-- [ ] 7. Report page and coverage table
+- [x] 7. Report page and coverage table
   - Owner: Đạt
   - Files: `apps/web/app/(workspace)/projects/[id]/report/page.tsx`, `apps/web/features/report/report-view.tsx`, `coverage-table.tsx`, tests
   - Do: sections in the order of 4.1; "Draft: not signed off" banner; state shown with text and icon; loading, empty and error states.
   - Done when: the demo project's report renders with its coverage rows and findings; a component test checks the banner.
   - Requirements: 4.1, 4.2, 1.1
 
-- [ ] 8. Reshoots and outside-proof lists
+- [x] 8. Reshoots and outside-proof lists
   - Owner: Đạt
   - Files: `apps/web/features/report/reshoot-list.tsx`, `outside-proof-list.tsx`, tests
   - Do: open and done reshoots with mark-done for owners; outside-proof lines with the proof hint and acknowledged flag; explain that "done" does not prove the item.
   - Done when: Playwright on an editable copy marks a reshoot done and the coverage state does not become proven.
   - Requirements: 2.1 to 2.3
 
-- [ ] 9. Seal panel, confirmation and exports
+- [x] 9. Seal panel, confirmation and exports
   - Owner: Đạt
   - Files: `apps/web/features/report/seal-panel.tsx`, `seal-confirmation.tsx`, `export-buttons.tsx`, `apps/web/styles/` (print rules), tests
   - Do: seal button with blockers list and confirm step; wax-seal confirmation with live announcement; reduced-motion safe; CSV and HTML links and a Print button; print stylesheet check.
   - Done when: blockers disable the button with reasons; the seal succeeds after everything is reviewed; the broken-seal message appears after an edit.
   - Requirements: 3.5, 3.6, 4.3, 4.4, 5.4
 
-- [ ] 10. End-to-end and accessibility
+- [x] 10. End-to-end and accessibility
   - Owner: Đạt
   - Files: `tests/e2e/final-seal.spec.ts`, `docs/accessibility.md` (extend)
   - Do: copy the demo, review every candidate, add a reshoot for the ghost item, seal, edit one sentence, see the seal broken; axe scan on the report page; keyboard-only run of the seal flow.
