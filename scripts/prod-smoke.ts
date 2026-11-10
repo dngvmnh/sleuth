@@ -16,7 +16,10 @@
  * the deploy plan afterwards. It starts no analysis job and sends nothing to Deepgram or Gemini.
  */
 const SITE = (process.env.PROD_SITE_URL ?? "https://sleuth-eight.vercel.app").replace(/\/$/, "");
-const SB_URL = process.env.PROD_SUPABASE_URL?.trim().replace(/\/$/, "");
+const RAW_SB_URL = process.env.PROD_SUPABASE_URL?.trim().replace(/\/$/, "");
+/** A Project URL is `https://<ref>.supabase.co`. Anything else is refused and never printed. */
+const URL_OK = RAW_SB_URL === undefined || /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(RAW_SB_URL);
+const SB_URL = URL_OK ? RAW_SB_URL : undefined;
 const SB_KEY = process.env.PROD_SUPABASE_ANON_KEY?.trim();
 const DEMO = "proofpay-demo";
 const MB = 1024 * 1024;
@@ -208,7 +211,9 @@ async function userPart(): Promise<void> {
 
 async function main(): Promise<void> {
   await visitorPart();
-  if (SB_URL && SB_KEY) await userPart();
+  if (!URL_OK) {
+    check("PROD_SUPABASE_URL looks like https://<ref>.supabase.co (value not shown)", false);
+  } else if (SB_URL && SB_KEY) await userPart();
   else
     console.log("--- Part B skipped: PROD_SUPABASE_URL and PROD_SUPABASE_ANON_KEY are not set ---");
   console.log(failed === 0 ? "ALL CHECKS PASSED" : `${failed} CHECK(S) FAILED`);
@@ -216,6 +221,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((e: unknown) => {
-  console.log("FAIL  script error: " + (e instanceof Error ? e.message : "unknown"));
+  // The message of a network error can hold the URL or a token, so only the error name is printed.
+  console.log("FAIL  script error: " + (e instanceof Error ? e.name : "unknown"));
   process.exit(1);
 });
