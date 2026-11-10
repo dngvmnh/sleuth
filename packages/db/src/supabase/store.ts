@@ -8,6 +8,7 @@ import type {
   ReviewDecision,
   Seal,
 } from "@sleuth/contracts";
+import { MAX_VIDEO_BYTES } from "@sleuth/contracts";
 import {
   applyReviewDecision,
   buildPoltergeistFindings,
@@ -112,6 +113,7 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
   const iso = () => now().toISOString();
   const limitConfig = {
     maxVideoMs: options.maxVideoMs ?? 180_000,
+    maxVideoBytes: MAX_VIDEO_BYTES,
     dailyAnalysisLimit: options.dailyAnalysisLimit ?? 5,
   };
 
@@ -428,11 +430,16 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
     async createUploadUrl(actor, projectId, input) {
       return db.transaction(async (tx) => {
         await writableProject(tx, actor, projectId);
-        const limit = checkLimits({ durationMs: input.durationMs, config: limitConfig });
+        const limit = checkLimits({
+          durationMs: input.durationMs,
+          sizeBytes: input.sizeBytes,
+          config: limitConfig,
+        });
         if (!limit.ok) {
-          throw new StoreError("invalid_request", 400, "The video length is not allowed.", {
+          throw new StoreError("invalid_request", 400, "The video length or size is not allowed.", {
             reason: limit.code,
             maxVideoMs: limitConfig.maxVideoMs,
+            maxVideoBytes: limitConfig.maxVideoBytes,
           });
         }
         const [max] = await tx

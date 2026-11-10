@@ -2,9 +2,21 @@
 
 import { useId, useState } from "react";
 import type { z } from "zod";
-import { MAX_VIDEO_SECONDS, type UploadUrlRequestSchema, type UploadUrlResponseSchema } from "@sleuth/contracts";
+import {
+  MAX_VIDEO_SECONDS,
+  type UploadUrlRequestSchema,
+  type UploadUrlResponseSchema,
+} from "@sleuth/contracts";
 import { Button } from "@/components/ui/button";
-import { checkDurationMs, readVideoDurationMs } from "./duration";
+import { ApiClientError } from "@/lib/api-client";
+import {
+  checkDurationMs,
+  checkFile,
+  isAllowedVideoType,
+  readVideoDurationMs,
+  SIZE_LIMIT_MESSAGE,
+  TYPE_LIMIT_MESSAGE,
+} from "./duration";
 
 type UploadUrlRequest = z.infer<typeof UploadUrlRequestSchema>;
 type UploadUrlResponse = z.infer<typeof UploadUrlResponseSchema>;
@@ -35,7 +47,8 @@ export function uploadBytes(
       xhr.status >= 200 && xhr.status < 300
         ? resolve("uploaded")
         : reject(new Error(`The upload was refused (status ${xhr.status}).`));
-    xhr.onerror = () => reject(new Error("The upload stopped. Check the connection and try again."));
+    xhr.onerror = () =>
+      reject(new Error("The upload stopped. Check the connection and try again."));
     xhr.send(file);
   });
 }
@@ -48,6 +61,16 @@ type Phase =
   | { kind: "uploading"; fraction: number }
   | { kind: "failed"; step: string; message: string }
   | { kind: "done"; result: UploadResult; version: number };
+
+/** What a 400 from the server means for a person, using the reason code when it is there. */
+function refusalOf(error: unknown): string | null {
+  if (!(error instanceof ApiClientError) || error.status !== 400) return null;
+  const reason = (error.details as { reason?: unknown } | undefined)?.reason;
+  if (reason === "video_too_large" || reason === "invalid_size") return SIZE_LIMIT_MESSAGE;
+  if (reason === "video_too_long")
+    return "This video is longer than " + MAX_VIDEO_SECONDS + " seconds. Trim it and try again.";
+  return TYPE_LIMIT_MESSAGE + " Files must also be up to 50 MB.";
+}
 
 function messageOf(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "Something went wrong.";
@@ -78,19 +101,37 @@ export function UploadFlow({
   const [file, setFile] = useState<{ file: File; durationMs: number } | null>(null);
   const inputId = useId();
   const limitsId = useId();
-  const busy = phase.kind === "reading" || phase.kind === "requesting" || phase.kind === "uploading";
+  const busy =
+    phase.kind === "reading" || phase.kind === "requesting" || phase.kind === "uploading";
 
   const send = async (chosen: { file: File; durationMs: number }) => {
+    const mimeType = chosen.file.type;
+    if (!isAllowedVideoType(mimeType)) {
+      setPhase({ kind: "refused", message: TYPE_LIMIT_MESSAGE });
+      return;
+    }
     setPhase({ kind: "requesting" });
     let target: UploadUrlResponse;
     try {
       target = await requestUploadUrl({
         fileName: chosen.file.name.slice(0, 200) || "video",
-        mimeType: chosen.file.type,
+        mimeType,
+        sizeBytes: chosen.file.size,
         durationMs: chosen.durationMs,
       });
     } catch (e: unknown) {
-      setPhase({ kind: "failed", step: "Asking the server for an upload address failed.", message: messageOf(e) });
+      // A 400 means the file itself is not allowed. Nothing was uploaded, and retrying cannot help.
+      const refusal = refusalOf(e);
+      if (refusal) {
+        setFile(null);
+        setPhase({ kind: "refused", message: refusal });
+        return;
+      }
+      setPhase({
+        kind: "failed",
+        step: "Asking the server for an upload address failed.",
+        message: messageOf(e),
+      });
       return;
     }
     setPhase({ kind: "uploading", fraction: 0 });
@@ -112,6 +153,11 @@ export function UploadFlow({
       setPhase({ kind: "refused", message: "This is not a video file. Choose a video." });
       return;
     }
+    const fileCheck = checkFile(picked);
+    if (!fileCheck.ok) {
+      setPhase({ kind: "refused", message: fileCheck.message });
+      return;
+    }
     setPhase({ kind: "reading" });
     let durationMs: number;
     try {
@@ -131,17 +177,22 @@ export function UploadFlow({
   };
 
   return (
-    <section aria-labelledby="upload-heading" className="rounded-md border border-line bg-surface p-4">
+    <section
+      aria-labelledby="upload-heading"
+      className="rounded-md border border-line bg-surface p-4"
+    >
       <h2 id="upload-heading" className="font-display text-lg text-foreground">
         Upload a video
       </h2>
       <p id={limitsId} className="mt-1 text-sm text-muted">
-        Limits: one English video, up to {MAX_VIDEO_SECONDS} seconds, and a plain-text script. A new video
-        makes the evidence for the old one out of date.
+        Limits: one English video, up to {MAX_VIDEO_SECONDS} seconds, and a plain-text script. A new
+        video makes the evidence for the old one out of date.
       </p>
 
       {readOnly ? (
-        <p className="mt-2 text-sm text-muted">The demo is read-only. Make an editable copy to upload a video.</p>
+        <p className="mt-2 text-sm text-muted">
+          The demo is read-only. Make an editable copy to upload a video.
+        </p>
       ) : (
         <div className="mt-3">
           <label htmlFor={inputId} className="text-sm font-medium text-foreground">
@@ -150,7 +201,7 @@ export function UploadFlow({
           <input
             id={inputId}
             type="file"
-            accept="video/*"
+            accept="video/mp4,video/quicktime,video/webm,video/x-matroska"
             disabled={busy}
             aria-describedby={limitsId}
             onChange={(e) => {
@@ -165,11 +216,18 @@ export function UploadFlow({
 
       <div className="mt-3 text-sm" aria-live="polite">
         {phase.kind === "reading" ? <p role="status">Reading the video length...</p> : null}
-        {phase.kind === "requesting" ? <p role="status">Asking the server where to upload...</p> : null}
+        {phase.kind === "requesting" ? (
+          <p role="status">Asking the server where to upload...</p>
+        ) : null}
         {phase.kind === "uploading" ? (
           <div role="status">
             <p>Uploading: {Math.round(phase.fraction * 100)}%</p>
-            <progress className="mt-1 w-full" max={100} value={Math.round(phase.fraction * 100)} aria-label="Upload progress" />
+            <progress
+              className="mt-1 w-full"
+              max={100}
+              value={Math.round(phase.fraction * 100)}
+              aria-label="Upload progress"
+            />
           </div>
         ) : null}
         {phase.kind === "done" ? (
@@ -177,10 +235,13 @@ export function UploadFlow({
             <p className="font-medium text-foreground">Video version {phase.version} saved.</p>
             {phase.result === "skipped_in_fixture_mode" ? (
               <p className="mt-1 text-muted">
-                Fixture mode has no storage, so the file was not sent anywhere. Only its name and length were saved.
+                Fixture mode has no storage, so the file was not sent anywhere. Only its name and
+                length were saved.
               </p>
             ) : null}
-            <p className="mt-1 text-muted">Evidence for the old video is now out of date. Run an analysis to check the new one.</p>
+            <p className="mt-1 text-muted">
+              Evidence for the old video is now out of date. Run an analysis to check the new one.
+            </p>
           </div>
         ) : null}
       </div>

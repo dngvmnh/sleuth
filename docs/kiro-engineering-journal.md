@@ -254,6 +254,13 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Team rule: free tiers only. `docs/deploy-plan.md` now costs $0: Vercel Hobby, a scheduled GitHub Actions worker (public repo, no minute cap), Supabase Free. D-4 proposal: Deepgram sign-up credit for transcription, Gemini free tier only for our own clips, because the free tier may use content to improve Google's products. Limits were read from vendor pages on 9 November.
 - Board refreshed to `main` `31d09ee` (Phạm Quốc Bảo merged PRs #9 to #19).
 - Checks: lint and typecheck clean; repo config tests 42 passed. Docs only, so the database suites were not re-run.
+## 2026-11-10: upload size and type limits (contract change)
+
+- `POST /projects/{id}/assets/upload-url` now requires `sizeBytes` (integer, 1 to `MAX_VIDEO_BYTES` = 52428800). `mimeType` must be one of `ALLOWED_VIDEO_TYPES` (mp4, quicktime, webm, x-matroska). Both are exported from `@sleuth/contracts`.
+- `checkLimits` gained `sizeBytes` and `config.maxVideoBytes` with codes `invalid_size` and `video_too_large`. Both stores use it and answer 400 `invalid_request` with `reason` and `maxVideoBytes` in the details.
+- Tests: domain unit and property tests, a store-contract property test (runs on the fixture and Supabase stores), and route tests for each refusal and each allowed type at exactly 50 MB.
+- For Dat: send `sizeBytes: file.size` and use `file.type` in the upload call, and show a clear message on 400 before uploading.
+- For Bao: nothing changes in the worker. `MAX_VIDEO_BYTES` keeps the same default.
 
 ### 2026-11-08, Đạt (@phatdat220707), review-workspace tasks 1–2
 

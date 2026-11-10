@@ -174,7 +174,10 @@ describe("createProject", () => {
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/v1/projects");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body as string)).toMatchObject({ name: "My Project", copyFromDemo: true });
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      name: "My Project",
+      copyFromDemo: true,
+    });
   });
 
   it("defaults copyFromDemo to false", async () => {
@@ -188,9 +191,11 @@ describe("createProject", () => {
 
 describe("getProject", () => {
   it("sends GET /api/v1/projects/{id}", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      ok({ project: PROJECT, assetVersion: null, scriptVersion: null, checklist: [] }),
-    );
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(
+        ok({ project: PROJECT, assetVersion: null, scriptVersion: null, checklist: [] }),
+      );
     const client = createApiClient({ fetchImpl });
     const result = await client.getProject("proofpay-demo");
     expect(fetchImpl.mock.calls[0]?.[0]).toBe("/api/v1/projects/proofpay-demo");
@@ -198,9 +203,11 @@ describe("getProject", () => {
   });
 
   it("percent-encodes the project id", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      ok({ project: PROJECT, assetVersion: null, scriptVersion: null, checklist: [] }),
-    );
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(
+        ok({ project: PROJECT, assetVersion: null, scriptVersion: null, checklist: [] }),
+      );
     const client = createApiClient({ fetchImpl });
     await client.getProject("a b/c");
     expect(fetchImpl.mock.calls[0]?.[0]).toBe("/api/v1/projects/a%20b%2Fc");
@@ -229,9 +236,9 @@ describe("listFindings", () => {
 
 describe("reviewEvidence", () => {
   it("sends PATCH /api/v1/evidence/{id}/review with the decision", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      ok({ evidence: EVIDENCE, decision: REVIEW_DECISION }),
-    );
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(ok({ evidence: EVIDENCE, decision: REVIEW_DECISION }));
     const client = createApiClient({ fetchImpl });
     const result = await client.reviewEvidence("ev-1", { decision: "confirm" });
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
@@ -263,6 +270,7 @@ describe("createUploadUrl", () => {
     const result = await client.createUploadUrl("proj-1", {
       fileName: "demo.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 60000,
     });
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
@@ -280,7 +288,8 @@ describe("createUploadUrl", () => {
     try {
       await client.createUploadUrl("proj-1", {
         fileName: "file.pdf",
-        mimeType: "application/pdf",
+        mimeType: "application/pdf" as "video/mp4",
+        sizeBytes: 1000,
         durationMs: 30000,
       });
     } catch {
@@ -298,6 +307,7 @@ describe("createUploadUrl", () => {
       await client.createUploadUrl("proj-1", {
         fileName: "long.mp4",
         mimeType: "video/mp4",
+        sizeBytes: 1000,
         durationMs: 181_000,
       });
     } catch {
@@ -472,8 +482,10 @@ describe("error handling", () => {
     const fetchImpl = vi.fn().mockResolvedValue(ok({ projects: [] }));
     const client = createApiClient({ fetchImpl, user: "alice" });
     await client.listProjects();
-    const headers = (fetchImpl.mock.calls[0] as [string, RequestInit])[1]
-      .headers as Record<string, string>;
+    const headers = (fetchImpl.mock.calls[0] as [string, RequestInit])[1].headers as Record<
+      string,
+      string
+    >;
     expect(headers["x-fixture-user"]).toBe("alice");
   });
 
@@ -481,8 +493,10 @@ describe("error handling", () => {
     const fetchImpl = vi.fn().mockResolvedValue(ok({ projects: [] }));
     const client = createApiClient({ fetchImpl });
     await client.listProjects();
-    const headers = (fetchImpl.mock.calls[0] as [string, RequestInit])[1]
-      .headers as Record<string, string>;
+    const headers = (fetchImpl.mock.calls[0] as [string, RequestInit])[1].headers as Record<
+      string,
+      string
+    >;
     expect(headers["x-fixture-user"]).toBeUndefined();
   });
 
@@ -542,7 +556,9 @@ describe("listReshoots", () => {
   });
 
   it("rejects a reshoot that does not match the contract", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(ok({ reshoots: [{ ...RESHOOT, status: "maybe" }] }));
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(ok({ reshoots: [{ ...RESHOOT, status: "maybe" }] }));
     const client = createApiClient({ fetchImpl });
     const caught = await client.listReshoots("proj-1").catch((e: unknown) => e);
     expect(caught).not.toBeInstanceOf(ApiClientError);
@@ -580,7 +596,9 @@ describe("getCoverage", () => {
   it("sends GET /api/v1/projects/{id}/coverage and parses coverage, seal and blockers", async () => {
     const fetchImpl = vi
       .fn()
-      .mockResolvedValue(ok({ coverage: COVERAGE, seal: null, blockers: ["undecided_candidates"] }));
+      .mockResolvedValue(
+        ok({ coverage: COVERAGE, seal: null, blockers: ["undecided_candidates"] }),
+      );
     const client = createApiClient({ fetchImpl });
     const result = await client.getCoverage("proj-1");
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
@@ -592,7 +610,9 @@ describe("getCoverage", () => {
   });
 
   it("parses an existing seal", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(ok({ coverage: COVERAGE, seal: SEAL, blockers: [] }));
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(ok({ coverage: COVERAGE, seal: SEAL, blockers: [] }));
     const client = createApiClient({ fetchImpl });
     const result = await client.getCoverage("proj-1");
     expect(result.seal?.status).toBe("active");
@@ -631,13 +651,11 @@ describe("sealProject", () => {
   });
 
   it("throws seal_blocked with the blockers kept in details, and sealBlockersOf reads them", async () => {
-    const fetchImpl = vi
-      .fn()
-      .mockResolvedValue(
-        errWithDetails(409, "seal_blocked", "The project cannot be sealed yet.", {
-          blockers: ["undecided_candidates", "uncovered_items"],
-        }),
-      );
+    const fetchImpl = vi.fn().mockResolvedValue(
+      errWithDetails(409, "seal_blocked", "The project cannot be sealed yet.", {
+        blockers: ["undecided_candidates", "uncovered_items"],
+      }),
+    );
     const client = createApiClient({ fetchImpl });
     const caught = await client.sealProject("proj-1").catch((e: unknown) => e);
     expect(caught).toBeInstanceOf(ApiClientError);
@@ -653,7 +671,9 @@ describe("sealProject", () => {
     for (const details of [undefined, {}, { blockers: [] }, { blockers: ["made_up"] }, "nope"]) {
       const fetchImpl = vi
         .fn()
-        .mockResolvedValue(errWithDetails(409, "seal_blocked", "The project cannot be sealed yet.", details));
+        .mockResolvedValue(
+          errWithDetails(409, "seal_blocked", "The project cannot be sealed yet.", details),
+        );
       const client = createApiClient({ fetchImpl });
       const caught = await client.sealProject("proj-1").catch((e: unknown) => e);
       expect(caught).toBeInstanceOf(ApiClientError);

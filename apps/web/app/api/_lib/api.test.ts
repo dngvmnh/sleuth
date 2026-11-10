@@ -97,12 +97,47 @@ describe("API routes in fixture mode", () => {
     );
   });
 
+  it.each([
+    ["a file over 50 MB", { mimeType: "video/mp4", sizeBytes: 52_428_801 }],
+    ["a size of zero", { mimeType: "video/mp4", sizeBytes: 0 }],
+    ["a text file", { mimeType: "text/plain", sizeBytes: 1000 }],
+    ["an unlisted video type", { mimeType: "video/x-flv", sizeBytes: 1000 }],
+    ["a request with no size", { mimeType: "video/mp4" }],
+  ])("refuses an upload request for %s with 400", async (_name, extra) => {
+    const who = "upload-limit-user";
+    const created = await createProject(json("POST", { name: "Upload limits" }, who), ctx());
+    const id = ((await created.json()) as { project: { id: string } }).project.id;
+    const res = await createUploadUrl(
+      json("POST", { fileName: "a.mp4", durationMs: 5000, ...extra }, who),
+      ctx({ id }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it.each(["video/mp4", "video/quicktime", "video/webm", "video/x-matroska"])(
+    "accepts %s at exactly 50 MB",
+    async (mimeType) => {
+      const who = "upload-limit-ok-user";
+      const created = await createProject(json("POST", { name: "Upload ok" }, who), ctx());
+      const id = ((await created.json()) as { project: { id: string } }).project.id;
+      const res = await createUploadUrl(
+        json("POST", { fileName: "a.bin", mimeType, sizeBytes: 52_428_800, durationMs: 5000 }, who),
+        ctx({ id }),
+      );
+      expect(res.status).toBe(201);
+    },
+  );
+
   it("answers 429 with the standard error shape and a reset time after the daily limit", async () => {
     const who = "limit-test-user";
     const created = await createProject(json("POST", { name: "Limits" }, who), ctx());
     const id = ((await created.json()) as { project: { id: string } }).project.id;
     const upload = await createUploadUrl(
-      json("POST", { fileName: "a.mp4", mimeType: "video/mp4", durationMs: 5000 }, who),
+      json(
+        "POST",
+        { fileName: "a.mp4", mimeType: "video/mp4", sizeBytes: 1000, durationMs: 5000 },
+        who,
+      ),
       ctx({ id }),
     );
     expect(upload.status).toBe(201);

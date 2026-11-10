@@ -58,6 +58,7 @@ suite("SupabaseStore (write side) on Postgres", () => {
     await store.createUploadUrl(owner, p.id, {
       fileName: "a.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 30_000,
     });
     await store.createScript(owner, p.id, script);

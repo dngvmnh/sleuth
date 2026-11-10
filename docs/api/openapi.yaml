@@ -525,7 +525,16 @@ paths:
                   maxLength: 200
                 mimeType:
                   type: string
-                  pattern: ^video\/
+                  enum:
+                    - video/mp4
+                    - video/quicktime
+                    - video/webm
+                    - video/x-matroska
+                sizeBytes:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                  maximum: 52428800
                 durationMs:
                   type: integer
                   minimum: 0
@@ -533,6 +542,7 @@ paths:
               required:
                 - fileName
                 - mimeType
+                - sizeBytes
                 - durationMs
   /projects/{id}/scripts:
     post:

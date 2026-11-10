@@ -42,6 +42,20 @@ describe("checkLimits properties", () => {
     );
   });
 
+  it("accepts a size exactly when it is a positive integer within the cap", () => {
+    fc.assert(
+      fc.property(
+        configArb,
+        fc.integer({ min: 1, max: 1_000_000_000 }),
+        fc.integer({ min: -5, max: 1_000_000_000 }),
+        (config, cap, sizeBytes) => {
+          const r = checkLimits({ sizeBytes, config: { ...config, maxVideoBytes: cap } });
+          expect(r.ok).toBe(sizeBytes > 0 && sizeBytes <= cap);
+        },
+      ),
+    );
+  });
+
   it("allows exactly the first N requests of the day and refuses the rest", () => {
     fc.assert(
       fc.property(configArb, fc.integer({ min: 0, max: 200 }), (config, analysesToday) => {

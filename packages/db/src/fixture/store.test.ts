@@ -105,6 +105,7 @@ describe("fixture store change impact", () => {
     await store.createUploadUrl(alice, projectId, {
       fileName: "take2.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 50000,
     });
     const evidence = await store.listEvidence(alice, projectId);
@@ -134,6 +135,7 @@ describe("fixture store daily analysis limit (ingestion 5.2)", () => {
     await store.createUploadUrl(alice, p.id, {
       fileName: "a.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 30_000,
     });
     await store.createScript(
@@ -178,6 +180,7 @@ describe("fixture store daily analysis limit (ingestion 5.2)", () => {
     await s.store.createUploadUrl(bob, bobProject.id, {
       fileName: "b.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 1000,
     });
     await s.store.createScript(bob, bobProject.id, "Only step here.");
@@ -210,6 +213,7 @@ describe("fixture store daily analysis limit (ingestion 5.2)", () => {
       store.createUploadUrl(alice, p.id, {
         fileName: "long.mp4",
         mimeType: "video/mp4",
+        sizeBytes: 1000,
         durationMs: 60_001,
       }),
     );
@@ -229,6 +233,7 @@ describe("fixture store audit events (ingestion 6.1)", () => {
     await store.createUploadUrl(alice, p.id, {
       fileName: SECRET_FILE,
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 12_000,
     });
     await store.createScript(alice, p.id, SECRET_SCRIPT);
@@ -394,6 +399,7 @@ describe("fixture store re-analysis (change-impact 3)", () => {
     await store.createUploadUrl(alice, id, {
       fileName: "take2.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 40_000,
     });
     const events = await store.listAuditEvents(alice, id);
@@ -594,6 +600,7 @@ describe("fixture store coverage, reshoots and the Final Seal (final-seal 1 to 3
     await store.createUploadUrl(alice, id, {
       fileName: "take2.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 30_000,
     });
     const out = await store.getCoverage(alice, id);
@@ -642,6 +649,7 @@ describe("fixture store retention purge [5.4]", () => {
     await store.createUploadUrl({ userId: "anon-1" }, oldAnon.id, {
       fileName: "a.mp4",
       mimeType: "video/mp4",
+      sizeBytes: 1000,
       durationMs: 1000,
     });
     const oldUser = await store.createProject(alice, { name: "kept" });
