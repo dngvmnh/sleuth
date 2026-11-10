@@ -6,7 +6,7 @@ Updated Tuesday 10 November 2026. Team rule: free options only for hosting and A
 
 | ID | Decision | Who | By | State |
 |---|---|---|---|---|
-| D-4 | AI providers on free options only | Đăng | Mostly decided 10 Nov | Models and data rule set (see below). Open: the AI account owner is Đăng; the "no video analysis" worker mode is a task for Bảo. |
+| D-4 | AI providers on free options only | Đăng | Mostly decided 10 Nov | Models and data rule set (see below). Open: the "no video analysis" worker mode is a task for Bảo, written up in `briefs/002-no-video-analysis-mode.md`. Until it ships, the worker workflow stays manual. |
 
 ## Decided
 

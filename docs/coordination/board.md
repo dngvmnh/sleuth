@@ -1,6 +1,6 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Tuesday 10 November 2026. Source: git, GitHub and files at `main` `89ea240`.
+Owner: coordinator session. Updated: Tuesday 10 November 2026. Source: git, GitHub and files at `main` `1da5209` (code at `7b038e6`).
 
 Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
@@ -8,8 +8,8 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 
 | Item | State |
 |---|---|
-| `origin/main` | `89ea240`. CI green (`check` and `db` jobs). |
-| PRs | #1 to #6 and #8 to #19 merged (#9 to #19 by Phạm Quốc Bảo). #7 was a CI preview, closed. No open PRs. |
+| `origin/main` | `1da5209`. CI green (`check` and `db` jobs). The `db` job can fail to start Supabase when the runner still holds port 54322; a re-run of the failed job passed (10 Nov, PR #20). |
+| PRs | #1 to #6 and #8 to #21 merged (#9 to #19 by Phạm Quốc Bảo, #21 by Đạt, #20 by Đăng). #7 was a CI preview, closed. No open PRs. |
 | CI | `check`: lint, typecheck, unit, property, contracts, build. `db`: a throwaway local Supabase stack runs every Postgres, Auth and Storage suite. |
 | Label `contract-change` | Exists. |
 
@@ -19,21 +19,33 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Of
 |---|---|---|
 | ingestion | 10/10 | none |
 | change-impact | 10/10 | none |
-| final-seal | 5/10 | 6-10 (UI, Đạt) |
-| review-workspace | 0/14 | all (Đạt) |
-| evidence-analysis | 9/16 | 3 (ADR 0007 proposed, not accepted), 7, 10 (adapters merged in PR #18, not ticked), 11, 13 (Bảo); 14, 15 (clips, Đạt) |
+| final-seal | 10/10 | none (UI merged in PR #21) |
+| review-workspace | 13/14 | 14 (accessibility: automated checks pass, manual screen-reader pass not done) |
+| evidence-analysis | 9/16 | 3, 7, 10, 11, 13 (Bảo); 14, 15 (clips, Đạt). See the check below. |
 
-Đăng's coding lane is complete.
+$1 Counts are from the `tasks.md` files at `main` on 10 November: ingestion 10/10, change-impact 10/10, final-seal 10/10, review-workspace 13/14, evidence-analysis 9/16.
+
+### Bảo's open tasks checked against the code (10 Nov)
+
+Nobody ticks these for Bảo. This is the evidence for him to tick, or to finish.
+
+| Task | State in code | Evidence | Missing |
+|---|---|---|---|
+| ea 3 provider ADR | Not done | `docs/decisions/0007-provider-choice.md` exists but says "proposed" and picks the paid Gemini tier | Amend to the free-tier rule and the data rule (D-4), then accept. The spend limit is decided: free only |
+| ea 7 outside-proof classifier | Done, only unticked | `packages/evidence-engine/src/outside-proof-terms.ts` and `outside-proof.test.ts`: 12 phrases flagged, 12 ordinary steps not flagged, the finding names the term and a proof hint; 56 tests pass in that folder and `packages/media/src/providers` | Nothing. Tick it |
+| ea 10 real adapters | Mostly done | `transcription-deepgram.ts`, `video-analysis-gemini.ts`, timeouts, retries, call cap (`createCallBudget`), recorded-response tests with no network; manual script `scripts/provider-check.ts` (Đăng's) printed counts only and no key (10 Nov) | A per-job cost ceiling (none in code); `gemini-3.8-flash` failed 3 of 3 tries, so the default model or a fallback needs a change |
+| ea 11 clips and protocol | Not done | Only clip-5 scaffolding exists | Record and label three clips, write the protocol |
+| ea 13 first evaluation | Not done | Needs ea 11 | Run after ea 11 |
 
 ## 3. Blockers today
 
 | Person | Blocker | Fix |
 |---|---|---|
 | Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | D-4 is decided (free tiers). Amend ADR 0007 to match, then tick ea 3. Check result: Deepgram and `gemini-3.6-flash` work; `gemini-3.8-flash` failed 3 of 3 tries on the free tier. |
-| Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | A "no video analysis" mode in the worker. |
-| Đăng | Production is only partly proven (10 Nov): the signed-out view, forged-header refusal and secret scan pass on the live site. Anonymous sign-in, two-user isolation and the upload limits are not proven. | Run part B of `scripts/prod-smoke.ts` (see `docs/deploy-plan.md` section 5). |
-| Đạt | The web app has no sign-in screen, and its JS holds no Supabase URL or anon key, so a visitor cannot yet reach "Try your own video". | Add anonymous sign-in with `@supabase/ssr` in the browser client (rw 1 or a small task before launch). |
-| Đạt | Review UI not started (rw 1-14, fs 6-10). Nothing on the backend side blocks it. | Start rw 1. |
+| Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | Build the speech-only mode: `briefs/002-no-video-analysis-mode.md`. |
+| Đăng | Production is only partly proven (10 Nov): signed-out view, forged-header refusal and secret scan pass on the live site (part A of `scripts/prod-smoke.ts`, 14 of 14 PASS, re-run after PR #20). Anonymous sign-in, two-user isolation and the upload limits on the live site are not proven. | Run part B after Đạt's sign-in screen is live (see below), or now for the API checks. |
+| Đạt | Confirmed in review 003: the web app has no sign-in screen and no browser Supabase client, so no visitor can write in Supabase mode. | Add anonymous sign-in with `@supabase/ssr` (steps in `reviews/003-pr21-review-workspace.md`). |
+| Đạt | Review workspace and Final Seal UI are merged (PR #21). Task 14 (manual screen-reader pass) is open. | Do the pass and tick task 14. |
 | Đạt | ea 14, 15: clips not recorded. | Record per `tests/evaluation/clips/clip-5/RECORDING.md` and the protocol from ea 9. |
 ## 4. Critical path to a working end-to-end demo
 
@@ -91,8 +103,9 @@ Target by Sun 15: probe a real video, extract audio and frames, ADR written.
 - Free hosting and AI plan (D-4, D-5): `docs/deploy-plan.md`, `decisions-needed.md`.
 
 ## 7. Open PRs and reviews
-- No open PRs on 10 November. Review notes go in `reviews/`.
+- No open PRs on 10 November. Review notes go in `reviews/`: 001 retention purge, 002 pg-queue connections, 003 PR #21.
+- PR #20 (upload size and type limits, `contract-change`) merged as `7b038e6`. It edited Đạt's upload form so it sends `sizeBytes`; Đạt is asked to look at those files.
 - Decisions: D-4, D-5 and D-7 are decided (`decisions-needed.md`). D-4 still has one task for the worker owner: a "no video analysis" mode, so visitors' videos never reach Gemini.
 - Deploy prep is written: `docs/deploy-plan.md` (production Supabase, Vercel variables, secrets) and `.github/workflows/worker.yml` (manual run only until the mode above exists).
 - Manual provider check: `pnpm tsx scripts/provider-check.ts <clip>` prints counts only.
-- Briefs 001 and 002 are complete.
+- Briefs 001 and 002 (`002-backend-finish-loop.md`) are complete. Open brief: `002-no-video-analysis-mode.md` for Bảo.

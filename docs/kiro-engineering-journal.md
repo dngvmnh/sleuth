@@ -1002,3 +1002,10 @@ None of them is a frontend test.
 - Requirement 6.1 asks to show who confirmed each item and when. The report page does not show review decisions: `GET /coverage` does not return them; only the exports do. This was not in task 10, and it is a question for Đăng if the page should show them.
 
 Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. Stash `0544b34` is kept. No server is running. Nothing was committed or pushed.
+
+## 2026-11-10: PR #20 merged, PR #21 reviewed, Bao's tasks checked
+
+- PR #20 merged (merge commit `7b038e6`) after merging `main` into the branch; the only conflict was this journal and both sides were kept. The upload form (`apps/web/features/upload`) now sends `sizeBytes`, checks type and size in the browser and explains a server 400. Gate: lint, typecheck and build clean; 945 unit tests, 113 property tests, contract check, ghost scan. CI `db` failed once (port 54322 held by the runner) and passed on re-run.
+- Live site, part A of `scripts/prod-smoke.ts`: 14 of 14 PASS.
+- Review 003 (PR #21): no sign-in screen, so visitors cannot write on the live site; task 14 (screen-reader pass) is open.
+- Bao's tasks against code: ea 7 done and unticked, ea 10 nearly done (no cost ceiling), ea 3 not done. Brief 002b written for the speech-only worker mode.
