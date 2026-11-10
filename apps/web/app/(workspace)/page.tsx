@@ -1,7 +1,5 @@
 import { FINDING_LABELS, type FindingType } from "@sleuth/contracts";
-import { getStore, VISITOR } from "../api/_lib/data-source";
-
-export const dynamic = "force-dynamic";
+import { ProjectList } from "@/features/dashboard/project-list";
 
 const ORDER: FindingType[] = [
   "ghost",
@@ -11,19 +9,9 @@ const ORDER: FindingType[] = [
   "needs_outside_proof",
 ];
 
-export default async function HomePage() {
-  const store = getStore();
-  const projects = await store.listProjects(VISITOR);
-  const rows = await Promise.all(
-    projects.map(async (project) => ({
-      project,
-      evidence: await store.listEvidence(VISITOR, project.id),
-      findings: await store.listFindings(VISITOR, project.id),
-    })),
-  );
-
+export default function HomePage() {
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="font-display text-4xl tracking-tight">SLEUTH</h1>
       <p className="mt-2 max-w-2xl text-muted">
         A QA workspace for software demo videos. It checks what you meant to say and show against
@@ -34,26 +22,9 @@ export default async function HomePage() {
         <h2 id="projects-heading" className="font-display text-2xl">
           Projects
         </h2>
-        <ul className="mt-4 space-y-3">
-          {rows.map(({ project, evidence, findings }) => (
-            <li key={project.id} className="rounded-md border border-line bg-surface p-4">
-              <a
-                className="font-display text-xl text-primary-strong underline-offset-4 hover:underline"
-                href={`/api/v1/projects/${project.id}`}
-              >
-                {project.name}
-              </a>
-              {project.isDemo ? (
-                <span className="ml-3 rounded border border-line px-2 py-0.5 text-xs text-muted">
-                  Public demo, read-only
-                </span>
-              ) : null}
-              <p className="mt-2 text-sm text-muted">
-                {evidence.length} evidence candidates, {findings.length} findings
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-4">
+          <ProjectList />
+        </div>
       </section>
 
       <section aria-labelledby="legend-heading" className="mt-10">
@@ -74,6 +45,6 @@ export default async function HomePage() {
           })}
         </dl>
       </section>
-    </main>
+    </div>
   );
 }

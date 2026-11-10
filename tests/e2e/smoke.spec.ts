@@ -1,9 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect as baseExpect, test } from "@playwright/test";
+
+// Dev mode compiles each route on its first visit, so the first waits can be slow on a busy machine.
+// A longer wait only gives the page time to appear; the assertions are unchanged.
+const expect = baseExpect.configure({ timeout: 30_000 });
 
 test("opens the demo project without signing in", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "SLEUTH" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /ProofPay demo/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^ProofPay demo/ })).toBeVisible();
   await expect(page.getByText("Public demo, read-only")).toBeVisible();
 });
 

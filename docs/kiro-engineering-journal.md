@@ -261,3 +261,744 @@ Judges read this. Keep entries dated and honest: what Kiro did, what we correcte
 - Tests: domain unit and property tests, a store-contract property test (runs on the fixture and Supabase stores), and route tests for each refusal and each allowed type at exactly 50 MB.
 - For Dat: send `sizeBytes: file.size` and use `file.type` in the upload call, and show a clear message on 400 before uploading.
 - For Bao: nothing changes in the worker. `MAX_VIDEO_BYTES` keeps the same default.
+
+### 2026-11-08, Đạt (@phatdat220707), review-workspace tasks 1–2
+
+- Goal: add component test tooling (task 1) and complete the typed API client (task 2).
+- Kiro features used: chat in agent mode, always-on steering (product, architecture, coding-standards, team-workflow, frontend, ai-safety), review-workspace spec.
+
+**Task 1 — Component test tooling**
+
+Added root dev dependencies (exact versions): `jsdom@26.1.0`, `@testing-library/react@16.3.0`, `@testing-library/dom@10.4.2`, `@testing-library/user-event@14.6.1`, `@testing-library/jest-dom@6.6.3`, `@axe-core/playwright@4.9.1`, `@vitejs/plugin-react@6.2.1`.
+
+`@vitejs/plugin-react` was required because Vitest 5 uses Vite's `vite:import-analysis` plugin before any oxc transformer runs, and `apps/web/tsconfig.json` sets `"jsx": "preserve"` for Next.js. The React plugin transforms JSX first, bypassing the preserve setting. No other solution worked without modifying the shared tsconfig.
+
+Converted `vitest.config.ts` from a single-project config to a two-project workspace: `node` (existing `.test.ts` files stay in Node) and `web` (`.test.tsx` files under `apps/web` run in jsdom). Added `apps/web/lib/**/*.test.ts` to the node project include to cover the api-client test added in task 2.
+
+Created `tests/setup/web.ts`: imports `@testing-library/jest-dom/vitest` (extends Vitest's `expect` with DOM matchers) and calls `cleanup()` after each test.
+
+Wrote a temporary `apps/web/features/example.test.tsx` with a Counter component. Verified: 3 tests passed (`pnpm exec vitest run --project web`, 2026-11-08). The tests covered `render`, `getByRole`, `toHaveTextContent` (jest-dom matcher), `userEvent.click`, and `vi.fn()` spy. Deleted the file after verification as the task requires.
+
+Pre-existing scaffold issue: `packages/media/` is ignored by the `media/` rule in `.gitignore` and was never committed. A stub was added on disk to unblock `pnpm install`; it is ignored by git. This caused a `pnpm typecheck` failure in `packages/evidence-engine` (imports from the stub, which exports nothing). That failure pre-dates this session — blocker is Bảo's (`packages/media` implementation).
+
+**Task 2 — Complete the API client**
+
+Added 6 methods to `apps/web/lib/api-client.ts`: `createUploadUrl`, `createScript`, `setChecklist`, `startAnalysis`, `getJob`, `createReshoot`. All use existing contract schemas from `packages/contracts/src/endpoints.ts`. Input is validated with the request schema before sending, so invalid inputs (wrong mimeType, empty text, empty items array, empty note, over-limit duration) throw a `ZodError` before any network call.
+
+Created `apps/web/lib/api-client.test.ts` with 26 tests covering all 12 client methods plus the error-handling helpers. Test fixtures were built from the exact entity schemas in `packages/contracts/src/entities.ts`.
+
+**Real verification results (2026-11-08, Node 24.18.0, pnpm 10.12.1)**
+
+| Command | Result |
+|---|---|
+| `pnpm exec vitest run --project web` (example.test.tsx before deletion) | 3/3 passed |
+| `pnpm exec vitest run --project node apps/web/lib/api-client.test.ts` | 26/26 passed |
+| `pnpm lint` | clean |
+| `pnpm test` | 176 passed, 2 failed (baseline: worker + golden-contract, both need `packages/media`) |
+| `pnpm test:property` | 13/13 passed |
+| `pnpm typecheck` | fails on `packages/evidence-engine` (baseline: needs real `packages/media`) |
+| `pnpm check:contracts` | 10/11 passed; 1 failed (baseline: golden pipeline needs mock providers from `packages/media`) |
+
+No commit or push was made. Changes left uncommitted for review.
+
+**Baseline failures (pre-existing, not caused by this work)**
+
+- `apps/worker/src/worker.test.ts > claims the fixture job…`: requires real `@sleuth/media` mock providers — Bảo's work.
+- `tests/contract/golden.contract.test.ts > worker pipeline…`: same cause.
+- `pnpm typecheck` on `packages/evidence-engine`: same cause.
+
+**Files changed this session**
+
+- `package.json` (root) — 7 new dev deps
+- `pnpm-lock.yaml` — updated
+- `vitest.config.ts` — two-project workspace config
+- `tests/setup/web.ts` — new (jsdom setup + cleanup)
+- `apps/web/lib/api-client.ts` — 6 methods added
+- `apps/web/lib/api-client.test.ts` — new (26 tests)
+- `packages/media/package.json` — stub only, git-ignored
+- `packages/media/src/index.ts` — stub only, git-ignored
+
+Kiro produced the full implementation. No corrections needed on the client methods or test structure; the test fixture shapes had to be corrected once after reading the real entity schemas.
+
+### 2026-11-08, Đạt (@phatdat220707), review-workspace — integration attempt for packages/media
+
+- Goal: integrate Đăng's `.gitignore` fix and real `packages/media` from origin/main, then re-run full checks.
+- Kiro features used: chat in agent mode.
+
+**What was checked**
+
+- `git fetch --all` run. `origin/main` still at `30f588e` (same as HEAD). Đăng's commit has not arrived on the remote as of this run.
+- Local `packages/media/` is still the stub from this session: `package.json` (no scripts, no tsconfig) and `src/index.ts` (comment only). No other files.
+- `.gitignore` on `origin/main` still has `media/` (unanchored). No change on remote.
+
+**What was done**
+
+- Fixed `vitest.config.ts` node project include: replaced the separate `apps/web/app/**/*.test.ts` and `apps/web/lib/**/*.test.ts` entries with a single `apps/web/**/*.test.ts` glob. This ensures future `.test.ts` files in `apps/web/features/` (timeline geometry, segment-at) are discovered in the Node environment without needing further config changes.
+- No stash needed: no merge possible since origin/main has not changed.
+- No stub files removed: cannot verify the stub against Đăng's real implementation until the push arrives.
+
+**Check results (2026-11-08, after vitest.config.ts glob fix)**
+
+| Command | Result |
+|---|---|
+| `pnpm lint` | ✅ clean |
+| `pnpm test:property` | ✅ 13/13 |
+| `pnpm test` (node + web projects) | 176 passed, **2 failed** (same baseline: mock provider stubs) |
+| `pnpm typecheck` | **fails on `packages/evidence-engine`** — stub `src/index.ts` is not a module |
+| `pnpm check:contracts` | 10/11 passed, **1 failed** — `createMockTranscriptionProvider is not a function` |
+
+All remaining failures trace to `packages/media` stub. They will clear once Đăng's real implementation arrives and the `.gitignore` fix lands on origin/main.
+
+**Pending action — needs Đăng**
+
+Once Đăng's commit is on origin/main: run `git fetch`, `git stash push --include-untracked -m "task1-2-changes"`, `git merge origin/main`, restore stash, delete the stub files (`packages/media/package.json` and `packages/media/src/index.ts`), run `pnpm install`, re-run all checks. At that point all 5 checks should be green.
+
+No commit or push made.
+
+### 2026-11-08, Đạt (@phatdat220707), review-workspace — integration of fix/track-packages-media complete
+
+- Goal: integrate Đăng's `fix/track-packages-media` branch (commit `f549c1c`) and re-verify tasks 1–2 with the real `packages/media` implementation.
+- Kiro features used: chat in agent mode.
+
+**Integration steps**
+
+1. Fetched `origin/fix/track-packages-media`. Confirmed: one commit (`f549c1c`) on top of `30f588e` (our HEAD) — fast-forward eligible.
+2. Inspected stub vs real files before acting:
+   - Stub `packages/media/src/index.ts`: comment only. Real: `export * from "./providers"; export * from "./mocks"; export * from "./validate";` — different, confirmed stub was safe to remove.
+   - Stub `packages/media/package.json`: no scripts, no dependencies. Real: has `typecheck` script and `@sleuth/contracts` dep.
+3. Stashed all task 1–2 changes (tracked + untracked) as `task1-2-web-test-tooling`. Confirmed stash saved.
+4. Deleted stub files individually: `packages/media/package.json`, `packages/media/src/index.ts`, then empty dirs. (Stub was git-ignored; stash had not captured it.)
+5. `git merge --ff-only origin/fix/track-packages-media` — clean fast-forward, HEAD now at `f549c1c`.
+6. `git stash pop` — all 6 modified files and 2 untracked entries restored without conflict.
+7. `pnpm install` — resolved with real `@sleuth/media` workspace package.
+8. Confirmed `.gitignore` now has `/media/` (anchored) — `packages/media` no longer ignored.
+
+**Final check results (2026-11-08, Node 24.18.0, pnpm 10.12.1, HEAD f549c1c)**
+
+| Command | Result |
+|---|---|
+| `pnpm lint` | ✅ clean |
+| `pnpm typecheck` | ✅ all packages pass (media, evidence-engine, web, worker) |
+| `pnpm test` | ✅ **183/183 passed** (0 failures) |
+| `pnpm test:property` | ✅ 13/13 |
+| `pnpm check:contracts` | ✅ 11/11 + openapi.yaml matches |
+| `apps/web/lib/api-client.test.ts` | ✅ 26/26 |
+
+No commit or push made. Changes left uncommitted for Đăng's review.
+
+## 2026-11-09 Review workspace task 3 (app shell and dashboard), Đạt
+
+Kiro added the workspace shell (`app/(workspace)/layout.tsx`: header, nav, skip link; fog stays in the root layout), `components/state-panel.tsx` (loading, empty, error with retry, processing), `features/dashboard/` (`use-dashboard.ts`, `project-list.tsx`) and rewrote `app/(workspace)/page.tsx` to use the typed API client. The "Create a project" action calls `createProject(name, true)` (copy-from-demo) with pending and error handling. The contract exposes only name, `isDemo` and `createdAt`, so no findings counts or "last updated" time are shown.
+
+Verification: lint clean; typecheck clean; `pnpm test` 188/188 (5 new component tests: loading, empty, demo list, error plus retry, create error); `test:property` 13/13; `check:contracts` 11/11; `test:e2e` 6/6 after `playwright install chromium`. The `smoke.spec.ts` link locator was updated because the dashboard now has an extra "Open demo" link.
+
+Not complete: the demo link goes to `/projects/proofpay-demo`, which has no page until task 6. The e2e test checks only the URL, not workspace content. Task 3 is left unticked for that reason.
+
+## 2026-11-09 Task 3 review pass, Đạt
+
+Kiro passed the `creating` state to `EmptyState`/`StatePanel` (button disabled, "Creating...") and added a ref guard in `useDashboard` so a second create cannot send a second POST. Each row now shows open findings from `listFindings` (status `open` only); if that request fails the row says "Open findings unavailable" and shows no number. Projects are sorted newest created first (`sortNewestFirst`, tie on id).
+
+Limit for Đăng to confirm: the contract has no "last change" field on `Project`. Requirement 1.2 says "last change", but the row shows only the creation date and the order is by `createdAt`. Needs a field such as `updatedAt` (or a derived value) in the contract before 1.2 is fully met.
+
+Verification: lint, typecheck clean; `pnpm test` 194/194 (11 dashboard component tests, including create then reload and one POST while pending); `test:property` 13/13; `check:contracts` 11/11; `test:e2e` 6 passed, 1 skipped. The skipped test is "opening the demo shows the demo workspace", blocked on task 6 (`/projects/[id]` does not exist). Task 3 stays unticked.
+
+## 2026-11-09 Review workspace task 4 (pure timeline helpers), Đạt
+
+Also in this session: the focus ring fix. Tailwind `transition-colors` animated `outline-color`, so the ring started as the text colour (dark on the primary button) and faded to `--sleuth-focus` over 150 ms. `globals.css` `:focus-visible` now leaves `outline-color` out of `transition-property`. `tests/e2e/focus.spec.ts` (8 tests: desktop and mobile, with and without reduced motion) reads the ring at once after Tab and checks style, 2 px width, offset, token colour and 3:1 contrast against the page; 6 of 8 failed with the fix removed.
+
+Task 4: Kiro added `apps/web/features/timeline/geometry.ts` (`clamp`, `msToPercent`, `percentToMs`) and `segment-at.ts` (`segmentAtMs`, generic over `{ startMs, endMs }`), with `geometry.property.test.ts` and `segment-at.property.test.ts` (fast-check).
+
+Decisions: duration of 0, negative or non-finite maps everything to 0% and 0 ms. Inputs are clamped, not extrapolated; non-finite input counts as the start. `percentToMs` returns whole ms. Intervals are half-open (`startMs <= ms < endMs`), so touching intervals never both match (the later one owns the shared instant), empty intervals never match, and `ms === endMs` of the last interval has no match. If intervals overlap, the first in input order wins.
+
+Verification: lint and typecheck clean; `pnpm test` 214/214; `pnpm test:property` 33/33, with both new files discovered and run (10 tests each); `check:contracts` 11/11. Task 4 ticked. Task 3 stays unticked (task 6 demo page, and no "last change" field in the contract).
+
+## 2026-11-09 Review workspace task 5 (player port and simulated player), Đạt
+
+Kiro added `apps/web/features/player/`: `player-port.ts` (`PlayerPort`, change events, `clampTimeMs`, `normaliseDurationMs`, reusing `clamp` from the task 4 geometry), `simulated-player.ts` (manual clock with `tick`), `html-player.tsx` (`HtmlVideoPlayer` over a `VideoElementLike`, which a real `<video>` satisfies) and `no-video-panel.tsx` (states that fixture mode has no video and nothing plays real footage).
+
+Decisions: time is whole ms within 0..duration, same as the timeline helpers. A duration of 0, negative or non-finite means nothing to play. `tick` moves time only while playing; ignored for a delta that is 0, negative or not finite. Reaching the end stops at exactly the duration and emits `ended`. `play` at the end restarts from 0. Seeking to the end during playback ends it. Listeners are copied before notifying, so unsubscribing inside a listener is safe. `PlayerPort` has `dispose()`, which clears subscribers and (for the HTML adapter) removes the DOM listeners. If the browser rejects `play()` (autoplay rules) the adapter stays paused and emits nothing.
+
+Verification: lint and typecheck clean; `pnpm test` 243/243; `pnpm test:property` 33/33; `check:contracts` 11/11. New tests were discovered and ran: `simulated-player.test.ts` 18, `html-player.test.ts` 9 (stub element, no media, no network), `no-video-panel.test.tsx` 2. Task 5 ticked. Task 3 stays unticked (task 6 demo page, no "last change" field in the contract).
+
+Limits: nothing yet drives `tick` from a timer or uses the panel; that belongs to the workspace page (task 6). The HTML adapter was tested only against a stub, not a real browser video.
+
+## 2026-11-09 Review workspace task 6 (workspace data hook and page skeleton), Đạt
+
+Kiro added `app/(workspace)/projects/[id]/page.tsx`, `features/workspace/use-project.ts`, `workspace.tsx` (plus `test-fixtures.ts` for tests) and `features/player/simulated-clock.tsx`. `LoadingSkeleton` got an optional `label`.
+
+`useProject(projectId)` loads project detail, evidence and findings through the typed client and exposes `status` (`loading`, `error`, `not_found`, `empty`, `done`), `refresh` and `review`. A 404 is `not_found`; other errors keep their message. A response for an earlier project, an earlier attempt or an unmounted component is dropped, and the old project is never shown while a new id loads. `review` sends one request at a time, replaces the returned evidence, reloads findings, and shows the server's refusal text; nothing in the UI sets `confirmed` itself, the status only changes when the server returns it after a human decision.
+
+The workspace shows the real script from the fixture in order, evidence and findings counts (open findings counted by type, spooky label with plain label), and labelled regions for Player, Timeline (placeholder), script and Evidence Lantern (placeholder). The player area shows `NoVideoPanel` and a `SimulatedClock` (play, pause, slider). The page never renders a `<video>`: the API exposes no playable video source (only a placeholder storage path), so the real adapter is not wired. One interval runs only while playing; it, the subscription and playback stop on unmount, and re-rendering does not add timers.
+
+Verification: lint and typecheck clean; `pnpm test` 266/266 (new: 9 hook, 7 workspace, 7 clock tests); `test:property` 33/33; `check:contracts` 11/11; `test:e2e` 19/19, no skipped. The test that was `fixme` now clicks Open demo on the dashboard and checks the heading, the first script line and "4 evidence candidates, 4 findings (4 open)". Visual check with Playwright screenshots at 1280 and 390 px: no horizontal overflow, no text under 12 px. Task 6 ticked.
+
+Task 3: the "open the demo" blocker is removed. It stays unticked because requirement 1.2 needs a "last change" field that `Project` does not have (Đăng to confirm).
+
+Limits: the HTML player adapter is still unused; it needs a playable video URL from the API (a signed-URL endpoint) before it can be wired. Timeline markers, sentence states and click-to-seek, and review buttons are later tasks.
+
+## 2026-11-09 Handoff: tasks 7, 8, 9 implemented, not yet ticked, Đạt
+
+Stopped on request (machine hot). Nothing was committed or pushed; all changes are uncommitted in `feat/web-test-tooling`. Tasks 1 to 6 are done and ticked. Task 3 stays unticked (no "last change" field on `Project`; Đăng to confirm). Tasks 7, 8 and 9 are NOT ticked.
+
+Built so far (code and tests exist):
+- Task 7: `features/timeline/state.ts` (TEMPORARY adapter for `deriveSegmentStates`, same signature, rules from change-impact design; delete it and use `packages/domain` when Đăng's task lands, and move or replace `state.test.ts`), `markers.ts`, `timeline.tsx`, `components/live-region.tsx`.
+- Task 8: `features/script/sentence-list.tsx`, `features/player/use-simulated-player.ts` (one shared player and one interval), `simulated-clock.tsx` now takes that player; `workspace.tsx` rewired so the player, timeline playhead, sentence highlight (`segmentAtMs`) and Lantern share one clock. "Play this part" stops at the end of the part.
+- Task 9: `features/lantern/lantern.tsx`, `components/finding-badge.tsx`.
+- Tests: `state.test.ts`, `markers.test.tsx` (renamed from .ts because the `@/` alias only exists in the jsdom project), `timeline.test.tsx`, `lantern.test.tsx`, `workspace-flow.test.tsx`, updated `workspace.test.tsx`, `simulated-clock.test.tsx`, `test-fixtures.ts`; `tests/e2e/investigation.spec.ts` (10 tests, includes axe).
+
+Checks actually run, and when:
+- Before the last layout edit: lint clean; typecheck clean; `pnpm test` 327/327; `test:property` 33/33; `check:contracts` 11/11; `test:e2e` 29/29; production `pnpm build` passed (also passed once before task 7 started); Playwright screenshots at 1280 and 390 px showed no horizontal overflow, no text under 12 px, focus ring amber 2 px, fog hidden under reduced motion.
+- After the last layout edit (timeline marker lanes, `h-28`; sentence list `basis-48` and badge padding): only `pnpm build` and one screenshot run. Unit tests, e2e, lint and typecheck were NOT re-run after this edit.
+
+Open issues:
+1. Mobile (390 px) sentence list: the first screenshot showed the line text squeezed into a very narrow column with the badge overlapping it. The edit meant to fix this was made, but the screenshot taken afterwards looked the same, so the fix is unverified and may not work. Needs a look at `features/script/sentence-list.tsx` (the button uses `flex flex-wrap`).
+2. Mobile timeline: markers for lines 1 and 2 overlapped before the lane change; the lane change is unverified.
+3. Design says focus goes to the Lantern heading on keyboard marker activation; task 8 says the sentence is focused. The code focuses the sentence (task 8 acceptance). Escape also returns to the sentence list (requirement 8.1).
+4. The HTML video adapter is still unused: the API has no playable video URL.
+5. In `use-simulated-player.ts` the player is not disposed on unmount (only paused and unsubscribed), so React strict mode can re-run the effect.
+
+Next steps when resuming (do in order, one check at a time):
+1. Fix the mobile sentence-list layout; look at a 390 px screenshot to confirm.
+2. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts`, `pnpm test:e2e`, then `pnpm build`.
+3. If all pass, tick tasks 7, 8 and 9 in `.kiro/specs/review-workspace/tasks.md` and note the temporary adapter in the journal. Do not start task 10.
+
+## 2026-11-09 Tasks 7, 8, 9 completed (resumed from the handoff), Đạt
+
+Resumed from the handoff entry. The 390 px problem in the handoff was a stale screenshot: it was taken before the layout edit was built. After a fresh `pnpm build` (fixture mode) and `next start`, a 390 px check showed: line text 246 px wide on every row, the state badge under the text and not over it, no horizontal overflow, and all four timeline markers hit-testable (markers sit in two lanes). No further code change was needed.
+
+Flow check at 390 px and 1280 px on the production build: clicking the marker for line 2 set the clock to 4.0 s, focused line 2 and showed "Evidence for line 2"; clicking the marker for line 1 gave 1.0 s and "Evidence for line 1"; on desktop the marker for line 3 gave 11.0 s and its Lantern. Screenshots (scratch, removed with the session): `final-mobile.png`, `final-desktop.png`.
+
+Checks after the last app code change (run in this order): `pnpm lint` clean; `pnpm typecheck` clean; `pnpm test` 327/327; `pnpm test:property` 33/33; `pnpm check:contracts` 11/11 plus openapi match; `pnpm build` passed. After that only e2e spec files changed (longer waits, see below); lint and typecheck were re-run and are clean.
+
+`pnpm test:e2e`: 29/29 passed with `--workers=4` and in an earlier run today with the default workers. With the default 16 workers on this slower machine the run failed in this session: 1 to 7 tests timed out at about 30 s, a different set each time (dev mode compiles each route on first visit while all workers start at once; a failing page snapshot showed the page had rendered). A single spec file alone passed. This looks like load, not an app bug, but it is not proven. Changes to tests for it, none weakening an assertion: `expect.configure({ timeout: 30_000 })` in `dashboard`, `smoke`, `workspace` and `focus` specs, and `test.setTimeout(90_000)` on the open-demo test. If CI runs with default workers on a slow runner, expect the same; fix would be a warm-up step or fewer workers in `playwright.config.ts` (root config, Đăng).
+
+Task state: 1 to 9 ticked (7, 8, 9 now). Task 3 stays unticked (needs a "last change" field on `Project`, Đăng). Task 10 not started.
+
+Remaining temporary adapter: `apps/web/features/timeline/state.ts` (`deriveSegmentStates`) replaces nothing in the domain package yet. When Đăng's change-impact task 2 lands in `packages/domain`: delete this function, import the domain one, keep `STATE_LABELS` (move it if the domain does not own labels), and move or replace `state.test.ts` with the domain tests. Open question for Đăng: the design does not define "valid" in rule 1 (outside_proof); the adapter reads it as confirmed, candidate or needs_reshoot.
+
+Not verified: real-browser keyboard use with a screen reader (no Narrator or NVDA pass yet, design asks for one); the HTML video adapter is still unused (the API has no playable video URL); focus goes to the sentence on marker activation (task 8 acceptance), not to the Lantern heading as the design text says.
+
+## 2026-11-09 Task 10 (Exorcism actions and reshoot note), Đạt
+
+Started 11:32. The previous attempt was cut off while `review.spec.ts` ran (the command hung 10 min with no output; no result was recorded).
+
+Kiro added `apps/web/features/lantern/actions.tsx` (`ExorcismActions`) and `actions.test.tsx`, wired it into the Lantern through a new `actions` slot, and extended `useProject` with `reshoot(evidence, note)` and `reviewErrorId`. `review` now returns whether it succeeded. One request runs at a time (shared guard for review and reshoot). Needs reshoot opens an inline note; it records the `needs_reshoot` decision first and only then calls `createReshoot` with the line's segment and checklist item, so a refused decision creates no task. Demo: all four actions disabled with the reason as their description. Stale evidence: only "Dismiss" (sent as `reject`), the rest disabled with the reason. The server's error text is shown unchanged in `role="alert"`, only on the evidence it belongs to. Saved and refused decisions are announced in the workspace live region. The status shown comes from the server response; nothing in the UI sets `confirmed`.
+
+Requirements: 6.1 decisions call the endpoint, update evidence and reload findings, announce (unit + e2e); 6.2 refusal shows the server message and leaves the screen unchanged (e2e uses a real refusal: the line is edited through the API so its evidence goes stale on the server, then Confirm returns "Decision refused: stale_needs_reanalysis."); 6.3 note and reshoot task (e2e checks the 201 body); 6.4 demo and stale reasons (unit + e2e for demo); 6.5 no bulk control (unit + e2e).
+
+Fix during checks: the e2e "no bulk control" regex matched the script line "All customer data ..."; it now matches action phrases (bulk, select all, confirm all) and checks there are no checkboxes. Lint asked for `cause` on a re-thrown error.
+
+Checks (fixture mode, after the last change unless noted): `vitest run` lantern + workspace 48/48 then use-project 11/11 and workspace-flow (new announce tests) pass, exit 0; `playwright test tests/e2e/review.spec.ts --workers=1` 5/5, exit 0 (before the lint `cause` fix, which does not touch the tested path); `pnpm lint` exit 0; web `typecheck` exit 0. Full `pnpm test`, `test:property`, `check:contracts`, full e2e and build: run at the end of this session. Task 10 ticked.
+
+## 2026-11-09 Task 11 (script and checklist editors), Đạt
+
+Kiro added `features/script/script-editor.tsx`, `features/checklist/checklist-editor.tsx`, `features/workspace/editors-panel.tsx` and their tests, and `saveScript`, `saveChecklist`, `makeCopy` in `useProject`. After a save the hook reloads project, evidence and findings without the loading state, so the sentence list and timeline show the server's new states.
+
+- 3.1: Save script posts a new version (`createScript`); the summary lists changed and added lines from `diff`, removed lines as a count, and the stale count from `staleEvidenceIds`.
+- 3.2: lines keep the server's segment ids; the list re-renders from the new `scriptVersion`.
+- 3.3: "No evidence affected." is shown when the server returns no stale ids. The UI does not decide this.
+- 3.4: checklist add (button or Enter), remove, Up and Down, Save sends the whole list in order; an empty list cannot be saved; server errors shown as alerts, the edited list kept.
+- 3.5: on the demo both editors are read-only, a note says so, and "Make an editable copy" creates a copy (`createProject(name, true)`) and opens it.
+
+Checks after the last change: `vitest run apps/web/features` 177/177, exit 0; `playwright test tests/e2e/editors.spec.ts tests/e2e/review.spec.ts --workers=1` 9/9, exit 0 (editing line 3 shows only "Line 3 changed" and 1 stale candidate, line 3 becomes Poltergeist and lines 1, 2, 5 keep their states; a punctuation-only edit on line 2 shows "No evidence affected."; checklist order checked through the API; demo copy opens an editable project); `pnpm lint` exit 0; `pnpm typecheck` exit 0. Task 11 ticked.
+
+## 2026-11-09 Task 12 (upload flow) and end-of-session checks, Đạt
+
+Kiro added `features/upload/duration.ts` (`readVideoDurationMs` reads only metadata through a `<video>` element and releases the object URL; `checkDurationMs` applies `MAX_VIDEO_MS` from contracts), `features/upload/upload-flow.tsx` and tests, and `requestUploadUrl` and `sync` in `useProject`. The flow sits in the workspace above the editors.
+
+- 2.1: the length is read in the browser; above 180 s it is refused with "This video is 200 seconds long. The limit is 180 seconds. Trim it and try again." and nothing is sent. A non-video file is refused too.
+- 2.2: accepted files call `createUploadUrl` with name, type and length, then upload with a progress bar. Fixture mode returns a `fixture://` URL: no bytes are sent and the UI says so. After success the workspace reloads, and the evidence for the old video shows as Poltergeist (the server marks it stale). The "processing state" (job polling) belongs to task 13 and is not built; the done message says to run an analysis.
+- 2.3: a failure says which step failed and shows the server's text; Try again repeats only that step with the same file. Script and checklist drafts live in their own editors and are kept (e2e checks both).
+- 2.4: the limits text is next to the file picker and is its accessible description.
+
+E2E note: no real video file is committed, so `upload.spec.ts` stubs the browser's media metadata (`HTMLMediaElement` `duration` and the `src` setter) to fire `loadedmetadata` with 200 s or 52 s. The app's reader, limit check and flow run unchanged.
+
+Fixes found by the full run:
+- Script lines also appear inside the script editor textarea, so two e2e `getByText` lookups in `dashboard.spec.ts` and `workspace.spec.ts` matched twice. They are now scoped to the script list.
+- `useSimulatedPlayer` could miss a seek made before its effect subscribed: the clock still showed 0.0 s (seen in 1 of about 13 unit runs). The display now reads the player through `useSyncExternalStore`, and the timer effect checks `player.playing` when it subscribes. After the change: workspace-flow alone 15/15 clean runs, `apps/web/features` 12/12, full `pnpm test` 6/6. One failure ("moves the playhead and the slider together") was seen once in 10 runs of workspace-flow and player run together, right after the change; it did not repeat in the 33 later runs. Cause not found.
+
+Final checks, run in order after the last code change (fixture mode):
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `pnpm test` | 378/378 (6 runs) | 0 |
+| `pnpm test:property` | 33/33 | 0 |
+| `pnpm check:contracts` | 11/11, openapi matches | 0 |
+| `playwright test --workers=1` (all specs) | 41/41, none skipped | 0 |
+| `pnpm build` | passed | 0 |
+
+Visual check: production build at 390 px on a copy after a confirm and a script save: no horizontal overflow, no text under 12 px. Screenshot `t10-12-mobile.png` in the session scratch folder (removed with the session). The `next start` server opened for it was stopped.
+
+Task state: 1, 2 and 4 to 12 ticked. Task 3 waits for a "last change" field on `Project` (Đăng). Not started: 13 onward. No API or contract change was needed.
+
+Still open:
+- The temporary `features/timeline/state.ts` adapter. Replace it when Đăng's `deriveSegmentStates` lands.
+- No screen reader pass yet.
+- Full e2e is reliable with `--workers=1`. Default workers on this machine timed out earlier today; that is a root `playwright.config.ts` question for Đăng.
+- Decision buttons stay available after a decision (the server allows changing it). Ask Đạt whether that is wanted.
+
+Next: task 13 (job polling and workspace states).
+
+## 2026-11-09 Task 13 (job polling and workspace states), Đạt
+
+Started 11:58. Kiro added `features/workspace/use-job-poll.ts`, `analysis-panel.tsx` with `analysis-panel.test.tsx`, `tests/e2e/analysis.spec.ts`, and `startAnalysis` and `fetchJob` in `useProject`. The panel sits after the upload panel and uses `ProcessingState` from `components/state-panel.tsx`.
+
+- 7.2: one check every 2 s while the job is `queued` or `running`. The next check is set only after the previous answer, so checks never overlap. Polling stops at `succeeded` or `failed`, when another job is watched, and on unmount. Each watch has a generation number, so a late answer for an older job is dropped. The UI shows status and "Attempt n of max". A failed check shows a warning and polling goes on.
+- 7.3: a failed job shows its `error` text and the attempts as an alert. Try again calls `startAnalysis` again, which creates a new job, and follows that job.
+- 7.4: on success it reloads project, evidence and findings (`sync`) and shows how many items still need a person: candidates not yet decided (`candidate` or `needs_outside_proof`) and open findings.
+- Demo: no Run analysis button, with a read-only note.
+
+Fixture limit: the web app runs no worker, so a real job stays `queued` with attempts 0. The UI shows that real state and says a job stays queued when no worker is running. The running, succeeded and failed paths are covered only by component tests with fake timers and simulated job answers. No API or contract change was needed.
+
+Checks after the last change: `vitest run` analysis-panel and editors-panel 11/11, exit 0 (fake timers: queued -> running -> succeeded, queued -> failed -> Try again -> succeeded, no overlapping checks, a late answer dropped, cleanup on unmount, a failed check, a start error, demo). `playwright test tests/e2e/analysis.spec.ts --workers=1` 3/3, exit 0. Against the real fixture API: POST returns 202 with a `queued` job; at least 3 checks at least 1.9 s apart, never two at once; the API still says `queued` and so does the UI; leaving for the dashboard stops all checks for 5 s; the demo cannot start one. `pnpm lint` exit 0; `pnpm typecheck` exit 0. Task 13 ticked.
+
+## 2026-11-09 Task 14 automated part, and end-of-session checks, Đạt
+
+After the task 13 entry, lint flagged that `schedule` in `use-job-poll.ts` called itself before it was declared. It now uses an inner `next()` function. The analysis-panel unit tests (8/8) and `analysis.spec.ts` (3/3) were re-run after this fix and passed.
+
+Task 14 (automated part only): Kiro added `tests/e2e/a11y.spec.ts` (9 tests) and `docs/accessibility.md`.
+- Axe with WCAG 2.0/2.1 A and AA tags, with motion on and with reduced motion, on three pages: the dashboard, the demo workspace with the Lantern open, and an editable copy with review actions and the reshoot note open. Result: 0 serious or critical issues, and 0 violations of any impact.
+- Axe left color-contrast as "incomplete": 6 nodes on the dashboard and 1 on each workspace page. These are probably the translucent header and the fog. They are unverified.
+- Reduced motion: the fog is hidden and no element has a running animation while the page loads.
+- Keyboard: skip link, open demo, timeline Tab, arrows, Enter and Escape, choosing a line, a visible focus ring, and confirming with the keyboard on a copy.
+- No frontend code change was needed.
+- The doc lists 16 Narrator/NVDA steps for Đạt to run, and the known gaps.
+- Task 14 is NOT ticked: the manual walkthrough has not been done.
+
+Test fixes from the full e2e run (none change what is asserted):
+- `focus.spec.ts` stopped tabbing after 12 stops. Copies made by earlier specs make the dashboard list longer, so the limit is now 80.
+- `investigation.spec.ts` paused before the clock had moved: 11.0 s is already inside line 3. It now waits for the clock to move before pausing.
+- `a11y.spec.ts` uses `Array.from` for typecheck.
+
+Final checks, fixture mode, in this order:
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean (after the `Array.from` fix) | 0 |
+| `pnpm test` | 386/386 | 0 |
+| `pnpm test:property` | 33/33 | 0 |
+| `pnpm check:contracts` | 11/11, openapi matches | 0 |
+| `pnpm build` | passed | 0 |
+| `playwright test --workers=1` (all 12 specs) | 53/53, none skipped | 0 |
+
+Code did not change after the unit-test and build runs. Only e2e spec files changed, and lint, typecheck and the full e2e run were done after those changes.
+
+Servers: one `next start` was opened for the axe dump and was stopped; port 3000 is free.
+
+Task state: 1, 2 and 4 to 13 ticked. Task 3 waits for Đăng ("last change" field). Task 14 waits for the manual screen-reader pass. The temporary timeline adapter `features/timeline/state.ts` is unchanged.
+
+## 2026-11-09 Task 14: the 8 color-contrast "incomplete" items, Đạt
+
+Started 13:20, done 13:23. Production build, fixture mode, Chromium 1280x900. Kiro found each node axe left as color-contrast "incomplete":
+- 6 on the dashboard. Axe's reason was "background gradient", from the fog and the translucent header.
+- 1 on the demo workspace and 1 on the editable copy. Both were the script editor textarea; axe's reason was "partially obscured".
+
+For each node, Kiro made the text transparent, took a screenshot of its box, read the darkest and lightest pixels, and computed the WCAG ratio of the computed text colour against both.
+
+All 8 pass AA. Worst ratios:
+- header wordmark 8.64:1
+- header "Dashboard" link 6.64:1 (the lowest)
+- h1 14.08:1
+- intro text 8.30:1
+- "Projects" 15.07:1
+- "What the findings mean" 16.08:1
+- textarea 16.18:1 on both pages
+
+For the textarea, 84,315 of 84,320 pixels are #0e0b16; the other 5 are the native resize grip. `elementFromPoint` finds nothing covering it.
+
+With reduced motion the fog is off, and the 6 dashboard items are not reported at all.
+
+No CSS change was needed, so `a11y.spec.ts` was not re-run (no code changed since its last 9/9 pass). The table and its limits are in `docs/accessibility.md`: one viewport, one moment of the fog drift, hover colours not measured, High Contrast mode not checked.
+
+The server opened for this was stopped; port 3000 is free. Task 14 stays unticked until the manual Narrator or NVDA walkthrough in `docs/accessibility.md` is done.
+
+## 2026-11-09 Task 14 manual walkthrough, group 1, Đạt
+
+At 13:26 Kiro rebuilt and started `next start` in fixture mode on port 3000, and created the editable copy `proj-1` ("Narrator copy") through the API.
+
+Group 1 (dashboard and skip link) was reported by Đạt as a keyboard and visual check in Chrome/Playwright. The tab order and focus behaved as expected: skip link first, Enter into the main region, then the project links, Open demo and Create a project. Each control had a name and a 2 px amber focus ring. Shift+Tab into the header reached "Dashboard" before "SLEUTH home". Details are in `docs/accessibility.md` under "Walkthrough log".
+
+What Narrator actually says for group 1 is not confirmed yet. No fix was needed. Task 14 stays unticked. The server is still running for groups 2 and 3.
+
+## 2026-11-09 Integrate main (PR #1, `Project.updatedAt`) and finish task 3, Đạt
+
+Backup: `git stash push --include-untracked`, stash `0544b34d9f1976dfd2156eb9ef039e569941d68b` (9 tracked, 64 untracked files). It is kept as `stash@{0}`.
+
+Update: `git merge --ff-only origin/main` took `feat/web-test-tooling` from `f549c1c` to `0232faf` (80 commits). Then `git stash apply` put back the local work. Two files conflicted:
+- `docs/kiro-engineering-journal.md`: both sides added entries at the end. Kept the common part once, then all of main's entries, then Đạt's. Only the markers were removed. A check confirmed that every non-blank line of both sides is present.
+- `pnpm-lock.yaml`: took HEAD (main) as the base and kept the merged `package.json`, which has main's `eval` and `db:migrate` scripts and our pinned test dev dependencies. Ran `pnpm install --lockfile-only --no-frozen-lockfile` with pnpm 10.12.1 (exit 0), then `pnpm install --frozen-lockfile` (exit 0).
+
+The lock diff against main is +591/-2:
+- The root importer now lists the seven dev dependencies with exact specifiers equal to their versions: `@axe-core/playwright` 4.9.1, `@testing-library/dom` 10.4.2, `@testing-library/jest-dom` 6.6.3, `@testing-library/react` 16.3.0, `@testing-library/user-event` 14.6.1, `@vitejs/plugin-react` 6.2.1, `jsdom` 26.1.0.
+- About 137 package entries are added, which are their transitive dependencies.
+- The two removed lines are the `vitest@5.1.0` resolution key, which now carries `jsdom` as a peer. The vitest version did not change.
+
+For Đăng to review: the lockfile, a shared file. No existing package version changed.
+
+Only the two conflicted files were marked resolved; `git ls-files -u` is empty. The index was then cleared, so nothing is staged. All 64 untracked files from the stash are present and byte-identical. The 6 tracked frontend files match the stash exactly.
+
+Task 3 (requirement 1.2):
+- The dashboard row shows "Last change" from `project.updatedAt`, in UTC to the minute, inside a `<time datetime>`.
+- The client-side `sortNewestFirst` (by `createdAt`) was removed. The list keeps the API order: the demo first, then the most recent change, as done by `sortProjects` in the fixture store.
+- Test data gained the new required `updatedAt`: `api-client.test.ts`, `project-list.test.tsx`, `workspace/test-fixtures.ts`.
+- New unit tests: the API order is kept even when a later row changed more recently; "Last change" uses `updatedAt`, not `createdAt`; `formatLastChange` returns "unknown" for a bad value.
+- New e2e in `dashboard.spec.ts` against the real fixture API: two copies are made and a checklist is saved on the first. The API then lists the demo first and that copy second, and the page shows exactly the API order, each row's `datetime` equal to `updatedAt` and the matching "Last change" text.
+
+Checks after the last code change (fixture mode, in order):
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `pnpm test` | 759 passed, 75 skipped | 0 |
+| `pnpm test:property` | 112/112 | 0 |
+| `pnpm check:contracts` | 14/14, openapi matches | 0 |
+| `playwright test --workers=1` | 54/54 (dashboard and open-demo flow included) | 0 |
+| `pnpm build` | passed | 0 |
+
+The 75 skipped tests are main's Supabase and Postgres suites, which skip when `TEST_DATABASE_URL` or Supabase keys are not set, plus 8 ffmpeg cases. None is a frontend test.
+
+Task 3 is ticked: 1.1 and 1.3 were already verified, and the open-demo e2e passes.
+
+Still open:
+- Task 14 waits for the Narrator walkthrough; only group 1 is done, and only as a keyboard check.
+- `deriveSegmentStates` now exists in `packages/domain` on main. Replacing the temporary `features/timeline/state.ts` is left for its own turn.
+
+No server was left running. Nothing was committed or pushed.
+
+## 2026-11-09 Use the domain `deriveSegmentStates` in the frontend (temporary adapter removed), Đạt
+
+The workspace and `buildMarkers` now import `deriveSegmentStates` from `@sleuth/domain`. Both get full script segments, so the domain sees `hash`, and the full evidence candidates, so it sees `segmentHash`.
+
+`features/timeline/state.ts` no longer contains any state rules. It re-exports the domain's `SegmentState` type and keeps only the frontend `STATE_LABELS`. Nothing in `apps/web` works out a state any more.
+
+Tests:
+- The adapter's rule tests were removed from `state.test.ts`. `packages/domain/src/segment-state.test.ts` and `segment-state.property.test.ts` cover the rules.
+- `state.test.ts` now checks only the labels, plus that every value in the domain's `SEGMENT_STATES` has a label.
+- Label and interaction tests (timeline keys, sentence list, Lantern, workspace flow) are unchanged.
+- New in `markers.test.tsx`: a `candidate` whose `segmentHash` differs from its line's hash shows as stale, while evidence with a matching hash stays needs_review.
+
+Fixture data changed:
+- `workspace/test-fixtures.ts` has `hashOf(segmentId)`, a distinct 64-hex value per segment.
+- Segments use it, and `evidence()` sets `segmentHash` to the hash of its own segment, so valid evidence matches.
+- `workspace-flow.test.tsx` used a different hash for its segments ("b"x64) than its evidence ("a"x64). Under the domain rule all its evidence would have looked stale. It now uses `hashOf`.
+- The only intentional mismatch is the new stale-by-hash case.
+
+The domain rules differ slightly from the old adapter:
+- confirmed wins over outside proof;
+- needs_outside_proof wins over a fresh candidate;
+- evidence with a hash mismatch counts as stale whatever its status.
+
+The UI shows the domain result. The golden demo data gives the same states as before (lines 1 to 3 Cursed Frame, line 5 Needs Outside Proof, lines 4 and 6 Ghost), as the e2e runs below confirm.
+
+Checks (fixture mode, in order):
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `vitest run apps/web/features` | 195/195 | 0 |
+| `playwright test` dashboard, investigation, workspace, review, editors specs `--workers=1` | 28/28 | 0 |
+| `pnpm build` | passed | 0 |
+
+The e2e runs cover: open demo from the dashboard; choosing a marker seeks the clock to the evidence start (1.0, 4.0, 11.0, 30.0 s) and fills the Lantern with that evidence; a script edit marks only that line Poltergeist; a stale line's Confirm is refused by the server.
+
+Not re-run this time: the full unit suite, `test:property`, `check:contracts`, and the other e2e specs (a11y, focus, smoke, upload, analysis). No code those depend on changed.
+
+Task 14 stays open. Stash `0544b34` is still kept as the backup. No server was left running. Nothing was committed or pushed.
+
+## 2026-11-09 Final Seal task 6 (client methods and report data hook), Đạt
+
+### API client (`apps/web/lib/api-client.ts`)
+
+New methods. Each uses the existing contract schemas for the request (where there is one) and the response:
+- `listReshoots(projectId)`
+- `updateReshoot(reshootId, { status })`
+- `getCoverage(projectId)` returns `{ coverage, seal | null, blockers }`.
+- `sealProject(projectId, { note? })`. Its doc comment says it is a human sign-off, to be called only from a person's explicit action.
+
+`ApiClientError` changes:
+- It gained an optional 4th field, `details`, filled from `error.details`. `status`, `code` and `message` are unchanged, so existing callers are unaffected. `name` is now "ApiClientError".
+- `details` stays `unknown`. The UI reads seal blockers only through `sealBlockersOf(error)`.
+- `sealBlockersOf` returns the blockers only for a 409 `seal_blocked` whose `details` match `{ blockers: SealBlocker[] (at least one) }` from the contract. Any other error, or details that do not match, returns null.
+
+### `useReport(projectId)` (`apps/web/features/report/use-report.ts`)
+
+- Loads project detail, `getCoverage`, findings and reshoots, so it has coverage, seal and blockers. Project detail is included because the report needs the project name and the checklist labels (4.1).
+- Status is `loading`, `error`, `not_found` or `done`, and `reload()` loads again.
+- A response that breaks the contract becomes an error, not data.
+- Answers for an earlier project, from before a reload, or after unmount are dropped. The old project is never shown while a new id loads.
+- It is read-only: it only sends GETs and never seals.
+
+### Tests
+
+- `api-client.test.ts`, 16 new tests:
+  - each new method's URL, method and body;
+  - parsing of the response;
+  - refusal of bad input before it is sent;
+  - refusal of contract-breaking responses (an unknown blocker, an unknown reshoot status);
+  - 409 `seal_blocked` keeping `details.blockers`, with `sealBlockersOf` returning them;
+  - `sealBlockersOf` returning null for missing, empty or unknown blockers and for other error codes;
+  - `details` undefined while status, code and message stay unchanged on an ordinary error.
+- `features/report/use-report.test.tsx`, 8 tests: done with all parts, not_found, error then reload, contract break, late answer after a project change, late answer from before a reload, no write after unmount, and GET-only.
+
+### Checks against the real fixture API
+
+`next start` in fixture mode, on a fresh demo copy:
+- `POST /seal` answered 409 `{"error":{"code":"seal_blocked","message":"The project cannot be sealed yet.","details":{"blockers":["undecided_candidates","uncovered_items"]}}}`, the shape the client test uses.
+- `GET /coverage` returned the same two blockers.
+
+The server was stopped afterwards.
+
+### Checks after the last change (fixture mode)
+
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `vitest run apps/web/lib apps/web/features/report` | 47/47 | 0 |
+| `pnpm test` | 770 passed, 75 skipped (main's DB and ffmpeg suites without keys) | 0 |
+| `pnpm test:property` | 112/112 | 0 |
+| `pnpm check:contracts` | 14/14, openapi matches | 0 |
+
+`test:property` and `check:contracts` ran before the last edit, which only removed an unused test argument for lint.
+
+No API or contract change was needed. Final Seal task 6 is ticked. Task 7 (report page) is not started. Review Workspace task 14 stays open. Stash `0544b34` is kept. Nothing was committed or pushed.
+
+## 2026-11-09 Final Seal task 7 (report page and coverage table), Đạt
+
+Kiro added:
+- `app/(workspace)/projects/[id]/report/page.tsx`
+- `features/report/report-view.tsx` (`ReportView` and `ReportBody`)
+- `features/report/coverage-table.tsx`
+- `features/report/labels.ts`
+- `features/report/report-view.test.tsx`
+- `tests/e2e/report.spec.ts`
+
+The workspace header also got an "Open the Final Seal report" link. Data comes from `useReport` (task 6).
+
+Page layout:
+- The seal banner comes first: "Draft: not signed off" when there is no seal, "Sealed" with who and when for an active seal, and "Seal broken: evidence changed after sign-off" with the reason for a broken seal.
+- Then the 4.1 order: project name, coverage (totals, proven percent and one row per checklist item), findings, open reshoots, outside proof, and the limits of the checks.
+- Each finding shows the spooky label beside the plain label (`FindingBadge`), plus what was found, what was not, and the limits.
+- The page shows the states, totals and percentage from `GET /coverage` and works none of them out. A test feeds totals that differ from the rows to prove this.
+- Each coverage state has words and its own icon shape: check, hollow circle, diamond, circular arrow, dashed square.
+- Reshoots (only open ones) and outside proof are read-only. Updating them is task 8; the seal action and exports are task 9.
+- Loading, error with Try again, project not found, and empty states (no checklist, no findings, no open reshoots, no outside proof) are handled.
+
+Wording: `labels.ts` copies the state labels and the four honesty notes from `app/api/_lib/report.ts`, so the page matches the exports. That module imports the db package, so it cannot be used in the browser. For Đăng: moving this wording to contracts would make one source; this is optional and not a blocker.
+
+Checks (fixture mode, in order, after the last code change):
+| Check | Result | Exit |
+|---|---|---|
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `vitest run apps/web/features/report` | 24/24 (16 new report tests and 8 from task 6) | 0 |
+| `pnpm test` | 786 passed, 75 skipped (main's DB and ffmpeg suites without keys) | 0 |
+| `playwright test` report, workspace, dashboard specs `--workers=1` | 13/13 | 0 |
+| `pnpm build` | passed; `/projects/[id]/report` is listed | 0 |
+
+The demo report e2e checks:
+- the draft banner;
+- one coverage row per API item (5), with the same states as the API;
+- the API's percentage;
+- every real finding (4), with "Ghost(No visual evidence)" and "Phantom Dialogue(Script line not spoken)";
+- the section order;
+- the limits text;
+- the link from the workspace;
+- not found for an unknown project;
+- axe: 0 serious or critical issues.
+
+On the production build, at 1280 px and 390 px: 5 rows (4 Needs review, 1 Uncovered), 4 findings, no horizontal overflow. The screenshots are in the session scratch folder.
+
+Not run this time: `test:property`, `check:contracts`, and the other e2e specs. No code they depend on changed.
+
+Final Seal task 7 is ticked; task 8 is not started. Review Workspace task 14 stays open, and stash `0544b34` is kept. A `next start` server was left running on port 3000 for Đạt to check the page. Nothing was committed or pushed.
+
+## 2026-11-09 Final Seal task 8 (reshoots and outside-proof lists), Đạt
+
+Kiro added `features/report/reshoot-list.tsx`, `outside-proof-list.tsx`, `reshoot-list.test.tsx` and `tests/e2e/reshoots.spec.ts`. `report-view.tsx` now uses the two lists. The section is renamed from "Open reshoots" to "Reshoots" because it lists open and done tasks, and the task 7 tests were updated for that.
+
+Reshoots (2.1, 2.2):
+- Open tasks come first, then done ones. Each shows the checklist item and the script line the API links it to.
+- The section says that marking done only closes the reshoot task, and that the item becomes Proven only when new evidence is found and a person confirms it.
+- Mark done appears only when `useReport().canManage` is true, and only on open tasks.
+
+How ownership is decided: the frontend has no current-user id, and there is no "me" endpoint. `canManage` therefore follows the existing read rule:
+- The fixture store's `canRead` lets a non-demo project be read only by its owner.
+- A loaded non-demo project with an `ownerId` is the viewer's own.
+- The demo is read-only.
+- The server checks again on `PATCH /reshoots/{id}`, where `writable` refuses the demo.
+
+This is the same rule the workspace already uses. If a shared or read-only non-owner view is added later, the frontend will need the viewer's id. That is a question for Đăng, not a blocker now.
+
+`useReport` gained `updateReshoot`, `updatingReshootId` and `reshootError`:
+- One update runs at a time, and every Mark done is locked while it runs.
+- On success it reloads reshoots and coverage (with seal and blockers) from the API. The page never changes a coverage state itself.
+- On failure it keeps the data and shows the server's text on that reshoot.
+- Late answers are dropped.
+
+Outside proof (2.3): each line shows the script line, the proof hint, and either "Marked by a person" or "Proposed by the software only", with `data-acknowledged`.
+
+Checks (fixture mode, in order, after the last code change):
+| Check | Result | Exit |
+|---|---|---|
+| `vitest run apps/web/features/report` | 38/38 | 0 |
+| `playwright test reshoots.spec.ts report.spec.ts --workers=1` | 8/8 | 0 |
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `pnpm test` | 800 passed, 75 skipped (main's DB and ffmpeg suites without keys) | 0 |
+| `pnpm build` | passed | 0 |
+
+The new unit tests cover:
+- Mark done shown only to the owner and only on open tasks; none on the demo, with the reason;
+- locked while saving, and only one PATCH;
+- the server's message on failure, with the data kept;
+- reload of reshoots and coverage after success;
+- both outside-proof states, and the empty states.
+
+The e2e on a fresh editable copy:
+1. Creates a reshoot on "Create a new invoice". Coverage then says `reshoot`.
+2. Clicks Mark done. The PATCH returns 200 and the task moves to Done.
+3. The item's row goes to `needs_review`, not `proven`.
+4. After a page reload the task is still Done, has no Mark done button, and the row is still `needs_review`. The API agrees on both.
+
+Also covered by e2e: a failed update shows the server's text and keeps the task open; the demo report has no Mark done; an outside-proof line becomes "Marked by a person" after a real `needs_outside_proof` review. The task 7 report specs still pass.
+
+The `next start` server left from task 7 was stopped before the e2e run, so the test server used current code. No server is running now.
+
+Not run this time: `test:property`, `check:contracts`, and the other e2e specs. No code they depend on changed.
+
+Final Seal task 8 is ticked; task 9 is not started. Review Workspace task 14 stays open. Stash `0544b34` is kept. No backend, contract or dependency change. Nothing was committed or pushed.
+
+## 2026-11-09 Final Seal task 9 (seal panel, confirmation and exports), Đạt
+
+Kiro added `features/report/seal-panel.tsx`, `seal-confirmation.tsx`, `export-buttons.tsx`, `seal-panel.test.tsx` and `tests/e2e/seal.spec.ts`. It also changed:
+- `useReport`: new `seal(note)` returning `SealResult`;
+- the report page: the panel and the exports come after the 4.1 sections;
+- `styles/tokens.css`: the `.sleuth-seal-stamp` animation, turned off under reduced motion;
+- `styles/globals.css`: `@media print` rules;
+- the workspace layout header: `print:hidden`.
+
+Seal panel (3.5, 4.3):
+- Only the owner of an editable copy sees "Apply the Final Seal" (`canManage`). The demo shows a read-only note and no button.
+- While `GET /coverage` reports blockers, the button is disabled. Each blocker has a plain sentence, and the fixable ones link to the workspace.
+- With no blockers, the button opens a confirm step: "You are signing that you reviewed these items", an optional note (max 1000, trimmed, sent only when not blank, per `SealProjectRequestSchema`), then Sign and seal or Cancel.
+- Both buttons are locked while the request runs, and `useReport` refuses a second request.
+- A `409 seal_blocked` closes the confirm step, shows the server's text, and puts the server's blockers into the page data through `sealBlockersOf`, so the list shows what is blocking now.
+- Other errors keep the confirm step open with the server's text.
+- An active seal hides the button. A broken seal offers it again, subject to the blockers.
+
+Confirmation (4.4):
+- The wax seal is shown only after the server returns 201 with the seal.
+- A polite live region announces "The Final Seal was applied", "The Final Seal was refused" or "The Final Seal was not applied".
+- After success, coverage, seal and blockers are reloaded from `GET /coverage`, and the banner reads the API state.
+
+Broken seal (3.6): after a sentence edit, the banner shows "Seal broken: evidence changed after sign-off" from the server's `seal.status` and `brokenReason`.
+
+Exports (5.4):
+- "Download CSV" links to `report.csv`; "Open printable HTML" links to `report.html`. Both are existing endpoints.
+- Print calls `window.print()` on the report page.
+- The print CSS swaps the tokens to a light palette, hides the fog, the site header, the skip link, the seal panel and the export buttons, stops all animation and transition, keeps table rows, list items and findings from splitting (`break-inside: avoid`), repeats table headers, and sets 15 mm page margins.
+
+Checks (fixture mode, in order, after the last change):
+| Check | Result | Exit |
+|---|---|---|
+| `vitest run apps/web/features/report` | 54/54 | 0 |
+| `playwright test seal, report, reshoots specs --workers=1` | 16/16 | 0 |
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `pnpm test` | 816 passed, 75 skipped (main's DB and ffmpeg suites without keys) | 0 |
+| `pnpm build` | passed | 0 |
+
+The new unit tests:
+- `seal-panel.test.tsx`: no button for a non-owner; every blocker in words; the confirm step and the note; Cancel; locked and sent once; the wax seal and announcement only after success; a 409 with new blockers; other errors; no button while sealed; reseal offered after a break; the export links and Print.
+- `use-report.test.tsx`: the trimmed note and an empty body for a blank note; a 409 mapped to the server's blockers; other errors mapped to failed; one request at a time.
+
+The seal e2e on fresh editable copies:
+1. With blockers, the button is disabled and lists exactly the API's blockers, in the same order.
+2. Review everything through the API: confirm the candidates, mark the outside-proof line, ask for a reshoot on the uncovered item. Blockers are then empty.
+3. The confirm step shows. The POST returns 201 with the note. The wax seal and the live message appear, and the banner says sealed with the note.
+4. A sentence edit through the API makes the reloaded banner "Seal broken: evidence changed after sign-off". The API says `broken`, and the button is disabled by `stale_evidence`.
+5. A script change while the confirm step is open gives a 409, no wax seal, and the new blocker list.
+6. The demo has no button; its CSV and HTML return 200 with the right content type.
+7. Print, for both the HTML export and the report page (Print button stubbed, then print media), at A4 and Letter widths:
+   - white background and no running animations;
+   - every `tr` set to `break-inside: avoid`, and no horizontal overflow;
+   - fog, site header and buttons hidden; the seal banner visible;
+   - `page.pdf` produces a PDF in both formats.
+
+The reshoot e2e text lookup was scoped to its section, because the seal panel adds a second read-only note.
+
+Not verified:
+- A real printer, and a person looking at the PDF pages. The tests check the computed print styles and that a PDF is produced, not how the pages look. Whether a long table actually avoids splitting rows is decided by Chromium's layout.
+- Browsers other than Chromium.
+- The wax-seal animation by eye.
+- A real sign-in. Fixture mode has a default user, so `401 unauthorized` was tested only with a fake response.
+- Axe, keyboard-only use and the wider e2e suite are for task 10.
+
+Final Seal task 9 is ticked; task 10 is not started. Review Workspace task 14 stays open. Stash `0544b34` is kept. No backend, contract or dependency change. No server is running. Nothing was committed or pushed.
+
+## 2026-11-10 Final Seal task 10 (end-to-end and accessibility), Đạt
+
+Kiro added `tests/e2e/final-seal.spec.ts` and extended `docs/accessibility.md` with a Final Seal section and walkthrough steps 17 and 18.
+
+### Frontend fixes the flow needed
+
+1. **No UI path to a reshoot for the Ghost item.** That checklist item has no evidence, so the Lantern has nothing to act on.
+   - Added `features/report/request-reshoot.tsx`: "Ask for a reshoot" on uncovered rows of the coverage table, for the owner only, with an inline note.
+   - Added `useReport.requestReshoot`, which calls the existing `createReshoot` with `checklistItemId` and reloads reshoots and coverage. It shares the one-at-a-time guard with `updateReshoot`.
+2. **Focus was lost when the confirm step opened.** The button unmounted. Focus now moves to the note when the step opens, back to the button on Cancel or a refusal, and to the "Final Seal applied" confirmation (a group with `tabIndex=-1`) after a seal.
+   - `components/ui/button.tsx`'s `ButtonProps` gained a `ref` type. React 19 already passed it through.
+3. **Axe found one serious issue, `link-in-text-block`.** The "Open the workspace" links inside the blocker sentences were shown by colour only. They are now always underlined.
+
+No backend, contract or dependency change.
+
+### The e2e flow (UI on a fresh copy; the API only read to cross-check)
+
+1. On the demo, "Make an editable copy" opens the copy.
+2. Confirm lines 1 to 3 in the Lantern, and mark line 5 "Needs outside proof". The API then has no `candidate` left.
+3. "Open the Final Seal report". Exactly one row is uncovered, "Export the invoice as a PDF". Ask for a reshoot with a note; the row becomes `reshoot`.
+4. Before signing: "Nothing blocks the Final Seal", the open reshoot is listed, and the outside-proof line shows as marked by a person.
+5. Keyboard sign-off:
+   - Tab from the skip link reaches "Apply the Final Seal", and Enter puts focus on the note.
+   - Type the note, Tab to "Sign and seal", Enter. The POST returns 201 with the note.
+   - Focus moves to the confirmation. The polite live region says "The Final Seal was applied. The report is now signed off." The banner is sealed.
+6. The API seal is `active`, with the note, 1 open reshoot and 1 outside-proof line in its snapshot. Both are still shown on the page.
+7. "Back to the workspace", edit sentence 2 in the script editor, save; the summary says evidence is now out of date.
+8. Back on the report: "Seal broken: evidence changed after sign-off"; the API says `broken`.
+
+### Axe (WCAG 2.0/2.1 A and AA) on the copy's report
+
+- 0 serious or critical issues and 0 other violations in all four states: seal button enabled, confirm step open, after the seal, broken seal.
+- "Incomplete" color-contrast items: 1 in the confirm step (the note textarea) and 5 with the broken seal (header and top text over the fog).
+- Those are the same kinds as the 8 items measured earlier, which all passed. These 6 were not measured one by one.
+
+### Checks (fixture mode, after the last code change, in order)
+
+| Check | Result | Exit |
+|---|---|---|
+| `playwright test --workers=1` (all 15 specs) | 71 passed, 0 skipped, 0 failed | 0 |
+| `pnpm lint` | clean | 0 |
+| `pnpm typecheck` | clean | 0 |
+| `pnpm test` | 822 passed, 75 skipped | 0 |
+| `pnpm test:property` | 112/112 | 0 |
+| `pnpm check:contracts` | 14/14, openapi matches | 0 |
+| `pnpm build` | passed | 0 |
+
+Why 75 tests were skipped: they are main's suites that need a database or keys, which this machine does not have:
+- `TEST_DATABASE_URL` is not set: `rls`, `pg-queue`, `store.write`, `supabase-handler.db`, the change-impact suite, and parts of `supabase/store` and `supabase-handler`;
+- Supabase keys are not set: `api.supabase`, `store.upload`, `store.purge`;
+- ffmpeg cases are skipped in `ffmpeg.test.ts`.
+
+None of them is a frontend test.
+
+`vitest run apps/web/features/report` passed 60/60. New tests: focus on open, on Cancel, after a seal and after a refusal; `RequestReshoot` success and failure; the reshoot action appears only on uncovered rows and only for the owner.
+
+### Not checked
+
+- What Narrator or NVDA says.
+- Whether the live message and the focus move are both read.
+- High Contrast mode, browsers other than Chromium, and real printing.
+- Requirement 6.1 asks to show who confirmed each item and when. The report page does not show review decisions: `GET /coverage` does not return them; only the exports do. This was not in task 10, and it is a question for Đăng if the page should show them.
+
+Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. Stash `0544b34` is kept. No server is running. Nothing was committed or pushed.
