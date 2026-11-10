@@ -6,6 +6,8 @@ One file per review, named `NNN-short-name.md`. Each records: what was checked, 
 - 9 November 2026, afternoon: review 001, the worker side of the retention purge (ADR 0008), by Phạm Quốc Bảo. Approved; two low follow-ups. See `001-retention-purge-worker.md`.
 - 9 November 2026, evening: no open PRs from Đạt or Bảo, and no branches from them on the remote (`gh pr list --state open`, `git fetch --prune`). Nothing to review yet.
 
+- 10 November 2026: review 003, PR #21 (review workspace and Final Seal UI, Đạt), after the merge. Approved; the missing sign-in screen blocks "Try your own video"; the screen-reader pass is still open. See `003-pr21-review-workspace.md`.
+
 ## What Đăng checks on every PR from Đạt or Bảo
 1. CI: both `check` and `db` jobs green.
 2. Contract change: any edit to `packages/contracts/`, `packages/db/src/schema.ts`, `packages/db/migrations/`, `docs/api/openapi.yaml` or `fixtures/golden/` needs the `contract-change` label and a passing `pnpm check:contracts`.
