@@ -1,9 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { formatReport, scoreClip, summarise, type ProducedAnalysis } from "./report";
+import { providersFromEnv } from "./real";
 import { analyseWithMock, evaluate, loadClip, main } from "./run";
 import { LabelledFindingSchema, LabelsSchema, type Labels } from "./schema";
 
@@ -237,11 +238,146 @@ describe("evaluate", () => {
 });
 
 describe("pnpm eval", () => {
-  it("refuses real providers until they exist and says which task adds them", async () => {
+  it("refuses real providers without keys and names the missing setting, not a value", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const code = await main(["--providers", "real"]);
-    expect(code).toBe(2);
-    expect(String(error.mock.calls[0]?.[0])).toContain("provider_not_configured");
+    expect(await main(["--providers", "real"], {})).toBe(2);
+    expect(String(error.mock.calls[0]?.[0])).toBe(
+      "provider_not_configured: TRANSCRIPTION_API_KEY is not set.",
+    );
+    expect(await main(["--providers", "real"], { TRANSCRIPTION_API_KEY: "k-do-not-print" })).toBe(
+      2,
+    );
+    expect(String(error.mock.calls[1]?.[0])).toBe(
+      "provider_not_configured: VIDEO_ANALYSIS_API_KEY is not set.",
+    );
+    expect(JSON.stringify(error.mock.calls)).not.toContain("k-do-not-print");
+    expect(await main(["--providers", "other"], {})).toBe(2);
     error.mockRestore();
+  });
+});
+
+describe("--providers real", () => {
+  const example = loadClip(join(CLIPS, "example"));
+  const mock = example.mock;
+  if (!mock) throw new Error("the example clip needs mock-inputs.json");
+
+  /** Answers like a provider would, from the example's hand-written inputs. */
+  const fakeProviders = (seen: { audio?: string; frames?: number; paths?: boolean }) => ({
+    label: "fake-transcription + fake-vision",
+    transcription: {
+      name: "fake",
+      transcribe: (input: { projectId: string; assetVersionId: string; audioPath?: string }) => {
+        seen.audio = input.audioPath;
+        return Promise.resolve(
+          mock.transcript.map((t, i) => ({
+            id: `t${i + 1}`,
+            projectId: input.projectId,
+            assetVersionId: input.assetVersionId,
+            startMs: t.startMs,
+            endMs: t.endMs,
+            text: t.text,
+            words: [],
+          })),
+        );
+      },
+    },
+    videoAnalysis: {
+      name: "fake",
+      analyse: (input: {
+        projectId: string;
+        assetVersionId: string;
+        frames: { timestampMs: number; path?: string }[];
+      }) => {
+        seen.frames = input.frames.length;
+        seen.paths = input.frames.every((f) => typeof f.path === "string");
+        return Promise.resolve(
+          mock.observations.map((o, i) => ({
+            id: `f${i + 1}`,
+            projectId: input.projectId,
+            assetVersionId: input.assetVersionId,
+            ...o,
+          })),
+        );
+      },
+    },
+  });
+
+  const fakeMedia = (durationMs: number) => ({
+    probeDurationMs: () => Promise.resolve(durationMs),
+    extractAudio: () => Promise.resolve(),
+    extractFrames: (_: string, timestamps: readonly number[], outDir: string) =>
+      Promise.resolve(timestamps.map((t) => ({ timestampMs: t, path: join(outDir, `${t}.jpg`) }))),
+  });
+
+  const realClipDir = (name: string, withVideo: boolean) => {
+    const root = join(scratch, name);
+    mkdirSync(join(root, "example"), { recursive: true });
+    writeFileSync(join(root, "example", "clip.json"), JSON.stringify(example.clip));
+    writeFileSync(join(root, "example", "labels.json"), JSON.stringify(example.labels));
+    if (withVideo) writeFileSync(join(root, "example", "example.mp4"), "");
+    return root;
+  };
+
+  it("scores the same as the mock run when the providers hear and see the same things", async () => {
+    const seen: { audio?: string; frames?: number; paths?: boolean } = {};
+    const real = await evaluate(realClipDir("real-same", true), {
+      kind: "real",
+      providers: fakeProviders(seen),
+      media: fakeMedia(32_000),
+    });
+    const mocked = await evaluate(CLIPS);
+    expect(real.providers).toBe("fake-transcription + fake-vision");
+    expect(real.clipsRun).toEqual(["example"]);
+    expect(real.scores[0]).toEqual(mocked.scores.find((s) => s.clip === "example"));
+    // Audio and frames were cut in a temporary folder that is gone afterwards.
+    expect(seen.audio).toMatch(/sleuth-eval-/);
+    expect(existsSync(seen.audio ?? "")).toBe(false);
+    // planFrames: 0 to 32000 ms every 2000 ms, both ends included.
+    expect(seen.frames).toBe(17);
+    expect(seen.paths).toBe(true);
+  });
+
+  it("skips a clip with no video and says which file is missing", async () => {
+    const result = await evaluate(realClipDir("real-novideo", false), {
+      kind: "real",
+      providers: fakeProviders({}),
+      media: fakeMedia(32_000),
+    });
+    expect(result.skipped).toEqual([
+      {
+        clip: "example",
+        reason: "no example.mp4 in the clip folder (needed for --providers real)",
+      },
+    ]);
+  });
+
+  it("refuses a video over 180 seconds before any provider call", async () => {
+    const seen: { audio?: string } = {};
+    await expect(
+      evaluate(realClipDir("real-long", true), {
+        kind: "real",
+        providers: fakeProviders(seen),
+        media: fakeMedia(180_001),
+      }),
+    ).rejects.toThrow("probe: duration_exceeded");
+    expect(seen.audio).toBeUndefined();
+  });
+
+  it("names providers and models in the header, never a key", () => {
+    const p = providersFromEnv({
+      TRANSCRIPTION_API_KEY: "k1-do-not-print",
+      VIDEO_ANALYSIS_API_KEY: "k2-do-not-print",
+    });
+    expect(p.label).toBe(
+      "deepgram (nova-3) + gemini (gemini-3.8-flash, fallback gemini-3.6-flash)",
+    );
+    const same = providersFromEnv({
+      TRANSCRIPTION_API_KEY: "a",
+      VIDEO_ANALYSIS_API_KEY: "b",
+      VIDEO_ANALYSIS_MODEL: "gemini-3.6-flash",
+      VIDEO_ANALYSIS_FALLBACK_MODEL: "gemini-3.6-flash",
+    });
+    expect(same.label).toBe("deepgram (nova-3) + gemini (gemini-3.6-flash)");
+    expect(p.fallbacks()).toBe(0);
   });
 });

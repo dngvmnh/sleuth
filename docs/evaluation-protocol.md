@@ -85,11 +85,18 @@ For the mock run only: the transcript and the on-screen frames written by hand, 
 ## Running it
 
 ```
-pnpm eval                       # mock providers, every ready clip
-pnpm eval -- --clips <folder>   # another folder of clips
+pnpm eval                            # mock providers, every ready clip
+pnpm eval -- --clips <folder>        # another folder of clips
+pnpm eval -- --providers real        # Deepgram and Gemini on the recorded videos (task 13)
 ```
 
-`--providers real` is refused until the real provider adapters exist (evidence-analysis task 10).
+`--providers real` needs:
+
+- each clip's video at `tests/evaluation/clips/<name>/<name>.mp4` (Git ignores it). A clip without it is skipped, and the run says why;
+- FFmpeg on `PATH`;
+- `TRANSCRIPTION_API_KEY` and `VIDEO_ANALYSIS_API_KEY` in the environment or in `.env.local` (never committed). Optional: `TRANSCRIPTION_MODEL`, `VIDEO_ANALYSIS_MODEL`, `VIDEO_ANALYSIS_FALLBACK_MODEL`, with the worker's defaults.
+
+It cuts audio and frames exactly as the worker does (one frame every 2 seconds, at most 60, videos over 180 seconds refused before any call), in a temporary folder that is deleted afterwards. The header names the providers and models. It also prints in how many clips Gemini switched to the fallback model. Keys, transcript text and frame descriptions are never printed. Our own clips may go to the Gemini free tier (D-4); visitors' videos never go through this harness.
 
 The run prints a table with one row per finding type (plus unscripted and reordered lines): how many were labelled, how many were found, how many were right, precision and recall with the counts beside them, and then **every** disagreement. A JSON copy goes to `tests/evaluation/results/`, which Git ignores.
 
