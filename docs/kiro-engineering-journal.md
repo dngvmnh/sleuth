@@ -1030,3 +1030,10 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - Task 7 ticked as it stands. The finding names the general kind of proof. A specific hint per term (`classify().hint`) would change locked golden text, so it was not done.
 - Task 10 ticked on PR #18, PR #22 and Đăng's manual run of 10 November (counts only).
 - Docs only. No code changed.
+
+## 2026-11-11: `pnpm eval -- --providers real` (Phạm Quốc Bảo, evidence-analysis 13 groundwork)
+
+- New `tests/evaluation/real.ts`: builds the Deepgram and Gemini adapters from the same settings as the worker, and cuts audio and frames with FFmpeg in a temporary folder (2 s spacing, at most 60 frames, over 180 s refused before any call).
+- `run.ts`: `evaluate(dir, mode)` takes `{ kind: "mock" }` or `{ kind: "real", providers }`. A clip needs `<name>.mp4` in its folder for a real run, otherwise it is skipped with the reason. The header names providers and models. The run prints how many clips used the Gemini fallback. A missing key stops the run with `provider_not_configured: <setting> is not set`, never the value.
+- Tests (no network, no FFmpeg): with fake providers that hear and see what the example's hand-written inputs say, the real path scores exactly like the mock path; the temporary folder is gone after the run; no video means skipped; over 180 s throws before any provider call; header names models, never a key. `tests/evaluation`: 24 of 24 pass.
+- Not done: the real run itself. It needs clips 1 to 5 recorded and labelled, and the keys Đăng holds.
