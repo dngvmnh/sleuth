@@ -1,6 +1,26 @@
 # 0007 Provider choice for transcription and video analysis
 
-Status: proposed on 9 November 2026 by Phạm Quốc Bảo's workstream. It becomes accepted when Phạm Quốc Bảo confirms the two picks and Đăng sets the spending limit (decision D-4). Nothing here was measured on our own clips yet; the evaluation harness (`pnpm eval`, evidence-analysis tasks 10 and 13) decides whether the picks stay.
+Status: accepted on 11 November 2026 by Phạm Quốc Bảo, as amended below for decision D-4 (free tiers only, decided by Đăng on 10 November). Proposed on 9 November 2026. Nothing here was measured on our own clips yet; the evaluation harness (`pnpm eval`, evidence-analysis task 13) decides whether the picks stay.
+
+## Amendment, 11 November 2026: free tiers and the data rule (D-4)
+
+D-4 (`docs/coordination/decisions-needed.md`) replaced the paid plan below. Where this section and the 9 November text disagree, this section wins.
+
+1. **Free tiers only, no card on either account.** Đăng owns both accounts. Transcription uses Deepgram's one-time sign-up credit. Video analysis uses the Gemini API free tier.
+2. **Data rule.** A visitor's video goes to Deepgram only. No frame of a visitor's video is sent to Gemini, because on the free tier content may be used to improve Google's products. Only our own recorded clips may use Gemini. The worker enforces this with a speech-only mode (brief `docs/coordination/briefs/002-no-video-analysis-mode.md`). Until that mode ships, the worker workflow stays manual and production runs no real worker on visitor uploads.
+3. **Models.** Deepgram `nova-3` with `mip_opt_out=true`. Gemini `gemini-3.8-flash`, with `gemini-3.6-flash` as the fallback (`VIDEO_ANALYSIS_FALLBACK_MODEL`). After its retries fail with a server error, a timeout or no answer, a job switches to the fallback and stays on it. Reason: on 10 November `gemini-3.8-flash` failed 3 of 3 tries on the free tier and `gemini-3.6-flash` worked 3 of 4 (`scripts/provider-check.ts`, counts only). Both ids are config, so changing them needs no code.
+4. **No dollar ceiling per job.** Without a card, neither account can bill, so the spend limit is zero by construction: Deepgram stops when its credit is used up, and the Gemini free tier is rate-limited, not billed. Each job is still bounded by fixed caps:
+
+   | Cap | Value | Where |
+   |---|---|---|
+   | Video length | 180 s | `MAX_VIDEO_SECONDS`, checked before any provider call |
+   | Frames per video | 60 | `MAX_FRAMES_PER_VIDEO` and the Gemini adapter's `maxFrames` |
+   | Deepgram calls per job, retries included | 3 | `createCallBudget` in `transcription-deepgram.ts` |
+   | Gemini calls per job, retries and fallback included | 8 | `createCallBudget` in `video-analysis-gemini.ts` |
+   | Analyses per user per day | `dailyAnalysisLimit` | `packages/domain/src/limits.ts`, enforced server-side |
+
+   Credit use, from the 9 November estimate: a 3-minute run costs about $0.013, or up to $0.026 if the opt-out doubles the rate. That is roughly 7,700 to 15,000 full-length runs from a $200 credit. **Revisit this point if a card is ever added to either account:** then a per-job dollar ceiling is needed, and the cost table below applies again.
+5. The 9 November paid-tier estimate and the proposed $50 monthly limit below no longer apply. They are kept as the record of what was compared.
 
 ## Context
 
@@ -40,7 +60,7 @@ Frames (up to 60 per clip) go in, structured JSON comes out. Output text is bill
 | Data handling | Official pricing page: on the paid tier, content is **not** used to improve Google's products. On the free tier it is. | API data is not used for training under the commercial terms (not re-read in this review). | Not read in this review. |
 | Risk | Prices change often; thinking tokens inflate output cost. | Cheapest by far; quality at reading small UI text is not known to us. | Not compared. |
 
-## Decision (proposed)
+## Decision (proposed 9 November; see the amendment above)
 
 1. **Transcription: Deepgram Nova-3, pre-recorded, with `mip_opt_out=true` on every request.** It gives timed words and utterances in one response, and an opted-out request is not retained. AssemblyAI is the fallback: it is cheaper per minute, and a 1-hour time-to-live plus a delete call after each job gets close to the same result.
 2. **Video analysis: Gemini Flash (`gemini-3.8-flash`) on the paid tier, lowest thinking level, one request per job with the sampled frames as images and a JSON schema for the answer.** The paid tier states in writing that content is not used to improve the products. Claude Haiku 5.5 is the cheap alternative to try.
@@ -69,7 +89,7 @@ Task 10's manual run must print token counts so this table can be replaced by re
 - The first adapter calls use plain `fetch`; no vendor SDK is added, so `pnpm-lock.yaml` does not change.
 - Deepgram's opt-out price and Gemini's per-image token count are the two numbers most likely to move the estimate. Both are checked in the first real run.
 - If OpenAI later documents word or segment times for `gpt-transcribe`, it becomes a third candidate for the same harness run.
-- Open for the team (D-4): who owns the accounts, and the monthly limit.
+- D-4 (decided 10 November): Đăng owns both accounts, free tiers, no card. See the amendment.
 
 ## Sources (read 9 November 2026)
 

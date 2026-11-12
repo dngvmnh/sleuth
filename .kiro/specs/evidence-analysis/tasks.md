@@ -16,12 +16,13 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: property test passes for durations 0..180000 and budgets 1..120; a test proves the temp dir is gone after a thrown error.
   - Requirements: 1.3, 1.4
 
-- [ ] 3. Provider decision and ADR
+- [x] 3. Provider decision and ADR
   - Owner: Bảo
   - Files: `docs/decisions/0007-provider-choice.md`
   - Do: compare 2 to 3 options for transcription and for video analysis on: word timestamps, on-screen text, 180-second clips, price per run, data handling terms. Pick one each. No keys needed to write this.
   - Done when: ADR merged with the choice and the per-run cost estimate; Đăng sets the hard monthly spending limit on the team account.
   - Requirements: 2.1, 4.1, 4.3
+  - Closed: ADR 0007 accepted 11 Nov 2026 with the D-4 amendment (free tiers, no card, so no spend; Đăng owns the accounts).
 
 - [x] 4. Output validation hardening
   - Owner: Bảo
@@ -44,12 +45,13 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: property tests for 5.2 and 5.4 pass; the doc matches the code (the test imports the same constants); golden output unchanged.
   - Requirements: 5.1 to 5.6
 
-- [ ] 7. Outside-proof classifier
+- [x] 7. Outside-proof classifier
   - Owner: Bảo
   - Files: `packages/evidence-engine/src/outside-proof-terms.ts`, `text.ts`, `outside-proof.test.ts`
   - Do: move the term list out of `text.ts`, add proof hints, add tests with at least 20 phrases (10 that must be flagged, 10 ordinary steps that must not).
   - Done when: no ordinary step is flagged; the finding text names the kind of proof.
   - Requirements: 6.1 to 6.3
+  - Closed: 12 flagged and 12 ordinary phrases in outside-proof.test.ts; the finding names the kind of proof (a document, certificate or other outside proof). Đăng checked it against code on 10 Nov.
 
 - [x] 8. Idempotency property tests through the pipeline
   - Owner: Bảo
@@ -65,12 +67,13 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Done when: `pnpm eval` prints a table; a deliberately wrong label shows up as a disagreement. Needs a root `package.json` change: ask Đăng to review.
   - Requirements: 7.2, 7.3
 
-- [ ] 10. Real provider adapters (needs API keys)
+- [x] 10. Real provider adapters (needs API keys)
   - Owner: Bảo
   - Files: `packages/media/src/providers/transcription-<name>.ts`, `video-analysis-<name>.ts`, `packages/media/src/providers/__fixtures__/` (recorded responses), tests
   - Do: implement the two adapters chosen in task 3 behind the interfaces; timeouts, bounded retries, call cap, cost ceiling; recorded-response tests; a manual script that runs one 30-second clip and prints counts only.
   - Done when: tests pass with recorded responses and no network; the manual run returns validated data; no key or content appears in logs (grep the run output).
   - Requirements: 2.1, 2.3, 2.4, 4.1, 4.3, 4.4
+  - Closed: Deepgram and Gemini adapters (PR #18), Gemini fallback model (PR #22); no dollar ceiling, reasons in the ADR 0007 amendment; manual run by Đăng on 10 Nov with scripts/provider-check.ts printed counts only.
 
 - [ ] 11. Record and label three clips, write the protocol
   - Owner: Bảo

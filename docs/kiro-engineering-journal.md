@@ -1022,3 +1022,11 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - `startRetentionTimer().stop()` now returns a promise. It clears the timer and resolves when a purge that is running has ended. `index.ts` awaits it before it closes the retention pool, so shutdown no longer logs a closed-pool `retention_failed`.
 - `runOnce()` returns the purge in flight instead of returning at once, so runs still never overlap.
 - Tests: stop waits for a held purge; stop resolves at once when idle. `apps/worker/src/retention.test.ts` passes.
+
+## 2026-11-11: ADR 0007 accepted; evidence-analysis 3, 7 and 10 ticked (Phạm Quốc Bảo)
+
+- ADR 0007 amended for D-4 and accepted: free tiers, no card, Đăng owns both accounts. Visitor videos go to Deepgram only; Gemini only for our own clips (speech-only mode from brief 002b still to ship). Models: `nova-3`; `gemini-3.8-flash` with `gemini-3.6-flash` as fallback.
+- No dollar ceiling per job, by choice: with no card neither account can bill. The ADR lists the caps that still bound a job (180 s, 60 frames, 3 Deepgram calls, 8 Gemini calls, the daily limit) and says to add a dollar ceiling if a card is ever added.
+- Task 7 ticked as it stands. The finding names the general kind of proof. A specific hint per term (`classify().hint`) would change locked golden text, so it was not done.
+- Task 10 ticked on PR #18, PR #22 and Đăng's manual run of 10 November (counts only).
+- Docs only. No code changed.
