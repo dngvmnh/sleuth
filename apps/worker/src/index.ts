@@ -87,7 +87,8 @@ async function main() {
   try {
     await runLoop({ ...common, queue, handler });
   } finally {
-    retention?.stop();
+    // Wait for a running purge before its pool closes (review 001, finding 1).
+    await retention?.stop();
     await workerDb.client.end({ timeout: 5 });
     await retentionDb.client.end({ timeout: 5 });
     await close();

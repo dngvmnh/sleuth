@@ -14,7 +14,8 @@ export interface RetentionTimerOptions {
 export interface RetentionTimer {
   /** Run one purge now. Never throws: a failure is logged and the next run tries again. */
   runOnce(): Promise<void>;
-  stop(): void;
+  /** Stops the timer and resolves when a purge that is running has ended, so its pool can close. */
+  stop(): Promise<void>;
 }
 
 /**
@@ -36,21 +37,26 @@ export async function purgeOnce(o: RetentionTimerOptions): Promise<void> {
  * every `intervalMs`. Runs never overlap. Logs counts only, never project ids or names.
  */
 export function startRetentionTimer(o: RetentionTimerOptions): RetentionTimer {
-  let running = false;
+  let current: Promise<void> | null = null;
 
-  async function runOnce() {
-    if (running) return;
-    running = true;
-    try {
-      await purgeOnce(o);
-    } finally {
-      running = false;
-    }
+  function runOnce(): Promise<void> {
+    if (current) return current;
+    current = purgeOnce(o).finally(() => {
+      current = null;
+    });
+    return current;
   }
 
   void runOnce();
   const timer = setInterval(() => void runOnce(), o.intervalMs);
   // The purge timer alone must not keep the process alive.
   timer.unref?.();
-  return { runOnce, stop: () => clearInterval(timer) };
+  return {
+    runOnce,
+    async stop() {
+      clearInterval(timer);
+      // purgeOnce never throws, so this only waits.
+      if (current) await current;
+    },
+  };
 }

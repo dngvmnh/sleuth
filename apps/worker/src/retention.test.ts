@@ -21,7 +21,7 @@ describe("retention timer (ingestion 5.4, ADR 0008)", () => {
     expect(purge).toHaveBeenCalledWith(new Date("2026-11-09T00:00:00.000Z"), 7);
     await vi.advanceTimersByTimeAsync(3_600_000 * 2);
     expect(purge).toHaveBeenCalledTimes(3);
-    t.stop();
+    await t.stop();
     await vi.advanceTimersByTimeAsync(3_600_000 * 5);
     expect(purge).toHaveBeenCalledTimes(3);
     // Counts only: no project id reaches the log.
@@ -44,7 +44,7 @@ describe("retention timer (ingestion 5.4, ADR 0008)", () => {
       log: (e, f) => events.push(`${e} ${JSON.stringify(f)}`),
     });
     await vi.advanceTimersByTimeAsync(1000);
-    t.stop();
+    await t.stop();
     expect(events[0]).toBe('retention_failed {"error":"TypeError"}');
     expect(events[1]).toBe('retention_purged {"projects":0,"files":0}');
     expect(events.join()).not.toContain("secret-path");
@@ -64,7 +64,39 @@ describe("retention timer (ingestion 5.4, ADR 0008)", () => {
     release();
     await vi.advanceTimersByTimeAsync(1000);
     expect(purge).toHaveBeenCalledTimes(2);
-    t.stop();
+    release();
+    await t.stop();
+  });
+
+  it("waits for a running purge to end before stop resolves", async () => {
+    let release: () => void = () => undefined;
+    const purge = vi.fn(
+      () =>
+        new Promise<{ projectIds: string[]; files: number }>((r) => {
+          release = () => r({ projectIds: [], files: 0 });
+        }),
+    );
+    const t = startRetentionTimer({ purge, intervalMs: 1000, days: 7 });
+    await vi.advanceTimersByTimeAsync(0);
+    let stopped = false;
+    const stopping = t.stop().then(() => {
+      stopped = true;
+    });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(stopped).toBe(false);
+    release();
+    await stopping;
+    expect(stopped).toBe(true);
+    expect(purge).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops at once when no purge is running", async () => {
+    const purge = vi.fn(async () => ({ projectIds: [], files: 0 }));
+    const t = startRetentionTimer({ purge, intervalMs: 1000, days: 7 });
+    await vi.advanceTimersByTimeAsync(0);
+    await t.stop();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(purge).toHaveBeenCalledTimes(1);
   });
 
   it("reads the interval and period from the environment, hourly and 7 days by default", () => {

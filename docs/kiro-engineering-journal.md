@@ -1009,3 +1009,9 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - Live site, part A of `scripts/prod-smoke.ts`: 14 of 14 PASS.
 - Review 003 (PR #21): no sign-in screen, so visitors cannot write on the live site; task 14 (screen-reader pass) is open.
 - Bao's tasks against code: ea 7 done and unticked, ea 10 nearly done (no cost ceiling), ea 3 not done. Brief 002b written for the speech-only worker mode.
+
+## 2026-11-11: retention stop waits for a running purge (Phạm Quốc Bảo, review 001 finding 1)
+
+- `startRetentionTimer().stop()` now returns a promise. It clears the timer and resolves when a purge that is running has ended. `index.ts` awaits it before it closes the retention pool, so shutdown no longer logs a closed-pool `retention_failed`.
+- `runOnce()` returns the purge in flight instead of returning at once, so runs still never overlap.
+- Tests: stop waits for a held purge; stop resolves at once when idle. `apps/worker/src/retention.test.ts` passes.
