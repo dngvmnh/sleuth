@@ -1010,6 +1010,13 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - Review 003 (PR #21): no sign-in screen, so visitors cannot write on the live site; task 14 (screen-reader pass) is open.
 - Bao's tasks against code: ea 7 done and unticked, ea 10 nearly done (no cost ceiling), ea 3 not done. Brief 002b written for the speech-only worker mode.
 
+## 2026-11-11: Gemini fallback model (Phạm Quốc Bảo, evidence-analysis 10, brief 002b)
+
+- Why: on 10 November `gemini-3.8-flash` failed 3 of 3 tries on the free tier and `gemini-3.6-flash` worked 3 of 4 (D-4).
+- `createGeminiVideoAnalysis` takes `fallbackModel`. When the model still fails after its retries with `server_error`, `timeout` or `unreachable`, the request is sent again to the fallback, and the rest of the job stays on it. A bad key, a rejected request or a full call budget never falls back. Every attempt still takes one call from the job's budget.
+- Worker setting `VIDEO_ANALYSIS_FALLBACK_MODEL`, default `gemini-3.6-flash`. Setting it to the same id as `VIDEO_ANALYSIS_MODEL` turns it off. The primary default is unchanged (`gemini-3.8-flash`).
+- Tests (recorded responses, no network): switch after three failures and stay switched; no switch on 403, 400 or budget; the final error is the fallback's code and names no model or key. `packages/media/src/providers`: 29 of 29 pass.
+
 ## 2026-11-11: retention stop waits for a running purge (Phạm Quốc Bảo, review 001 finding 1)
 
 - `startRetentionTimer().stop()` now returns a promise. It clears the timer and resolves when a purge that is running has ended. `index.ts` awaits it before it closes the retention pool, so shutdown no longer logs a closed-pool `retention_failed`.

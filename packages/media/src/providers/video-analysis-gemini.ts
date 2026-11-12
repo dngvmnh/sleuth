@@ -11,6 +11,11 @@ export interface GeminiOptions {
   apiKey: string;
   /** Model id, for example `gemini-3.8-flash`. Read from config. */
   model: string;
+  /**
+   * Model to use when `model` still fails with a server error, a timeout or no answer after its
+   * last retry. From then on the job stays on it. The free tier's newest model is often busy.
+   */
+  fallbackModel?: string;
   baseUrl?: string;
   /** Pictures sent in one request. */
   framesPerRequest?: number;
@@ -24,6 +29,8 @@ export interface GeminiOptions {
   sleep?: (ms: number) => Promise<void>;
   readImage?: (path: string) => Promise<Uint8Array>;
   onUsage?: (usage: ProviderUsage) => void;
+  /** Called once with the fallback model id when the job switches to it. Ids only. */
+  onFallback?: (model: string) => void;
 }
 
 const INSTRUCTION =
@@ -89,6 +96,9 @@ const MAX_DESCRIPTION = 500;
 const MAX_TEXT_ITEMS = 40;
 const MAX_TEXT_LENGTH = 200;
 
+/** Failures that another model may not have. A rejected request or a bad key would fail again. */
+const FALLBACK_CODES = new Set(["server_error", "timeout", "unreachable"]);
+
 function chunk<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
@@ -120,6 +130,24 @@ export function createGeminiVideoAnalysis(options: GeminiOptions): VideoAnalysis
       const budget = createCallBudget(PROVIDER, options.maxCalls ?? 8);
       const observations: FrameObservation[] = [];
       let offset = 0;
+      let model = options.model;
+      const fallback =
+        options.fallbackModel && options.fallbackModel !== options.model
+          ? options.fallbackModel
+          : null;
+
+      const post = (body: string) =>
+        postJson({
+          provider: PROVIDER,
+          url: `${baseUrl}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+          headers: { "x-goog-api-key": options.apiKey, "Content-Type": "application/json" },
+          body,
+          budget,
+          ...(options.fetchFn ? { fetchFn: options.fetchFn } : {}),
+          ...(options.sleep ? { sleep: options.sleep } : {}),
+          ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
+          ...(options.maxAttempts ? { maxAttempts: options.maxAttempts } : {}),
+        });
 
       for (const batch of chunk<SampledFrame>(input.frames, perRequest)) {
         const parts: unknown[] = [];
@@ -136,27 +164,28 @@ export function createGeminiVideoAnalysis(options: GeminiOptions): VideoAnalysis
           });
         }
 
-        const json = await postJson({
-          provider: PROVIDER,
-          url: `${baseUrl}/v1beta/models/${encodeURIComponent(options.model)}:generateContent`,
-          headers: { "x-goog-api-key": options.apiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: INSTRUCTION }] },
-            contents: [{ role: "user", parts }],
-            generationConfig: {
-              temperature: 0,
-              maxOutputTokens: 8192,
-              responseMimeType: "application/json",
-              responseJsonSchema: RESPONSE_SCHEMA,
-              thinkingConfig: { thinkingLevel: "low" },
-            },
-          }),
-          budget,
-          ...(options.fetchFn ? { fetchFn: options.fetchFn } : {}),
-          ...(options.sleep ? { sleep: options.sleep } : {}),
-          ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
-          ...(options.maxAttempts ? { maxAttempts: options.maxAttempts } : {}),
+        const body = JSON.stringify({
+          systemInstruction: { parts: [{ text: INSTRUCTION }] },
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 8192,
+            responseMimeType: "application/json",
+            responseJsonSchema: RESPONSE_SCHEMA,
+            thinkingConfig: { thinkingLevel: "low" },
+          },
         });
+
+        let json: unknown;
+        try {
+          json = await post(body);
+        } catch (error) {
+          const retryable = error instanceof ProviderError && FALLBACK_CODES.has(error.code);
+          if (!retryable || !fallback || model === fallback) throw error;
+          model = fallback;
+          options.onFallback?.(fallback);
+          json = await post(body);
+        }
 
         const response = ResponseSchema.safeParse(json);
         if (!response.success) throw new ProviderError(PROVIDER, "bad_response");
