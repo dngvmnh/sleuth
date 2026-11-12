@@ -62,6 +62,7 @@ export type ProviderConfig = Pick<
       | "VIDEO_ANALYSIS_API_KEY"
       | "TRANSCRIPTION_MODEL"
       | "VIDEO_ANALYSIS_MODEL"
+      | "VIDEO_ANALYSIS_FALLBACK_MODEL"
     >
   >;
 
@@ -117,6 +118,9 @@ export function createProviders(
       ? createGeminiVideoAnalysis({
           apiKey: config.VIDEO_ANALYSIS_API_KEY ?? "",
           model: config.VIDEO_ANALYSIS_MODEL ?? "gemini-3.8-flash",
+          ...(config.VIDEO_ANALYSIS_FALLBACK_MODEL
+            ? { fallbackModel: config.VIDEO_ANALYSIS_FALLBACK_MODEL }
+            : {}),
           maxFrames: config.MAX_FRAMES_PER_VIDEO,
           ...(onUsage ? { onUsage } : {}),
         })

@@ -413,6 +413,55 @@ describe("Gemini video analysis", () => {
     expect(denied.calls).toHaveLength(1);
   });
 
+  it("falls back to the second model after the first one keeps failing, and stays on it", async () => {
+    const ok = () => json(fixture("gemini-generate-content.json"));
+    const switched: string[] = [];
+    const { provider, calls } = make(
+      [json({}, 500), new DOMException("slow", "TimeoutError"), json({}, 503), ok(), ok()],
+      {
+        fallbackModel: "gemini-fallback-model",
+        framesPerRequest: 2,
+        onFallback: (m: string) => switched.push(m),
+      },
+    );
+    const out = await provider.analyse(input(3));
+    expect(out.length).toBeGreaterThan(0);
+    expect(calls.map((c) => c.url.split("/models/")[1])).toEqual([
+      "gemini-test-model:generateContent",
+      "gemini-test-model:generateContent",
+      "gemini-test-model:generateContent",
+      "gemini-fallback-model:generateContent",
+      "gemini-fallback-model:generateContent",
+    ]);
+    expect(switched).toEqual(["gemini-fallback-model"]);
+  });
+
+  it("does not fall back on a bad key, a rejected request or a full call budget", async () => {
+    for (const status of [403, 400]) {
+      const { provider, calls } = make([json({}, status)], {
+        fallbackModel: "gemini-fallback-model",
+      });
+      await expect(provider.analyse(input(1))).rejects.toThrow(ProviderError);
+      expect(calls).toHaveLength(1);
+    }
+    const capped = make([json({}, 500), json({}, 500), json({}, 500)], {
+      fallbackModel: "gemini-fallback-model",
+      maxCalls: 3,
+    });
+    await expect(capped.provider.analyse(input(1))).rejects.toThrow("gemini: budget_exceeded");
+    expect(capped.calls).toHaveLength(3);
+  });
+
+  it("gives up with the fallback's own error when both models fail, and never names a model or key", async () => {
+    const { provider, calls } = make(
+      [json({}, 500), json({}, 500), json({}, 500), json({}, 500), json({}, 500), json({}, 429)],
+      { fallbackModel: "gemini-fallback-model" },
+    );
+    const error = await provider.analyse(input(1)).catch((e: unknown) => e);
+    expect(String(error)).toBe("ProviderError: gemini: rate_limited");
+    expect(calls).toHaveLength(6);
+  });
+
   it("copies text from the screen as data and never follows it", async () => {
     const attack = {
       candidates: [

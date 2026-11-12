@@ -17,6 +17,12 @@ const EnvSchema = z.object({
   TRANSCRIPTION_MODEL: z.string().default("nova-3"),
   VIDEO_ANALYSIS_MODEL: z.string().default("gemini-3.8-flash"),
   /**
+   * Used for the rest of a job when the model above still fails after its retries (server error,
+   * timeout, no answer). On 10 November `gemini-3.8-flash` failed 3 of 3 tries on the free tier and
+   * `gemini-3.6-flash` worked 3 of 4 (D-4). Set it to the same id as the model to turn it off.
+   */
+  VIDEO_ANALYSIS_FALLBACK_MODEL: z.string().default("gemini-3.6-flash"),
+  /**
    * The mock providers return the golden fixture, whatever the video says. In supabase mode that
    * would show invented results as an analysis, so the worker refuses to start with them unless
    * this is set. For local testing only.
