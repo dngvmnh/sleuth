@@ -112,12 +112,14 @@ export function SealPanel({ projectId, seal, blockers, canManage, onSeal }: Seal
       ) : (
         <>
           {blocked ? (
-            <div className="mt-2" id={blockersId}>
-              <p className="text-sm font-medium text-foreground">The Final Seal is not available yet:</p>
+            <div className="mt-2">
+              <p id={blockersId} className="text-sm font-medium text-foreground">
+                The Final Seal is not available yet:
+              </p>
               <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted" aria-label="What blocks the Final Seal">
                 {blockers.map((b) => (
                   <li key={b} data-blocker={b}>
-                    {BLOCKER_TEXT[b]}{" "}
+                    <span id={`${blockersId}-${b}`}>{BLOCKER_TEXT[b]}</span>{" "}
                     {b !== "job_running" ? (
                       // Underlined, not colour only: it sits inside a sentence (axe link-in-text-block).
                       <Link className="text-primary-strong underline underline-offset-4" href={workspace}>
@@ -137,7 +139,11 @@ export function SealPanel({ projectId, seal, blockers, canManage, onSeal }: Seal
               ref={applyRef}
               className="mt-3"
               disabled={blocked}
-              aria-describedby={blocked ? blockersId : undefined}
+              // Point at the sentences themselves. Pointing at a wrapper around the labelled list made
+              // Narrator read the list's label instead of the reasons (live check, 2026-11-11).
+              aria-describedby={
+                blocked ? [blockersId, ...blockers.map((b) => `${blockersId}-${b}`)].join(" ") : undefined
+              }
               onClick={() => {
                 setError(undefined);
                 setConfirming(true);

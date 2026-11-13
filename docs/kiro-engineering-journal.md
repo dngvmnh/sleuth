@@ -1037,3 +1037,116 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - `run.ts`: `evaluate(dir, mode)` takes `{ kind: "mock" }` or `{ kind: "real", providers }`. A clip needs `<name>.mp4` in its folder for a real run, otherwise it is skipped with the reason. The header names providers and models. The run prints how many clips used the Gemini fallback. A missing key stops the run with `provider_not_configured: <setting> is not set`, never the value.
 - Tests (no network, no FFmpeg): with fake providers that hear and see what the example's hand-written inputs say, the real path scores exactly like the mock path; the temporary folder is gone after the run; no video means skipped; over 180 s throws before any provider call; header names models, never a key. `tests/evaluation`: 24 of 24 pass.
 - Not done: the real run itself. It needs clips 1 to 5 recorded and labelled, and the keys Đăng holds.
+
+## 2026-11-11: Narrator walkthrough and the step 18 fix (Review Workspace task 14)
+
+A Narrator walkthrough was run on Windows and Edge, against the production build in fixture mode, at commit `c737231`. An agent pressed the keys. The evidence is screenshots of Narrator's Speech recap. Nobody listened by ear. The step-by-step results are in `docs/accessibility.md` ("Narrator walkthrough log").
+
+Steps 1 to 15 and 17 pass on the transcript. Two findings:
+
+- **Scan mode.** With Narrator Scan mode on, Right reads the marker's label one character at a time instead of moving to the next marker. The walkthrough now says to turn Scan mode off for the timeline (Narrator key + Space). No code change: in Scan mode the screen reader keeps the arrow keys for itself.
+- **Step 18 failed.** The disabled seal button was described as "The Final Seal is not available yet What blocks the Final Seal". The button's `aria-describedby` pointed at a wrapper around a list with `aria-label`. To build the description, the browser walks the wrapper, and on reaching the list it uses the list's label instead of its items. Fix in `seal-panel.tsx`: `aria-describedby` now lists the intro line and one `span` per blocker sentence. The links and the list label are no longer part of the description.
+
+Tests added: `seal-panel.test.tsx` checks the exact description; `seal.spec.ts` checks it in Chromium. The new unit test failed before the fix. In jsdom, the old description also included "Open the workspace".
+
+| Check (fixture mode) | Result |
+|---|---|
+| `vitest run apps/web/features/report` | 61/61 |
+| `pnpm lint` | clean |
+| `pnpm typecheck` | clean |
+| `playwright test seal, final-seal, a11y, report --workers=1` | 22/22 |
+
+Not checked: step 18 heard again after the fix; speech cut off or overlapping (steps 15 and 17); hover contrast; Windows High Contrast mode. Task 14 stays open. Nothing was committed or pushed.
+
+## 2026-11-13: step 18 re-checked with Narrator (Review Workspace task 14)
+
+Đạt checked the step 18 fix with Narrator by ear. On a copy whose seal is still blocked, Narrator read both reasons on the disabled "Apply the Final Seal" button: undecided evidence candidates, and checklist items with no usable evidence. Step 18 is now **Pass**. Source: the user heard it directly. The exact words were not captured, so it is not a verbatim transcript.
+
+Still open, so task 14 stays open:
+- Steps 15 and 17: whether speech is cut off or overlaps, checked by ear.
+- Hover contrast.
+- Windows High Contrast mode.
+- Narrator heading navigation with the heading key.
+
+Only docs changed in this entry. Nothing was committed or pushed.
+
+## 2026-11-13: hover contrast, Windows High Contrast, heading navigation (Review Workspace task 14)
+
+An agent ran these checks. Details are in `docs/accessibility.md`.
+
+- **Hover contrast: Pass, nothing changed.** 20 text elements on 18 controls were measured while hovered: dashboard, workspace copy and report copy. The text was made transparent and every pixel of its line box was read as the background. The lowest results are 6.68:1 for large text (the wordmark, needs 3:1) and 7.91:1 for normal text (needs 4.5:1). A first run screenshotted the whole control and counted borders and rounded corners as background, which gave false "1:1" results. That run was thrown away.
+- **Windows High Contrast: 2 problems found and fixed.** The Night sky theme was applied through Settings. Before the check, the theme was "None" (flags 126, `Custom.theme`). It was restored afterwards and the values were checked again.
+  - Problem 1: the chosen marker and the chosen script line looked like the rest. The theme gives every border the same colour and drops the raised background.
+  - Problem 2: the playhead and the marker range bars disappeared, because they were drawn with `background-color`.
+  - Fix in `timeline.tsx` and `sentence-list.tsx`: a double border for the chosen item in forced colours, and borders instead of backgrounds for the playhead and bars.
+  - Re-checked in the real theme.
+  - Note: Playwright Chromium follows the Windows theme only with `forcedColors: null`. Its default emulates "none", and a first run made that way was not counted.
+- **Narrator heading navigation: not verified.** The desktop tool lost its handle on Edge's web content between calls, so H and Shift+H were never sent. Narrator's speech also cannot be captured from this session. No PASS is recorded.
+
+| Check (fixture mode) | Result |
+|---|---|
+| `vitest run apps/web/features` | 256/256 |
+| `pnpm lint` | clean |
+| `pnpm typecheck` | clean |
+| `playwright test a11y, investigation, focus, workspace, review --workers=1` | 37/37 (including the new forced-colors test) |
+
+Still open, so task 14 stays open:
+- Steps 15 and 17: whether speech is cut off or overlaps, checked by ear.
+- Narrator heading navigation.
+- The other contrast themes.
+
+Step 18 stays Pass, as Đạt confirmed. Nothing was committed or pushed.
+
+## 2026-11-13: Narrator heading navigation Pass; step 15 set up for listening
+
+- **Heading navigation: Pass.** Source: Đạt, checking directly with Narrator in Scan mode. H moved to the next heading and read its name correctly. Shift+H went back and read the previous heading correctly. These results are what Đạt heard and reported, not a verbatim transcript.
+- **Step 15 set up for listening.**
+  - The production build (`ioAWs_mJzgrmDBH_KiX0a`, fixture mode) is running at 127.0.0.1:3000.
+  - An editable copy, `proj-5`, was made for Đạt to press "Run analysis" and listen.
+  - The workspace does not load an existing job when it opens, so the queued state can only be reached by pressing the button. It was not queued ahead of time.
+  - A separate sanity copy (`proj-1`) confirmed through the API that starting an analysis gives `queued` (attempts 0 of 3), and that it is still `queued` 5 s later. In fixture mode the web app has no worker.
+
+Still open, so task 14 stays open: steps 15 and 17, whether speech is cut off or overlaps, checked by ear. Only docs changed. Nothing was committed or pushed.
+
+## 2026-11-13: step 15 heard; step 17 set up (Review Workspace task 14)
+
+- **Step 15 by ear: Pass, within a stated scope.** Đạt listened directly with Narrator on the fixture copy `proj-5`. After pressing "Run analysis" and waiting about 10 s, Đạt heard the queued message read in full, once, with no repeats while it polled. Overlap with other speech was not reported, so it is not recorded as checked.
+- **Step 17 set up, not signed.** The fixture copy `proj-9` was made ready to seal through the local API, the same way `seal.spec.ts` does it.
+  - The agent confirmed evidence for lines 1 to 3. This is test setup on fixture data, not a real review.
+  - Line 5 was marked as needing outside proof.
+  - A reshoot was asked for the uncovered item `ck-4`.
+  - The coverage API then reported `blockers: []` and no seal. The report page answers 200.
+  - The seal was not applied, so Đạt can sign it and listen.
+
+Task 14 stays open until step 17 is heard. Only docs changed. Nothing was committed or pushed.
+
+## 2026-11-13: step 17 heard; Review Workspace task 14 ticked
+
+- **Step 17 by ear: Pass, within a stated scope.** After signing with the keyboard, Đạt heard both messages directly with Narrator: "Final Seal applied." and "The Final Seal was applied. The report is now signed off." These are what Đạt heard and reported, not a verbatim transcript. Their order and any overlap between them were not reported.
+  - Three fixture copies were made ready to seal and were all signed: `proj-9`, `proj-18` and `proj-27`.
+  - Đạt missed the speech on the first two and they were left as they were.
+  - Đạt has not confirmed which copy ID the heard run was on.
+- **Task 14 checked against its own criteria** (`.kiro/specs/review-workspace/tasks.md`):
+
+| Criterion | Evidence | Met |
+|---|---|---|
+| Do: axe scan of dashboard, workspace and lantern | `a11y.spec.ts`: 6 axe tests, with motion on and off. They passed after the last code change (the 37/37 run on 2026-11-13) | Yes |
+| Do: reduced-motion test | `a11y.spec.ts` "reduced motion"; `focus.spec.ts` with reduced motion | Yes |
+| Do: a Narrator or NVDA walkthrough noted with what was and was not checked | Steps 1 to 18 in `docs/accessibility.md`: Speech recap (2026-11-11) and Đạt by ear (steps 15, 17, 18 and heading navigation, 2026-11-13) | Yes |
+| Done when: axe reports no serious or critical issues | 0 serious or critical on every scanned page and state | Yes |
+| Done when: the doc lists known gaps honestly | "Known gaps" names the limits: one screen reader and one browser, the scope of the by-ear checks, contrast themes not tried, the 6 unmeasured report nodes, the 8.5 limits, the unwired video player, the open focus decision | Yes |
+
+  Task 14 is ticked. Requirement 8.5 is still only partly proven, and the doc says so. The task did not ask for full proof.
+
+Only docs and the task list changed in this entry. Nothing was committed or pushed in that session.
+
+## 2026-11-13: accessibility follow-up handed off
+
+PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow-up work goes on a new branch, `fix/accessibility-followup`, made from the newest `main` (`62e2332`):
+- the step 18 description fix;
+- the High Contrast fixes (chosen marker and line, playhead and range bars);
+- their tests;
+- `docs/accessibility.md`;
+- task 14 ticked.
+
+The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.

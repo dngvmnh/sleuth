@@ -94,7 +94,7 @@ All tasks are Đạt's (@phatdat220707), half a day or less, and run against fix
   - Done when: tests cover queued to running to succeeded and queued to failed to retry.
   - Requirements: 7.2 to 7.4
 
-- [ ] 14. Accessibility and motion pass
+- [x] 14. Accessibility and motion pass
   - Owner: Đạt
   - Files: `tests/e2e/a11y.spec.ts`, `docs/accessibility.md`
   - Do: axe scan of dashboard, workspace and lantern; reduced-motion test; a manual Narrator or NVDA walkthrough noted in the doc with what was and was not checked.

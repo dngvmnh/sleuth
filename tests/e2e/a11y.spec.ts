@@ -81,6 +81,32 @@ test.describe("reduced motion", () => {
   });
 });
 
+test.describe("contrast theme (forced colors)", () => {
+  // Emulated here so it runs anywhere. A real Windows contrast theme (Night sky) found both
+  // problems on 2026-11-13: the chosen marker and line looked like the rest, and the playhead
+  // and range bars vanished because contrast themes drop author backgrounds.
+  test.use({ forcedColors: "active" });
+
+  test("keeps the chosen marker and line distinct and the playhead visible", async ({ page }) => {
+    await page.goto("/projects/proofpay-demo");
+    await expect(line(page, 1)).toBeVisible();
+    await marker(page, 3).click();
+    await expect(marker(page, 3)).toHaveAttribute("aria-pressed", "true");
+    const borderStyle = (n: number, of: typeof marker) =>
+      of(page, n).evaluate((el) => getComputedStyle(el).borderTopStyle);
+    expect(await borderStyle(3, marker)).toBe("double");
+    expect(await borderStyle(1, marker)).toBe("solid");
+    expect(await borderStyle(3, line)).toBe("double");
+    expect(await borderStyle(1, line)).toBe("solid");
+    const playhead = await page.getByTestId("playhead").evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { width: parseFloat(cs.borderLeftWidth), color: cs.borderLeftColor, page: getComputedStyle(document.body).backgroundColor };
+    });
+    expect(playhead.width).toBeGreaterThan(0);
+    expect(playhead.color).not.toBe(playhead.page);
+  });
+});
+
 test("the main keyboard path works without a mouse", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Public demo, read-only")).toBeVisible();
