@@ -40,7 +40,7 @@ Rehearse once before 30 November, then repeat for launch. Never put a key in a c
 What you click:
 1. supabase.com, then New project. Name: `sleuth-prod`. Plan: Free. Region: Northeast Asia (Seoul), the same as `sleuth-dev`. Set a database password and save it in your password manager.
 2. Authentication, then Sign In / Providers: turn on "Allow anonymous sign-ins".
-3. Storage, then New bucket: name `video-assets`, Public bucket OFF, file size limit 50 MB, allowed MIME types `video/mp4, video/quicktime, video/webm`. The Free plan caps any file at 50 MB, which matches `MAX_VIDEO_BYTES` (52428800).
+3. Storage, then New bucket: name `video-assets`, Public bucket OFF, file size limit 50 MB, allowed MIME types `video/mp4, video/quicktime, video/webm, video/x-matroska`. The Free plan caps any file at 50 MB, which matches `MAX_VIDEO_BYTES` (52428800). The API accepts the same four types, so the bucket must list all four. Verify: Supabase, Storage, Buckets, `video-assets`: Public is off, the limit is 50 MB, and the four types are listed. Without this bucket every upload request fails with a 500 (this happened on 10 November, see section 5).
 4. Connect (top bar), then Session pooler. Copy the connection string. It must start with `postgresql://postgres.<project-ref>:` and use host `aws-0-ap-northeast-2.pooler.supabase.com`, port 5432. This is the IPv4 address that works from this PC and from GitHub.
 5. Project Settings, then API: copy the Project URL, the anon key, and the service_role key.
 
@@ -116,11 +116,28 @@ Run by `pnpm tsx scripts/prod-smoke.ts`. Part A needs nothing. Part B needs the 
 | Signed-out visitor sees only the demo | Proven | Script part A: list holds one project; demo, evidence, findings, coverage and report.csv return 200; an unknown id returns 404 |
 | Signed-out visitor cannot write | Proven | Script part A: create 401; scripts, analysis, seal and upload-url 403; a forged bearer token 401 |
 | No secret in the page or its JS | Proven | Fetched the page and 7 assets (584159 bytes). Zero matches for a JWT, `service_role`, `sb_secret_`, `postgres://`, a Supabase host, Deepgram, Gemini or any env name |
-| Anonymous sign-in, create, upload | **Not proven** | The web app has no sign-in screen yet and its JS holds no Supabase URL or anon key. Needs script part B |
-| Two users cannot read each other's projects | **Not proven** | Same reason. Policies reviewed in section 6; not run on production |
-| 50 MB cap and file types | API: proven by tests. Live: **not proven** | Unit, property, store-contract and route tests cover the API. The live site needs script part B and the bucket settings check |
+| Anonymous sign-in, create, upload | **Not proven** on 10 November (replaced by section 5b) | The web app has no sign-in screen yet and its JS holds no Supabase URL or anon key. Needs script part B |
+| Two users cannot read each other's projects | **Not proven** on 10 November (replaced by section 5b) | Same reason. Policies reviewed in section 6; not run on production |
+| 50 MB cap and file types | API: proven by tests. Live: **not proven** on 10 November (replaced by section 5b) | Unit, property, store-contract and route tests cover the API. The live site needs script part B and the bucket settings check |
 
 Fixed in the API (contract change): the upload-url request now needs `sizeBytes` (1 to 52428800) and `mimeType` must be `video/mp4`, `video/quicktime`, `video/webm` or `video/x-matroska`. Anything else gets 400 before a URL is issued. The bucket settings in step 1 stay as the second wall. Script part B checks both: the API refuses a 51 MB size claim, and the bucket refuses a 51 MB body and a text body.
+
+### 5b. Production check, 13 November 2026
+
+Reported by Đăng; run in Đăng's shell with `pnpm tsx scripts/prod-smoke.ts` (parts A and B). Not re-run by the coding session.
+
+- Root cause of the 10 November failure ("signed upload URL issued" got 500): `sleuth-prod` had no storage bucket. Step 1.3 above had never been done. The bucket `video-assets` now exists: private, 50 MB limit, MIME types `video/mp4`, `video/quicktime`, `video/webm`, `video/x-matroska`.
+- The script also expected 200 from `createUploadUrl` while the contract declares 201. The script now expects 201.
+- Result: all checks passed, 32 of 32 (parts A and B).
+
+Rows of the 10 November table that this replaces:
+
+| Check | Status on 13 November | How |
+|---|---|---|
+| Anonymous sign-in, create, upload | Proven on production | Part B: two anonymous users, create a project, signed upload URL issued (201) and a 4 KB file uploaded through the API |
+| Two users cannot read each other's projects | Proven on production | Part B: user B gets 404 on A's project, B's list hides it, a signed-out visitor gets 404, B cannot write to it |
+| 50 MB cap and file types | Proven on production | Part B: the API refuses a 51 MB size claim, a missing size, `text/plain` and a video over 180 s; the bucket refuses a 51 MB body and a text body |
+| No secret in the page or its JS | Still true as of 10 November. Re-check after PR #27 | PR #27 (guest sign-in, not merged yet) puts the Supabase Project URL and the anon key in the page. Both are public by design (ADR 0006), so after #27 they are expected. Still forbidden anywhere in the page or its JS: `service_role`, `sb_secret_`, `postgres://` and any Deepgram or Gemini key |
 
 ### 6. Row-level security review (migrations 0000 to 0002)
 
@@ -155,7 +172,13 @@ select id, name, owner_id, created_at from projects where name like 'zz-test-%';
 delete from projects where name like 'zz-test-%' and not is_demo;
 ```
 
-Child rows go with the project (cascade). Then Storage, `video-assets`: open each folder named with a deleted project id and delete it. Optionally, Authentication, Users: delete the anonymous users made today.
+Child rows go with the project (cascade). Then Storage, `video-assets`: open each folder named with a deleted project id and delete it. SQL cannot delete Storage objects, so this step is by hand in the dashboard. Optionally, Authentication, Users: delete the anonymous users made today.
+
+Left over from the 13 November run (delete these two folders in Storage, `video-assets`; each holds one 4 KB test file):
+- `prj-0mwetmijy0001-78237676`
+- `prj-0mweu1pmk0001-c9e4ae11`
+
+The three test projects of that run (`zz-test-ec48xl`, `zz-test-836d6a`, `zz-test-eu60zn`) were already deleted.
 
 ## Vercel Hobby terms (read 10 November 2026)
 
