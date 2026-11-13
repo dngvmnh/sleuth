@@ -1151,6 +1151,13 @@ PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow
 
 The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
 
+## 2026-11-13: guest sign-in check (brief 004 step 1)
+
+- New `scripts/guest-flow-check.ts`: drives Chromium through the real guest flow and prints PASS or FAIL only, plus the one project id it makes. It takes our own clip (`scripts/make-check-clip.ps1`, 6.5 s) so the browser reads a real length; no stub.
+- Run against a local dev server on the PR #27 branch (separate worktree, `SLEUTH_DATA_MODE=supabase`, sleuth-dev values loaded in that process only): 14 of 14 PASS. Signed out, create shows "Starting a guest session..." then a project; reload keeps it; a second browser does not see it and gets "Project not found"; a text file is refused with no server call; our clip got 201 and was saved to storage.
+- Two first runs failed because of the script, not the app: Next.js keeps an empty role=alert route announcer, and the demo has two links. Both fixed.
+- Not covered by the script: review 005 item 4 (anonymous sign-ins switched off); it needs a dashboard toggle.
+- Leftovers in sleuth-dev: guest projects from these runs; the 7-day anonymous purge removes them.
 ## 2026-11-13: playback URL for the owner's player (brief 004 step 2, contract change)
 
 - New `GET /projects/{id}/assets/{assetVersionId}/playback-url` (`getPlaybackUrl`) returns `{ url, expiresAt }` or both null. Null means no playable video: the demo, fixture mode, or a version whose file never reached storage.
