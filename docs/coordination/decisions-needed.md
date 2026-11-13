@@ -1,12 +1,16 @@
 # Decisions needed
 
-Updated Tuesday 10 November 2026. Team rule: free options only for hosting and AI.
+Updated Friday 13 November 2026, evening. Team rule: free options only for hosting and AI.
 
 ## Open
 
-| ID | Decision | Who | By | State |
+| ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
-| D-4 | AI providers on free options only | Đăng | Mostly decided 10 Nov | Models and data rule set (see below). Open: the "no video analysis" worker mode is a task for Bảo, written up in `briefs/002-no-video-analysis-mode.md`. Until it ships, the worker workflow stays manual. |
+| D-4 (rest) | The speech-only worker mode is still not built, so the scheduled worker stays off. | Bảo (build), Đăng (decide the fallback in D-13) | Mon 16 Nov | See D-13. Until it ships, run the worker by hand and only when the queue holds our own jobs. |
+| D-10 | Who records clips 1 to 3 (ea 11). | Đăng | Sat 14 Nov | Đăng records clips 1 to 3 (API and database demos, same style as clip 5's `demo.ps1`). Bảo finalises the protocol and labels them by watching, before any run. Đạt keeps clips 4 and 5 (ea 14, 15). Recorder and labeller are different people, which makes the labels more honest. |
+| D-11 | What visitors may do at launch. | Đăng | Mon 16 Nov | "Try your own video" is speech-only: Deepgram transcript, no frames to Gemini (D-4 data rule). Our own clips use Gemini through an allow-list of owner ids. Until the mode ships, visitors can sign in and make copies of the demo, but the worker stays off. |
+| D-12 | Keep Supabase Free and the worker alive through judging. | Đăng | Wed 18 Nov | Yes. A small scheduled GitHub workflow that makes one cheap query to `sleuth-prod` twice a week, plus the weekly manual look at both projects. Check the pause rule on Supabase's page and quote it in the PR. |
+| D-13 | If Bảo has not started brief 002b by Sat 14 Nov noon, who builds it. | Đăng | Sat 14 Nov | Đăng builds it on `feat/worker-speech-only-mode`, tells Bảo, and Bảo reviews. It is the critical path to a scheduled worker, and Đăng's lane is free. |
 
 ## Decided
 
@@ -15,31 +19,21 @@ Updated Tuesday 10 November 2026. Team rule: free options only for hosting and A
 | D-1 | Ingestion 7 upload URL lifetime | Option 3: `expiresAt` is a 5-minute window; analysis refuses a late (`upload_late`) or missing (`upload_missing`) file. | PR #4, ingestion requirement 2.1 |
 | D-2 | How to merge PR #1 | Merge commit (`deb6dbc`). | PR #1 |
 | D-3 | Postgres in CI | Yes, as a throwaway local Supabase stack in the `db` job, never the shared dev project. | PR #5 |
-| D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026. The team clause also allows one person on more than one team: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
+| D-4 | AI providers on free options only | Deepgram credit and Gemini free tier. Visitors' videos go to Deepgram only. Models: `gemini-3.8-flash` with fallback `gemini-3.6-flash` (PR #22). ADR 0007 accepted for free tiers (PR #24). Owner of both accounts: Đăng. No card on either. | ADR 0007, PR #22, PR #24 |
+| D-5 | Hosting on free options only | Vercel Hobby, a GitHub Actions worker, Supabase Free. `sleuth-prod` is production. Upload cap 50 MB (52428800 bytes). Owner: Đăng. | `docs/deploy-plan.md` |
+| D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
+| D-7 | Eligibility answers | All three are university students and adults. Phạm Quốc Bảo and Đạt did not register for Kiroween 2025. | Team, 10 Nov |
 | D-8 | Who adds the hourly purge to `apps/worker` | Đăng wrote it; Bảo owns the worker going forward. | PR #6, ADR 0008 |
-| D-5 | Hosting on free options only | Free tiers only: Vercel Hobby, a GitHub Actions worker, Supabase Free. A second free Supabase project (`sleuth-prod`) is production. Upload cap is 50 MB (52428800 bytes, the same value as `MAX_VIDEO_BYTES`). Keep the weekly reminder to open both Supabase projects so they are not paused. Owner: Đăng. | `docs/deploy-plan.md` |
-| D-7 | Eligibility answers | All three are university students and adults. Phạm Quốc Bảo and Đạt did not register for Kiroween 2025 and are above the age of majority. Đăng's answers are recorded. | Team, 10 Nov |
 
-## D-4: free AI providers (decided 10 Nov)
+## Facts recorded 13 November (reported by Đăng, verified outside Kiro, not re-checked here)
 
-- Gemini model: `gemini-3.8-flash` on the free tier. Checked on 10 Nov with `pnpm tsx scripts/provider-check.ts`: `gemini-3.8-flash` failed 3 of 3 tries on the free tier (timeout, server error, timeout). `gemini-3.6-flash` worked in 3 of 4 runs (3 frames in, 3 observations, 6 text items; the 4th run hit a server error). Use `gemini-3.6-flash` until `gemini-3.8-flash` answers; set `VIDEO_ANALYSIS_MODEL` to change it. The code default in `apps/worker/src/config.ts` still says 3.8, which is the worker owner's call.
-- Data rule: visitors' videos go to Deepgram only. Frames are never sent to Gemini for visitors.
-- Task for Bao: add a "no video analysis" mode to the worker. Supabase mode refuses the mock providers today.
-- Owner of both accounts: Đăng. No card on either.
+- Production root cause: `sleuth-prod` had no storage bucket, because deploy-plan step 1.3 was never done. Bucket `video-assets` now exists: private, 50 MB limit, MIME types `video/mp4`, `video/quicktime`, `video/webm`, `video/x-matroska`. The API accepts `video/x-matroska`, so the bucket must list it. Brief 003 updates step 1.3.
+- `scripts/prod-smoke.ts` expected 200 from `createUploadUrl`, but the contract says 201. Fixed locally, not committed. Brief 003 commits it.
+- Production smoke test, parts A and B: all checks passed, 32 of 32. That covers anonymous sign-in, two-user isolation, an upload URL with no key, no file name and under 5 minutes, a 4 KB upload, and the bucket refusing a 51 MB file and a text body.
+- Test projects `zz-test-ec48xl`, `zz-test-836d6a` and `zz-test-eu60zn` were deleted from `sleuth-prod`.
+- Two 4 KB test files remain in Storage, in folders `prj-0mwetmijy0001-78237676` and `prj-0mweu1pmk0001-c9e4ae11`. SQL cannot delete Storage objects: delete them by hand in the dashboard (Storage, `video-assets`).
 
-### Original proposal
+## Notes kept from earlier
 
-The adapters exist for Deepgram (transcription) and Gemini (video analysis), PR #18. ADR 0007 picked the paid Gemini tier; the free rule changes that.
-
-| Part | Free option | Limit | Data handling | Source |
-|---|---|---|---|---|
-| Transcription | Deepgram, $200 sign-up credit | One-time credit, no card needed. Without a card it cannot bill, so the credit is the cap. Estimate: about $0.013 to $0.026 per 3-minute run (ADR 0007), so several thousand runs. | `mip_opt_out=true` stops retention (ADR 0007). It may cost up to double, which uses the credit faster. | [Deepgram sign-up](https://console.deepgram.com/signup) |
-| Video analysis | Gemini API free tier | Rate-limited requests per minute and per day, per model. Check the active limits in AI Studio. | On the free tier, content may be used to improve Google's products (ADR 0007, official pricing page). | [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) |
-
-The conflict: `.kiro/steering/ai-safety.md` says users' videos are not kept or used for training. The free Gemini tier does not promise that.
-
-Recommendation:
-1. Our own recorded clips: Deepgram credit plus Gemini free tier. We own the footage and accept the terms.
-2. Visitors' videos ("try your own video"): Deepgram only, with no frames sent to Gemini. This needs a "no video analysis" mode in the worker (Bảo's area), because supabase mode refuses the mock providers today.
-3. No card on any provider account. Both accounts belong to one owner (OPEN; Bảo is the natural fit).
-4. Bảo amends ADR 0007 to match, if the team agrees.
+- D-9 (team channel) was dropped on 9 Nov.
+- Gemini check of 10 Nov: `gemini-3.8-flash` failed 3 of 3 on the free tier; `gemini-3.6-flash` worked in 3 of 4. The fallback in PR #22 is tested with recorded responses only.
