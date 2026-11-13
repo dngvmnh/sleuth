@@ -159,7 +159,8 @@ async function userPart(): Promise<void> {
     });
 
   const ok = await request("video/webm");
-  check("signed upload URL issued", ok.status === 200 && !!ok.json?.uploadUrl, String(ok.status));
+  // The contract declares 201 Created for createUploadUrl (packages/contracts/src/endpoints.ts).
+  check("signed upload URL issued", ok.status === 201 && !!ok.json?.uploadUrl, String(ok.status));
   if (ok.json?.uploadUrl) {
     const url = String(ok.json.uploadUrl);
     check("upload URL holds no service-role key", !/service_role|sb_secret_/.test(url));

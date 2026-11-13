@@ -1150,3 +1150,10 @@ PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow
 - task 14 ticked.
 
 The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
+
+## 2026-11-13: smoke test expects 201, deploy plan synced with the production check
+
+- `scripts/prod-smoke.ts` now expects 201 from createUploadUrl (the contract says 201).
+- `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
+- Gate on this branch: see the PR. Part B was not run and no production values were set.
+- Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
