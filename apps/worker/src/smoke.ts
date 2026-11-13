@@ -46,18 +46,22 @@ async function main(): Promise<number> {
     }
     const audioPath = join(dir, "audio.wav");
     await extractAudio(file, audioPath);
+    // Speech only (VIDEO_ANALYSIS_PROVIDER=none): no frames are cut or sent.
+    const video = providers.videoAnalysis;
     const framesDir = join(dir, "frames");
-    await mkdir(framesDir);
-    const frames = await extractFrames(
-      file,
-      planFrames(durationMs, { intervalMs: 2000, maxFrames: config.MAX_FRAMES_PER_VIDEO }),
-      framesDir,
-    );
+    if (video) await mkdir(framesDir);
+    const frames = video
+      ? await extractFrames(
+          file,
+          planFrames(durationMs, { intervalMs: 2000, maxFrames: config.MAX_FRAMES_PER_VIDEO }),
+          framesDir,
+        )
+      : [];
 
     const base = { projectId: "smoke", assetVersionId: "smoke-av", durationMs };
     const started = Date.now();
     const rawTranscript = await providers.transcription.transcribe({ ...base, audioPath });
-    const rawObservations = await providers.videoAnalysis.analyse({ ...base, frames });
+    const rawObservations = video ? await video.analyse({ ...base, frames }) : [];
     const seconds = Math.round((Date.now() - started) / 100) / 10;
 
     const transcript = validateTranscript(rawTranscript, durationMs);
@@ -66,7 +70,7 @@ async function main(): Promise<number> {
       usage.filter((u) => u.provider === provider).reduce((n, u) => n + u[field], 0);
 
     const lines = [
-      `providers: ${providers.transcription.name} + ${providers.videoAnalysis.name}`,
+      `providers: ${providers.transcription.name} + ${video?.name ?? "none"}`,
       `video_ms: ${durationMs}`,
       `frames_sent: ${frames.length}`,
       `transcript_segments_kept: ${transcript.valid.length}`,
@@ -76,8 +80,8 @@ async function main(): Promise<number> {
       `observations_rejected: ${observations.rejectedCount}`,
       `observations_with_screen_text: ${observations.valid.filter((o) => o.onScreenText.length > 0).length}`,
       `transcription_audio_seconds_billed: ${sum(providers.transcription.name, "inputTokens")}`,
-      `video_analysis_input_tokens: ${sum(providers.videoAnalysis.name, "inputTokens")}`,
-      `video_analysis_output_tokens: ${sum(providers.videoAnalysis.name, "outputTokens")}`,
+      `video_analysis_input_tokens: ${sum(video?.name ?? "none", "inputTokens")}`,
+      `video_analysis_output_tokens: ${sum(video?.name ?? "none", "outputTokens")}`,
       `provider_seconds: ${seconds}`,
     ];
     console.log(lines.join("\n"));

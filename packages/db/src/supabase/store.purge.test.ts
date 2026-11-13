@@ -83,7 +83,8 @@ suite("retention purge on Postgres and Storage [5.4]", () => {
     (await admin().storage.from(bucket).download(path)).error === null;
 
   beforeAll(async () => {
-    handle = openTestDb();
+    // Queries run one at a time here: one client keeps the Free pooler's 15-client cap free.
+    handle = openTestDb(1);
     await deleteTestProjects(handle.db, "purge");
     store = createSupabaseStore({
       db: handle.db,

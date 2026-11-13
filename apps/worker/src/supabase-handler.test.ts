@@ -16,6 +16,7 @@ import {
   createMockVideoAnalysisProvider,
   type AnalyseInput,
   type TranscribeInput,
+  type VideoAnalysisProvider,
 } from "@sleuth/media";
 import { loadConfig } from "./config";
 import { downloadVideo } from "./download";
@@ -41,6 +42,7 @@ function inputsOf(over: Partial<JobInputs> = {}): JobInputs {
   return {
     job,
     projectId: fx.project.id,
+    owner: { userId: "11111111-1111-4111-8111-111111111111", realAccount: true },
     asset: { ...fx.assetVersion, storagePath: "p/v1/video.mp4" },
     script: fx.script,
     checklist: fx.checklist,
@@ -77,7 +79,11 @@ function fakeStore(
   return store;
 }
 
+/** A provider policy that lets every owner have frames sent; only for tests of other rules. */
+const everyone = () => true;
+
 const goldenProviders = (): ProviderSet => ({
+  sendsFramesFor: everyone,
   transcription: createMockTranscriptionProvider(fx.transcript),
   videoAnalysis: createMockVideoAnalysisProvider(fx.frames),
 });
@@ -143,6 +149,7 @@ describe("createSupabaseHandler", () => {
   it("hands the audio file and the cut frames to the providers", async () => {
     const seen: { audio?: TranscribeInput; frames?: AnalyseInput } = {};
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: {
         name: "spy",
         transcribe(input) {
@@ -169,6 +176,7 @@ describe("createSupabaseHandler", () => {
   it("uses the length of the file, not the length the client declared", async () => {
     const seen: number[] = [];
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: {
         name: "spy",
         transcribe(input) {
@@ -207,6 +215,7 @@ describe("createSupabaseHandler", () => {
   it("deletes its temporary folder when the pipeline fails", async () => {
     const media = fakeMedia();
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: { name: "boom", transcribe: () => Promise.reject(new Error("boom")) },
       videoAnalysis: { name: "boom", analyse: () => Promise.resolve([]) },
     };
@@ -292,6 +301,7 @@ describe("createSupabaseHandler", () => {
     expect(describeError(error)).toBe("media: failed");
 
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: {
         name: "leaky",
         transcribe: () => Promise.reject(new Error("the presenter said: my password is hunter2")),
@@ -442,7 +452,7 @@ describe("createProviders", () => {
     } as const;
     const set = createProviders(real);
     expect(set.transcription.name).toBe("deepgram");
-    expect(set.videoAnalysis.name).toBe("gemini");
+    expect(set.videoAnalysis?.name).toBe("gemini");
     // No mock is involved, so the mock guard does not apply.
     expect(() => createProviders({ ...real, TRANSCRIPTION_API_KEY: undefined })).toThrow(
       /TRANSCRIPTION_API_KEY is not set/,
@@ -461,6 +471,7 @@ describe("createProviders", () => {
 
   it("lets a real provider's failure reach the job row as 'provider: code'", async () => {
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: {
         name: "deepgram",
         transcribe: () => Promise.reject(new ProviderError("deepgram", "rate_limited")),
@@ -486,7 +497,7 @@ describe("createProviders", () => {
       expect(s.assetVersionId).toBe("av9");
       expect(s.id.startsWith("av9-")).toBe(true);
     }
-    const observations = await videoAnalysis.analyse({
+    const observations = await (videoAnalysis as VideoAnalysisProvider).analyse({
       projectId: "p9",
       assetVersionId: "av9",
       durationMs: 52_000,
@@ -545,6 +556,7 @@ describe.skipIf(!hasFfmpeg)("with real FFmpeg", () => {
       dirs: [],
     };
     const providers: ProviderSet = {
+      sendsFramesFor: everyone,
       transcription: {
         name: "spy",
         transcribe(input) {

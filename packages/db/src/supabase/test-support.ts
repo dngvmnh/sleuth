@@ -68,10 +68,14 @@ export function testDatabaseUrl(): string | undefined {
   return url ? url : undefined;
 }
 
-export function openTestDb(): { db: Db; close: () => Promise<void> } {
+/**
+ * A pool for one test file. `max` defaults to 4; a file that runs one query at a time should ask
+ * for 1, because the Supabase Free session pooler allows 15 clients for all files running at once.
+ */
+export function openTestDb(max = 4): { db: Db; close: () => Promise<void> } {
   const url = testDatabaseUrl();
   if (!url) throw new Error("TEST_DATABASE_URL is not set.");
-  const { db, client } = createDb(url, { max: 4 });
+  const { db, client } = createDb(url, { max });
   return { db, close: () => client.end({ timeout: 5 }) };
 }
 
