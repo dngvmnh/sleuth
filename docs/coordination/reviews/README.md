@@ -16,3 +16,6 @@ One file per review, named `NNN-short-name.md`. Each records: what was checked, 
 5. Spec: the ticked task's "done when" is really met, and the journal has an entry with real numbers.
 6. Safety: no secrets, no `.env` files, no new code outside `packages/domain/src/review.ts` that sets evidence to `confirmed` (`node tools/kiro-hooks/hook.mjs ghost-scan`), logs hold ids and counts only.
 7. Language and names: English everywhere; real names (Đạt, Đăng, Phạm Quốc Bảo); no AI mentions or trailers.
+
+- 13 November 2026: review 004, PR #26 (accessibility follow-up, review-workspace 14, Đạt), before merge. Approved; merge now. See `004-pr26-accessibility-followup.md`.
+- 13 November 2026: review 005, PR #27 (anonymous guest sign-in, Đạt), before merge. Code approved; check it on real Supabase before merging. See `005-pr27-guest-sign-in.md`.

@@ -1,111 +1,106 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Tuesday 10 November 2026. Source: git, GitHub and files at `main` `1da5209` (code at `7b038e6`).
+Owner: coordinator session. Updated: Friday 13 November 2026, evening. Source: `origin/main` `62e2332` (read with git and `gh`; nothing was checked out and no lint, test or build was run, because the builder session was working). Facts marked "reported" come from Đăng and were not re-checked here.
 
-Dates (SGT): feature freeze Wed 2 Dec 23:59. Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
+Dates (SGT): feature freeze Wed 2 Dec 23:59 (19 days). Internal submit Fri 4 Dec 18:00 (21 days). Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
 ## 1. Git and GitHub
 
 | Item | State |
 |---|---|
-| `origin/main` | `1da5209`. CI green (`check` and `db` jobs). The `db` job can fail to start Supabase when the runner still holds port 54322; a re-run of the failed job passed (10 Nov, PR #20). |
-| PRs | #1 to #6 and #8 to #21 merged (#9 to #19 by Phạm Quốc Bảo, #21 by Đạt, #20 by Đăng). #7 was a CI preview, closed. No open PRs. |
-| CI | `check`: lint, typecheck, unit, property, contracts, build. `db`: a throwaway local Supabase stack runs every Postgres, Auth and Storage suite. |
-| Label `contract-change` | Exists. |
+| `origin/main` | `62e2332`. CI green on the last six runs (`check`, `db`). |
+| Merged since 10 Nov | #20 (Đăng, upload size and type limits). #22 to #25 (Bảo, 12 Nov): Gemini fallback model, retention stop fix, ADR 0007 accepted, `pnpm eval --providers real`. |
+| Open PRs | #26 (Đạt, accessibility follow-up, ticks review-workspace 14). #27 (Đạt, anonymous guest sign-in). Both opened 13 Nov, CI green, mergeable, no review yet. They conflict with each other in `docs/kiro-engineering-journal.md` only. |
+| Stale branches | `chore/coordination`, `feat/change-impact-9-supabase`, `feat/ci-supabase-db`, `feat/ea-15-clip-prep`, `feat/ingestion-10-worker-purge`, `feat/ingestion-7-upload-window`, `feat/upload-size-type-limits`, `feat/web-test-tooling` are merged and can be deleted. |
+| Local checkout (Đăng) | `main` is 9 commits behind `origin/main`. One uncommitted change: `scripts/prod-smoke.ts` (201 instead of 200). Brief 003 fixes both. |
+| Worker workflow | One run ever: manual, 9 Nov, green, no job in the queue. Schedule is off on purpose (see risk 3). |
 
-## 2. Ticked versus really done
+## 2. Ticked versus really done (spec ticks at `62e2332`)
 
-| Spec | Ticked | Open |
-|---|---|---|
-| ingestion | 10/10 | none |
-| change-impact | 10/10 | none |
-| final-seal | 10/10 | none (UI merged in PR #21) |
-| review-workspace | 13/14 | 14 (accessibility: automated checks pass, manual screen-reader pass not done) |
-| evidence-analysis | 9/16 | 3, 7, 10, 11, 13 (Bảo); 14, 15 (clips, Đạt). See the check below. |
-
-$1 Counts are from the `tasks.md` files at `main` on 10 November: ingestion 10/10, change-impact 10/10, final-seal 10/10, review-workspace 13/14, evidence-analysis 9/16.
-
-### Bảo's open tasks checked against the code (10 Nov)
-
-Nobody ticks these for Bảo. This is the evidence for him to tick, or to finish.
-
-| Task | State in code | Evidence | Missing |
+| Spec | Ticked | Open | Checked against code |
 |---|---|---|---|
-| ea 3 provider ADR | Not done | `docs/decisions/0007-provider-choice.md` exists but says "proposed" and picks the paid Gemini tier | Amend to the free-tier rule and the data rule (D-4), then accept. The spend limit is decided: free only |
-| ea 7 outside-proof classifier | Done, only unticked | `packages/evidence-engine/src/outside-proof-terms.ts` and `outside-proof.test.ts`: 12 phrases flagged, 12 ordinary steps not flagged, the finding names the term and a proof hint; 56 tests pass in that folder and `packages/media/src/providers` | Nothing. Tick it |
-| ea 10 real adapters | Mostly done | `transcription-deepgram.ts`, `video-analysis-gemini.ts`, timeouts, retries, call cap (`createCallBudget`), recorded-response tests with no network; manual script `scripts/provider-check.ts` (Đăng's) printed counts only and no key (10 Nov) | A per-job cost ceiling (none in code); `gemini-3.8-flash` failed 3 of 3 tries, so the default model or a fallback needs a change |
-| ea 11 clips and protocol | Not done | Only clip-5 scaffolding exists | Record and label three clips, write the protocol |
-| ea 13 first evaluation | Not done | Needs ea 11 | Run after ea 11 |
+| ingestion | 10/10 | none | Store and route tests in CI. Live: upload URL, 50 MB cap and bucket refusals proven on production on 13 Nov (reported, 32 of 32). |
+| change-impact | 10/10 | none | Shared contract suite runs on both stores in the `db` job. Live on production: not run. |
+| final-seal | 10/10 | none | UI merged in #21. Seal rules covered by tests. Live: not run. |
+| review-workspace | 13/14 | 14 | Task 14 is ticked inside #26. Not on `main` yet. |
+| evidence-analysis | 12/16 | 11, 13 (Bảo); 14, 15 (Đạt) | Tasks 3, 7, 10, 12, 16 are ticked and the code exists (`supabase-handler.ts` with a DB test, `pg-queue.ts` with a DB test, both adapters, outside-proof terms). They are proven by tests with recorded responses or a local database. No job has ever run on production. No clip is recorded: there is no `clip-1` to `clip-4` folder and `clip-5` holds only its recording kit. |
 
-## 3. Blockers today
+No false tick found. Overall: 55 of 60 spec tasks ticked on `main`; 56 after #26.
 
-| Person | Blocker | Fix |
-|---|---|---|
-| Bảo | ADR 0007 picks the paid Gemini tier; the team rule is now free only (D-4). | D-4 is decided (free tiers). Amend ADR 0007 to match, then tick ea 3. Check result: Deepgram and `gemini-3.6-flash` work; `gemini-3.8-flash` failed 3 of 3 tries on the free tier. |
-| Bảo | Public uploads must not go to the free Gemini tier (D-4). Supabase mode refuses mock providers. | Build the speech-only mode: `briefs/002-no-video-analysis-mode.md`. |
-| Đăng | Production is only partly proven (10 Nov): signed-out view, forged-header refusal and secret scan pass on the live site (part A of `scripts/prod-smoke.ts`, 14 of 14 PASS, re-run after PR #20). Anonymous sign-in, two-user isolation and the upload limits on the live site are not proven. | Run part B after Đạt's sign-in screen is live (see below), or now for the API checks. |
-| Đạt | Confirmed in review 003: the web app has no sign-in screen and no browser Supabase client, so no visitor can write in Supabase mode. | Add anonymous sign-in with `@supabase/ssr` (steps in `reviews/003-pr21-review-workspace.md`). |
-| Đạt | Review workspace and Final Seal UI are merged (PR #21). Task 14 (manual screen-reader pass) is open. | Do the pass and tick task 14. |
-| Đạt | ea 14, 15: clips not recorded. | Record per `tests/evaluation/clips/clip-5/RECORDING.md` and the protocol from ea 9. |
-## 4. Critical path to a working end-to-end demo
+## 3. Per person
 
-1. Real analysis: FFmpeg probe and frames (ea 1, 2), provider ADR (ea 3), alignment and matching (ea 5, 6), real adapters (ea 10). Bảo. Longest chain, biggest risk.
-2. Worker on Postgres: ea 12 (Supabase handler) and ea 16 (queue test). Inputs ready: see `docs/worker-supabase-contract.md`.
-3. Review UI: rw 1-6, then Timeline and Lantern (7-9), then Exorcism (10). Đạt. Runs on fixtures with no backend wait.
-4. Final Seal UI (fs 6-9). Đạt, after rw 6.
-5. Our own recorded clips (ea 11, 14, 15) and the first evaluation run (ea 13).
-6. Deploy (`docs/deploy-plan.md`), then dogfood, video, Devpost.
+| Person | Finished since 10 Nov | Doing now | Blocked by | Blocking |
+|---|---|---|---|---|
+| Đăng | #20 merged (10 Nov). Prod bucket fixed and smoke test 32/32 (13 Nov, reported). Worker run, board, reviews, briefs. | Local `main` behind, one uncommitted fix. | Nothing outside. Own queue: #26, #27 (review), the Storage cleanup. | Đạt (#27 merge needs my real-Supabase check). Đạt (no playable video URL in the API). |
+| Đạt | #21 merged (10 Nov). #26 and #27 opened and green (13 Nov). | Waiting for review of #26 and #27. | Đăng (review and check). | Live visitors (no sign-in until #27). Clips 4 and 5 (nobody has started them). |
+| Bảo | #22 to #25 merged 11 to 12 Nov (evidence-analysis 3, 7, 10 ticked; real-provider eval mode). | Nothing visible. No open PR. Last push 12 Nov 08:39 SGT. | Unknown. Ask today. | Speech-only worker mode (brief 002b, not started: no branch, no `none` provider in `apps/worker`). Scheduled worker. Clips 1 to 3 and the first evaluation (ea 11, 13), so no accuracy numbers for Devpost. |
+
+Is Đăng blocking anyone? Yes, on two points:
+1. #27 is the critical path and the PR asks me to run a real-Supabase check before merge. Review 005 says how.
+2. The API has no playable video URL (`docs/accessibility.md`, known gaps), so the real video player cannot be wired. That is backend work: brief 004, step 3.
+
+Is anyone doing ea 14 and ea 15? No. Both are Đạt's. There is no `clip-4` folder and `clip-5` has only the recording kit from #8.
+
+## 4. Critical path: one real run on production
+
+Target: upload a real video, the worker transcribes it and finds evidence, findings show on the timeline, resolve one, edit one sentence so only its evidence goes stale, export the Final Seal.
+
+| # | Step | Status | Evidence |
+|---|---|---|---|
+| 1 | A visitor signs in as a guest in the browser, creates a project and uploads | **Broken** in the browser. Proven through the API only | Live site has no sign-in until #27 (review 003). API: anonymous sign-in, two-user isolation, 4 KB upload, bucket refuses 51 MB and text, 32 of 32 (13 Nov, reported). #27's cookie path is not verified on real Supabase. |
+| 2 | Worker takes the job, Deepgram transcribes, Gemini reads frames, evidence is found | Unproven | The worker has never run a job on production. Real providers were checked only by `provider-check.ts` on a 6 s clip (10 Nov). The Gemini fallback (#22) is tested with recorded responses only. |
+| 3 | Findings show on the timeline with the video | Unproven | Demo project loads signed out on production (part A). A real job's findings: not run. The API has no playable video URL. |
+| 4 | Resolve one finding | Unproven on production | Fixture end-to-end and API tests pass (per PR bodies). |
+| 5 | Edit one sentence: only its evidence goes stale | Unproven on production | Contract suite on both stores in CI. |
+| 6 | Export the Final Seal | Unproven on production | Fixture end-to-end and seal tests. |
+
+Earliest step not proven: **step 1, the browser sign-in, create and upload on the live site.** Next: step 2, the first real job.
 
 ## 5. Top five risks
 
-1. Word-overlap matching is weak on real transcripts (ea 5, 6). Test on real clips by 20 Nov.
-2. Bảo's lane has not started and has the longest chain. Only one person on it.
-3. Free tiers only. Gemini free tier may use content to improve its products, so visitors' videos must not reach it (D-4). Deepgram's free credit runs out once.
-4. Free hosting (D-5): the GitHub Actions worker starts jobs up to 5 minutes late or more, and Supabase Free pauses idle projects. Rehearse before 30 Nov.
-5. Gemini free tier: `gemini-3.8-flash` did not answer in 3 tries, and `gemini-3.6-flash` failed 1 of 4. Retries and a fallback model are needed in the worker.
+1. No real job has run on production. 21 days left. The first run will find bugs. Do it by Tue 17 Nov (brief 004).
+2. Visitors cannot write on the live site until #27 is merged and its cookie path is checked on real Supabase.
+3. Data rule (D-4): the manual worker workflow sets `VIDEO_ANALYSIS_PROVIDER: gemini`, so it would send any queued visitor's frames to Gemini. Speech-only mode is not built. Keep the worker manual and run it only when the queue holds our own jobs.
+4. Bảo has been quiet since 12 Nov and holds speech-only mode, the protocol, three clips and the first evaluation. No accuracy numbers exist yet. Matching quality on real speech is unmeasured.
+5. Free-tier limits: Gemini `3.8-flash` failed 3 of 3 on 10 Nov (fallback to `3.6-flash` is not proven live); Supabase Free pauses after 7 quiet days; the Deepgram credit is one-time.
 
-## 6. Week plan, 9-15 November
+## 6. Week plan, 14 to 20 November
 
 Rule for all lanes: small PRs, CI green, journal entry, tick `tasks.md` in the same PR. Dependency adds: one person at a time.
 
-### Lane BACKEND and COORDINATION: Đăng (@dngvmnh)
+### Lane BACKEND, INTEGRATION and SUBMISSION: Đăng (@dngvmnh)
 | Day | Work |
 |---|---|
-| Mon 9 | Done: BRIEF 001 and 002, all backend tasks, CI database job. Board, D-6 answer, worker contract, deploy plan, submission drafts. |
-| Tue 10 to Fri 13 | Review PRs from Đạt and Bảo (shared files, `contract-change` label). Pair on fresh-clone setup. Collect D-4, D-5 and D-7 answers. |
-| Sat-Sun 14-15 | Review only. |
+| Sat 14 | Brief 003 (smoke test 201, deploy-plan sync, local `main`). Merge #26. Run the real-Supabase check on #27 (review 005), then merge it. Delete the two test files in Storage by hand. Ask Bảo for status. |
+| Sun 15 | Light. Brief 004 step 2: guest-flow check script. |
+| Mon 16 | Run the guest-flow check on production. Brief 004 step 3: playback URL (contract change, PR). |
+| Tue 17 | Brief 004 step 4: first real job on production with our own clip. |
+| Wed 18 | Record and label clips 1 to 3 if decision D-10 is yes. Keep-alive workflow (brief 005). |
+| Thu 19 | If Bảo has not started speech-only mode: build it (decision D-13). Kiro usage write-up. |
+| Fri 20 | Dogfood plan. Board and decisions. Review week's PRs. |
 
 ### Lane FRONTEND: Đạt (@phatdat220707)
 | Day | Work |
 |---|---|
-| Mon 9 | Run section 8 setup, report result. Request Kiro credits. |
-| Tue 10 | rw 1 (test tooling, shared files, tell team before touching lockfile). rw 2 (API client). |
-| Wed 11 | rw 3 (shell and dashboard), rw 4 (timeline helpers). |
-| Thu 12 | rw 5 (player port), rw 6 (workspace hook and page). |
-| Fri 13 | rw 7 (timeline with keyboard). |
-| Sat-Sun 14-15 | rw 8 (sentence list). Stretch: rw 9. |
-| Any day | ea 15: record clip-5 with the unscripted line, follow `tests/evaluation/clips/clip-5/RECORDING.md`. Tick only after Bảo's ea 9 and ea 11 are on main. |
-Target by Sun 15: workspace page shows the demo project timeline on fixtures.
+| Sat 14 | After review: merge #26, then merge `main` into #27 (keep both sides of the journal), re-run the end-to-end specs on the last commit, and merge. |
+| Mon 16 | Record clip 5 (ea 15) from `tests/evaluation/clips/clip-5/RECORDING.md`. |
+| Tue 17 | Record clip 4 (ea 14). Label both before running the tool. |
+| Wed 18 to Fri 20 | Wire the real video player when the playback URL lands. Fix what the first real job shows. Start the 3 outside tester plan for 30 Nov. |
 
 ### Lane MEDIA: Phạm Quốc Bảo (@baofrovn)
 | Day | Work |
 |---|---|
-| Mon 9 | Setup plus `winget install Gyan.FFmpeg`. Request Kiro credits. |
-| Tue 10 | ea 1 (FFmpeg probe and audio). |
-| Wed 11 | ea 2 (frames and cleanup). |
-| Thu 12 | ea 3 (provider ADR 0007, comparison only, no keys). ea 4 (validation property tests). |
-| Fri 13 | ea 5 (script alignment). |
-| Sat-Sun 14-15 | ea 6 start (matching and confidence). change-impact 4 (`segmentIds`) if time. |
-Target by Sun 15: probe a real video, extract audio and frames, ADR written.
+| Sat 14 | Reply with status and a date for each item. |
+| Mon 16 | Brief 002b, speech-only worker mode, one PR. |
+| Tue 17 to Thu 19 | ea 11: protocol final, label clips 1 to 3 (Đăng records, decision D-10). |
+| Fri 20 | ea 13 setup: `pnpm eval --providers real` on the clips that exist. |
 
-### Cross-cutting this week
-- Everyone answers the day-one questions (student, Kiroween 2025, age of majority). Owner: Đăng collects. Do not guess for anyone.
-- Free hosting and AI plan (D-4, D-5): `docs/deploy-plan.md`, `decisions-needed.md`.
+### Cross-cutting
+- Everyone requests Kiro credits before Wed 2 Dec 04:00. Not confirmed for anyone.
+- Weekly: open both Supabase projects so neither pauses.
 
-## 7. Open PRs and reviews
-- No open PRs on 10 November. Review notes go in `reviews/`: 001 retention purge, 002 pg-queue connections, 003 PR #21.
-- PR #20 (upload size and type limits, `contract-change`) merged as `7b038e6`. It edited Đạt's upload form so it sends `sizeBytes`; Đạt is asked to look at those files.
-- Decisions: D-4, D-5 and D-7 are decided (`decisions-needed.md`). D-4 still has one task for the worker owner: a "no video analysis" mode, so visitors' videos never reach Gemini.
-- Deploy prep is written: `docs/deploy-plan.md` (production Supabase, Vercel variables, secrets) and `.github/workflows/worker.yml` (manual run only until the mode above exists).
-- Manual provider check: `pnpm tsx scripts/provider-check.ts <clip>` prints counts only.
-- Briefs 001 and 002 (`002-backend-finish-loop.md`) are complete. Open brief: `002-no-video-analysis-mode.md` for Bảo.
+## 7. Briefs and reviews
+
+- Briefs: `003-prod-smoke-201-and-plan-sync.md` (do first), `004-first-real-job-and-playback.md`, `005-submission-groundwork.md`. Older: 001 and 002 (finished), `002-no-video-analysis-mode.md` (open, Bảo).
+- Reviews: `004-pr26-accessibility-followup.md` (approve), `005-pr27-guest-sign-in.md` (approve the code; check on real Supabase before merge).
+- Decisions: see `decisions-needed.md`. Open today: D-10, D-11, D-12, D-13.
