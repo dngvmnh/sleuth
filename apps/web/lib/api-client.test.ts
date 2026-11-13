@@ -706,3 +706,24 @@ describe("ApiClientError details", () => {
     expect(caught.name).toBe("ApiClientError");
   });
 });
+
+describe("beforeRequest (Supabase session refresh)", () => {
+  it("waits for beforeRequest before each request and sends no fixture header", async () => {
+    const order: string[] = [];
+    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      order.push("fetch");
+      expect(new Headers(init?.headers).has("x-fixture-user")).toBe(false);
+      return ok({ projects: [] });
+    });
+    const client = createApiClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      beforeRequest: async () => {
+        await Promise.resolve();
+        order.push("prepare");
+      },
+    });
+    await client.listProjects();
+    await client.listProjects();
+    expect(order).toEqual(["prepare", "fetch", "prepare", "fetch"]);
+  });
+});

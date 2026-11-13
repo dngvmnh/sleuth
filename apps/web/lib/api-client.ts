@@ -67,8 +67,14 @@ export function sealBlockersOf(error: unknown): SealBlocker[] | null {
 
 export interface ApiClientOptions {
   baseUrl?: string;
+  /** Fixture mode only: sent as `x-fixture-user`. Never set it in Supabase mode, where the API ignores it. */
   user?: string;
   fetchImpl?: typeof fetch;
+  /**
+   * Awaited before every request. In Supabase mode it lets an existing guest session refresh
+   * its cookie first (it never signs anyone in). Same-origin requests then carry that cookie.
+   */
+  beforeRequest?: () => Promise<void>;
 }
 
 export function createApiClient(options: ApiClientOptions = {}) {
@@ -81,6 +87,7 @@ export function createApiClient(options: ApiClientOptions = {}) {
     path: string,
     body?: unknown,
   ): Promise<z.infer<S>> {
+    if (options.beforeRequest) await options.beforeRequest();
     const res = await doFetch(`${base}${path}`, {
       method,
       headers: {

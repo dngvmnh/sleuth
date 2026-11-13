@@ -11,7 +11,8 @@ import type {
   ProcessingJob,
   ReviewRequest,
 } from "@sleuth/contracts";
-import { ApiClientError, createApiClient, type ApiClient } from "@/lib/api-client";
+import { useApiClient } from "@/components/guest-auth-provider";
+import { ApiClientError, type ApiClient } from "@/lib/api-client";
 
 /** Project detail as the API returns it (the contracts package exports the schema, not this type). */
 export type ProjectDetail = z.infer<typeof GetProjectResponseSchema>;
@@ -85,7 +86,8 @@ function initial(projectId: string): Loaded {
  * A response for an earlier project, an earlier request or an unmounted component is dropped.
  */
 export function useProject(projectId: string, client?: ApiClient): ProjectState {
-  const api = useMemo(() => client ?? createApiClient(), [client]);
+  const shared = useApiClient();
+  const api = useMemo(() => client ?? shared, [client, shared]);
   const [state, setState] = useState<Loaded>(() => initial(projectId));
   const [attempt, setAttempt] = useState(0);
   const [reviewingId, setReviewingId] = useState<string | undefined>(undefined);

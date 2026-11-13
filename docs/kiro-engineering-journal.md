@@ -1037,3 +1037,75 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - `run.ts`: `evaluate(dir, mode)` takes `{ kind: "mock" }` or `{ kind: "real", providers }`. A clip needs `<name>.mp4` in its folder for a real run, otherwise it is skipped with the reason. The header names providers and models. The run prints how many clips used the Gemini fallback. A missing key stops the run with `provider_not_configured: <setting> is not set`, never the value.
 - Tests (no network, no FFmpeg): with fake providers that hear and see what the example's hand-written inputs say, the real path scores exactly like the mock path; the temporary folder is gone after the run; no video means skipped; over 180 s throws before any provider call; header names models, never a key. `tests/evaluation`: 24 of 24 pass.
 - Not done: the real run itself. It needs clips 1 to 5 recorded and labelled, and the keys Đăng holds.
+
+## 2026-11-13: anonymous guest sign-in in the browser (Đạt, review 003 blocker, ADR 0006)
+
+Branch `feat/web-anonymous-signin`, in its own worktree from `main` `62e2332`. Nothing was committed or pushed. The accessibility work (PR #26) and the stash were not touched.
+
+What changed (frontend only; no API route, contract, database, RLS, worker or dependency change):
+- `apps/web/lib/guest-auth.ts`: the sign-in rules.
+  - `ensureSession()` reuses a session the Auth server still accepts. Otherwise it calls `signInAnonymously()`.
+  - A new user is made only when there is no session, or when the Auth server answers that the session is gone (401/403, `user_not_found`, ...). A network error never makes a new user.
+  - Calls made at the same time share one sign-in.
+  - `prepareRequest()` only reads the session, so an expired cookie gets refreshed. It never signs in.
+  - Errors are `not_configured`, `anonymous_disabled`, `network` and `failed`. Each has a plain message saying nothing was created. Nothing is logged.
+- `apps/web/lib/supabase-browser.ts`: `createBrowserClient` from `@supabase/ssr` (existing 0.12.7), built lazily, only in Supabase mode. The session is kept in the `@supabase/ssr` cookies that `supabase-server.ts` reads (same URL, so the same cookie name).
+- `apps/web/lib/auth-config.ts` (server): the mode comes from `SLEUTH_DATA_MODE`, by the same rule as `dataMode()`. It is not guessed from a URL or key being set. Only the two public values are passed on.
+- `apps/web/app/(workspace)/layout.tsx`: reads that config per request (`connection()`) and wraps the pages in `GuestAuthProvider`. The pages are now rendered on demand (`ƒ /`).
+- `apps/web/components/guest-auth-provider.tsx`: one guest auth and one API client for every page, so both entry points share the session and the in-flight sign-in. `GuestSessionNote` says the session lives in this browser only and cannot be recovered after its data is cleared.
+- `apps/web/lib/api-client.ts`: a `beforeRequest` option. In Supabase mode it is `prepareRequest`, and no `x-fixture-user` header is sent. Same-origin calls carry the cookie.
+- Dashboard "Create a project" and demo "Make an editable copy":
+  1. sign in;
+  2. only then send the create request;
+  3. while waiting, the button is locked with a ref against double clicks and says "Starting a guest session..." and then "Creating..." / "Making a copy...";
+  4. a failed sign-in shows an alert and sends no request, and pressing again retries.
+- Viewing pages never signs anyone in. The demo stays read-only.
+
+Checks (fixture mode, on the worktree):
+
+| Check | Result |
+|---|---|
+| New unit tests: `guest-auth.test.ts` (17), project-list (+5), editors-panel (+5), api-client (+1) | pass |
+| `vitest run apps/web/lib apps/web/features` | 327/327 |
+| `pnpm test` | 885 passed, 75 skipped (the same DB/key/ffmpeg suites as before) |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `pnpm --filter @sleuth/web build` | passed |
+| Client bundle (`.next/static`) contains `SUPABASE_SERVICE_ROLE`, `DATABASE_URL` or `service_role` | 0 files |
+| `playwright test --workers=1` (all specs) | 71/71 |
+
+One run of the full features set had a single timing failure in `workspace-flow.test.tsx` (the playhead test). It passed 3 of 3 times alone, and in the next full run. It does not touch the new code.
+
+Not verified: a real sign-in. This machine has no Supabase test project. It has no `NEXT_PUBLIC_SUPABASE_*` values and no Supabase CLI. The unit tests use a fake `supabase.auth`, so they do not prove the following:
+- a real anonymous user is made;
+- the cookie survives a reload;
+- the server reads it;
+- two users are kept apart.
+
+For Đăng: a test Supabase project with anonymous sign-ins on, and its `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `DATABASE_URL` set locally (not shared in chat). Then run part B of `scripts/prod-smoke.ts`, plus a reload check, against that test project. Not against production.
+
+### 2026-11-13: guest sign-in no longer replaces a session on unclear errors (review fix)
+
+Two cases were reproduced in `guest-auth.ts`:
+1. `getSession` returned `session: null` with an `AuthApiError` 429. `ensureSession` still called `signInAnonymously`.
+2. With a session, `getUser` returned 403 `access_denied`. The code signed out and made a new guest, because `isDeadSession` treated every 401 or 403 as a dead session.
+
+Fix (`apps/web/lib/guest-auth.ts`, frontend only):
+- A failed session read is no longer read as "signed out". Now a new guest is made only in two cases:
+  - the read succeeds and there is no session;
+  - the Auth server gives a specific dead-session code (`user_not_found`, `session_not_found`, `session_expired`, `bad_jwt`, `refresh_token_not_found`, or `AuthSessionMissingError`).
+- HTTP 401 or 403 alone no longer counts as a dead session.
+- Rate limits, access denied, other unknown errors and network errors now throw. The person sees "Guest sign-in did not work ... Try again" or the network message. Nothing calls `signOut` or `signInAnonymously`, and no create request is sent.
+- Reusing a valid session and sharing one sign-in between concurrent calls are unchanged.
+
+Regression tests. Before the fix, 6 failed, and these were exactly the new tests:
+- `guest-auth.test.ts`: `getSession` 429; `getSession` unknown error; `getUser` 403 `access_denied`; `getUser` bare 401. In each, `signInAnonymously` and `signOut` are not called.
+- `project-list.test.tsx`: the real `createGuestAuth` with a 429 session read. The test checks for an alert, no POST, no sign-in or sign-out, and that the button can be pressed again.
+- `editors-panel.test.tsx`: the real `createGuestAuth` with a `getUser` 403 `access_denied`. The test checks for an alert, no copy, and no sign-in or sign-out.
+
+Also added: `getSession` with `refresh_token_not_found` still starts a new guest. This test passed before the fix and after it.
+
+After the fix:
+- `vitest run apps/web/lib apps/web/features`: 335/335;
+- `pnpm lint`, `pnpm typecheck` and `git diff --check`: clean.
+
+Still not verified: a real Supabase sign-in, the cookie surviving a reload, and two users kept apart. There is no Supabase test environment on this machine. Nothing was committed or pushed.

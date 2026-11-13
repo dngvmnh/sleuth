@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
+import { GuestAuthProvider } from "@/components/guest-auth-provider";
+import { clientAuthConfigFromEnv } from "@/lib/auth-config";
 
 /**
  * Midnight Screening Room shell.
@@ -7,9 +10,13 @@ import Link from "next/link";
  * skip-navigation link. The decorative fog layer lives in the root layout so
  * it spans the full viewport; this layout only adds navigation chrome.
  */
-export default function WorkspaceLayout({ children }: { children: ReactNode }) {
+export default async function WorkspaceLayout({ children }: { children: ReactNode }) {
+  // Read the data mode when the request arrives, not at build time, so the browser always
+  // signs in the way the running server expects. Only public values reach the browser.
+  await connection();
+  const authConfig = clientAuthConfigFromEnv();
   return (
-    <>
+    <GuestAuthProvider config={authConfig}>
       {/* Skip link: keyboard users jump past the nav to the main content */}
       <a
         href="#main-content"
@@ -48,6 +55,6 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
       <main id="main-content" tabIndex={-1} className="outline-none">
         {children}
       </main>
-    </>
+    </GuestAuthProvider>
   );
 }
