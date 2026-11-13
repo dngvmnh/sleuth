@@ -142,6 +142,89 @@ export function runStoreContract(
     });
   });
 
+  describe(`${name}: playback URLs`, () => {
+    it("answers url null for the demo, to anyone, signed in or not", async () => {
+      const store = await makeStore();
+      const demo = await store.getProjectDetail(anon, DEMO);
+      const assetId = demo.assetVersion?.id as string;
+      for (const actor of [anon, user(1)]) {
+        expect(await store.getPlaybackUrl(actor, DEMO, assetId)).toEqual({
+          url: null,
+          expiresAt: null,
+        });
+      }
+    });
+
+    it("never gives another user or a visitor anything for a private project, not even existence", async () => {
+      const store = await makeStore();
+      const p = await store.createProject(user(1), { name: "p" });
+      const { assetVersion } = await store.createUploadUrl(user(1), p.id, {
+        fileName: "v.mp4",
+        mimeType: "video/mp4",
+        sizeBytes: 1000,
+        durationMs: 1000,
+      });
+      for (const actor of [user(2), anon]) {
+        const err = await refused(store.getPlaybackUrl(actor, p.id, assetVersion.id));
+        expect([err.status, err.code]).toEqual([404, "not_found"]);
+      }
+      const own = await store.getPlaybackUrl(user(1), p.id, assetVersion.id);
+      expect(own.url === null ? own.expiresAt : typeof own.expiresAt).toBe(
+        own.url === null ? null : "string",
+      );
+    });
+
+    it("refuses an unknown version and a version that belongs to another project", async () => {
+      const store = await makeStore();
+      const a = await store.createProject(user(1), { name: "a" });
+      const b = await store.createProject(user(1), { name: "b" });
+      const { assetVersion } = await store.createUploadUrl(user(1), a.id, {
+        fileName: "v.mp4",
+        mimeType: "video/mp4",
+        sizeBytes: 1000,
+        durationMs: 1000,
+      });
+      expect((await refused(store.getPlaybackUrl(user(1), a.id, "av-nope"))).status).toBe(404);
+      expect((await refused(store.getPlaybackUrl(user(1), b.id, assetVersion.id))).status).toBe(
+        404,
+      );
+    });
+
+    it("gives a URL only to the owner of a private project [PBT]", async () => {
+      const store = await makeStore();
+      const p = await store.createProject(user(1), { name: "p" });
+      const { assetVersion } = await store.createUploadUrl(user(1), p.id, {
+        fileName: "v.mp4",
+        mimeType: "video/mp4",
+        sizeBytes: 1000,
+        durationMs: 1000,
+      });
+      const demo = await store.getProjectDetail(anon, DEMO);
+      const targets = [
+        { projectId: DEMO, assetId: demo.assetVersion?.id as string, demo: true },
+        { projectId: p.id, assetId: assetVersion.id, demo: false },
+      ];
+      await fc.assert(
+        fc.asyncProperty(
+          fc.constantFrom<"owner" | "other" | "visitor">("owner", "other", "visitor"),
+          fc.constantFrom(...targets),
+          async (who, target) => {
+            const actor = who === "owner" ? user(1) : who === "other" ? user(2) : anon;
+            const call = store.getPlaybackUrl(actor, target.projectId, target.assetId);
+            if (!target.demo && who !== "owner") {
+              expect((await refused(call)).status).toBe(404);
+              return;
+            }
+            const out = await call;
+            if (target.demo) expect(out).toEqual({ url: null, expiresAt: null });
+            else expect(out.url === null).toBe(out.expiresAt === null);
+          },
+        ),
+        { numRuns: runs(30) },
+      );
+    });
+  });
+
   describe(`${name}: asset versions`, () => {
     it("numbers uploads 1..n with no gaps, per project [PBT 2.3]", async () => {
       await fc.assert(

@@ -132,6 +132,48 @@ suite("signed upload URLs on Supabase Storage", () => {
     expect(read.error).not.toBeNull();
   });
 
+  it("gives the owner a short-lived playback URL once the file landed, and nobody else anything", async () => {
+    const p = await store.createProject(owner, { name: `${TEST_PROJECT_PREFIX}play` });
+    const out = await upload(p.id);
+    const avId = out.assetVersion.id;
+    // Nothing in storage yet: no playable video.
+    expect(await store.getPlaybackUrl(owner, p.id, avId)).toEqual({ url: null, expiresAt: null });
+
+    const token = new URL(out.uploadUrl).searchParams.get("token") as string;
+    const browser = createClient(supaUrl as string, anonKey as string, {
+      auth: { persistSession: false },
+    });
+    const put = await browser.storage
+      .from(bucket)
+      .uploadToSignedUrl(
+        out.assetVersion.storagePath,
+        token,
+        new Blob([new Uint8Array([1, 2, 3])], { type: "video/mp4" }),
+      );
+    expect(put.error).toBeNull();
+    uploaded.push(out.assetVersion.storagePath);
+
+    const play = await store.getPlaybackUrl(owner, p.id, avId);
+    if (play.url === null) throw new Error("expected a playback URL");
+    expect(new URL(play.url).host).toBe(new URL(supaUrl as string).host);
+    const everything = JSON.stringify(play);
+    expect(everything).not.toContain(serviceKey as string);
+    expect(everything.toLowerCase()).not.toMatch(/service[_-]?role/);
+    const ttl = Date.parse(play.expiresAt) - Date.now();
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(600_000 + 5_000);
+    // The URL really plays: the bytes come back.
+    const fetched = await fetch(play.url);
+    expect(fetched.status).toBe(200);
+    expect(new Uint8Array(await fetched.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+
+    for (const actor of [{ userId: testUser("upload", 2) }, { userId: null }]) {
+      await expect(store.getPlaybackUrl(actor, p.id, avId)).rejects.toMatchObject({
+        status: 404,
+      });
+    }
+  });
+
   it("deletes files through the storage client", async () => {
     const p = await store.createProject(owner, { name: `${TEST_PROJECT_PREFIX}remove` });
     const out = await upload(p.id);
