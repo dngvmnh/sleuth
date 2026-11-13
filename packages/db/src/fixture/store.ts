@@ -251,6 +251,15 @@ export function createFixtureStore(options: FixtureStoreOptions = {}): FixtureSt
       return detail(readable(actor, projectId));
     },
 
+    async getPlaybackUrl(actor, projectId, assetVersionId) {
+      const d = readable(actor, projectId);
+      if (!d.assets.some((a) => a.id === assetVersionId)) {
+        throw new StoreError("not_found", 404, "Video version not found.");
+      }
+      // Fixture mode has no storage, so there is never a playable file.
+      return { url: null, expiresAt: null };
+    },
+
     async createProject(actor, input) {
       if (actor.userId === null)
         throw new StoreError("unauthorized", 401, "Sign in to create a project.");
