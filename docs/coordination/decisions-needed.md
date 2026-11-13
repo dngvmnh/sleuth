@@ -22,7 +22,7 @@ Updated Saturday 14 November 2026, early morning, by Đăng. Team rule: free opt
 | D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
 | D-7 | Eligibility answers | All three are university students and adults. Phạm Quốc Bảo and Đạt did not register for Kiroween 2025. | Team, 10 Nov |
 | D-8 | Who adds the hourly purge to `apps/worker` | Đăng wrote it; Bảo owns the worker going forward. | PR #6, ADR 0008 |
-| D-13 | Bảo had not started brief 002b; who builds it | Đăng built it on 13 Nov: PR #34 (`feat/worker-speech-only-mode`), CI green, review requested from Bảo. | PR #34 |
+| D-13 | Bảo had not started brief 002b; who builds it | Đăng built it on 13 Nov: PR #34 (`feat/worker-speech-only-mode`), merged on 14 Nov. Bảo was asked to review. | PR #34 |
 | D-14 | New look: default for launch, or a skin for the video only? | Default for launch, behind a `data-theme` attribute on `<html>`, so it rolls back in one line. Decided by Đăng, 14 Nov. | Item 5 (theme foundations) |
 | D-15 | Who does the revamp? | Đạt builds components and screens. Đăng does tokens, fonts, icons and the contrast test. UI freeze Sun 29 Nov. Decided by Đăng, 14 Nov. | Item 5 |
 | D-16 | Art | Original SVG and CSS only. No stock or generated images unless the rights are recorded. Decided by Đăng, 14 Nov. | Item 5 |

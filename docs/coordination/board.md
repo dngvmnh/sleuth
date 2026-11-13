@@ -1,6 +1,6 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Saturday 14 November 2026, about 01:30 SGT, by Đăng's builder session. Source: `origin/main` `395f490`, read with git and `gh`, and `tasks.md` on that commit.
+Owner: coordinator session. Updated: Saturday 14 November 2026, about 01:30 SGT, by Đăng's builder session. Source: `origin/main` `37da5c1`, read with git and `gh`, and `tasks.md` on that commit.
 
 Dates (SGT): feature freeze Wed 2 Dec 23:59 (18 days). UI freeze Sun 29 Nov (D-15). Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
@@ -8,10 +8,10 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59 (18 days). UI freeze Sun 29 Nov (D-1
 
 | Item | State |
 |---|---|
-| `origin/main` | `395f490`. Merged on 13 Nov evening: #29 (smoke test expects 201, deploy-plan sync), #31 (owner-only playback URL, `contract-change`), #30 (guest-flow check script). |
-| Open PRs (Đăng) | #32 prod-e2e script; #33 submission groundwork and keep-alive; #34 speech-only worker mode (review requested from Bảo); #35 cleanup list; and this PR. `main` was merged into #32 to #35 on 14 Nov (journal: both sides kept). |
+| `origin/main` | `37da5c1`. Merged 13 to 14 Nov: #29 (smoke test expects 201, deploy-plan sync), #31 (owner-only playback URL, `contract-change`), #30 (guest-flow check), #32 (prod-e2e script), #34 (speech-only worker mode). |
+| Open PRs (Đăng) | #33 submission groundwork and keep-alive (`ping` red until the secret is fixed); #35 cleanup list; #36 this board; #37 theme foundations. `main` was merged into each on 14 Nov (journal: both sides kept). |
 | Open PRs (Đạt) | #27 guest sign-in. Conflicts with `main` in the journal only. Needs Đạt to merge `main` into it. |
-| Worker workflow | Manual only. Schedule off until #34 is merged. |
+| Worker workflow | Manual only. #34 is merged, so a scheduled run is now speech only for every job unless `VIDEO_ANALYSIS_OWNER_IDS` is set. Turning the schedule on is Đăng's step. |
 
 ## 2. Spec ticks at `395f490`
 
@@ -31,14 +31,14 @@ Total 56 of 60.
 |---|---|---|---|---|
 | Đăng | #29, #30, #31 merged. #32 to #35 open, CI green before the main merge. Guest-flow check 14 of 14 PASS on sleuth-dev against #27's code. prod-e2e rehearsal on sleuth-dev: 9 PASS, 1 SKIP. Leak check of both scripts: 0 secrets, signed URLs or transcript strings in the output. | Theme foundations (D-14 to D-18 decided). | `DATABASE_URL` secret (Đăng's own click) for keep-alive and the worker. #27 deploy for the live checks. | Đạt (theme tokens, fonts and icons for the revamp). |
 | Đạt | #26 merged (review-workspace 14 ticked). #27 open. | #27: merge `main`, re-run the browser specs. | Nobody. | Live sign-in on the site (#27). Real video player (playback URL is on `main` now). Clips 4 and 5 (ea 14, 15). |
-| Bảo | Last push 12 Nov 00:39 UTC (#25). | Review of #34 requested. | Unknown; no reply. | ea 11 protocol and labels, ea 13 first evaluation. No accuracy numbers until these run. |
+| Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) was merged on 14 Nov; a review after the fact is still welcome. | Unknown; no reply. | ea 11 protocol and labels, ea 13 first evaluation. No accuracy numbers until these run. |
 
 ## 4. Critical path: one real run on production
 
 | # | Step | Status | Evidence |
 |---|---|---|---|
 | 1 | A guest signs in in the browser, creates a project and uploads | Proven on sleuth-dev; **unproven on the live site** | `scripts/guest-flow-check.ts` (PR #30, merged) against a local dev server on #27's code with sleuth-dev: 14 of 14 PASS, 13 Nov, and again 14 Nov. Live site: waits for #27 to be merged and deployed. API path on production: 32 of 32, 13 Nov (reported by Đăng). |
-| 2 | The worker takes the job, transcribes and finds evidence | Proven on sleuth-dev; unproven on production | `scripts/prod-e2e.ts` (PR #32) rehearsal with a local worker run (Deepgram, gemini-3.6-flash, our own 6.5 s clip): job `succeeded`, 13 and 14 Nov. Production: needs the `DATABASE_URL` secret, the queue check and Đăng's shell. |
+| 2 | The worker takes the job, transcribes and finds evidence | Proven on sleuth-dev; unproven on production | `scripts/prod-e2e.ts` (PR #32, merged) rehearsal with a local worker run (Deepgram, gemini-3.6-flash, our own 6.5 s clip): job `succeeded`, 13 and 14 Nov. Production: needs the `DATABASE_URL` secret, the queue check and Đăng's shell. |
 | 3 | Findings show on the timeline with the video | Partly: API counts proven on dev; player not wired | Rehearsals listed evidence and findings by type. Playback URL route merged (#31). The real player is Đạt's next task. |
 | 4 | Resolve one finding | Proven once on dev | Rehearsal run 1 (13 Nov) resolved a Cursed Frame through the review call. Later runs only produced a Ghost, which has no evidence to review, so step 7 was SKIP. |
 | 5 | Edit one sentence: only its evidence goes stale | Proven on dev | Rehearsal 14 Nov: 1 modified line, its 1 evidence item went stale, nothing else changed. |
@@ -56,15 +56,15 @@ Earliest step not proven on production: **step 1, the browser sign-in on the liv
 
 ## 6. Merge order for open PRs
 
-1. #32 prod-e2e script: needed for Gate B, touches only `scripts/` and the journal.
-2. #35 cleanup list: docs only.
-3. #33 submission groundwork: docs and keep-alive. Its `ping` run goes green only after the secret is fixed.
+Already merged: #29, #31, #30, #32, #34.
+1. #35 cleanup list: docs only, no risk.
+2. #36 this PR (decisions and board): docs only.
+3. #37 theme foundations: tokens, fonts, icons. Đạt builds on it, so earlier is better.
 4. #27 (Đạt), after Đạt merges `main` into it: unlocks the live checks.
-5. #34 speech-only mode, after Bảo reviews: unlocks the worker schedule.
-6. This PR (decisions and board), any time.
+5. #33 submission groundwork: its `ping` goes green only after the `DATABASE_URL` secret is fixed.
 
 ## 7. Briefs, reviews, decisions
 
-- Briefs: 003 done (#29). 004: steps 1 to 3 done in code (#30, #31, #32); live runs are gated. 005: #33. 002b: #34.
+- Briefs: 003 done (#29). 004: steps 1 to 4 done in code (#30, #31, #32, #34); live runs are gated. 005: #33. 002b: #34 (merged).
 - Decisions: see `decisions-needed.md`. Open: D-10, D-11, D-12. Decided today: D-13 to D-18.
 - Cleanup: `docs/coordination/cleanup.md` (#35).
