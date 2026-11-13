@@ -1150,3 +1150,10 @@ PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow
 - task 14 ticked.
 
 The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
+
+## 2026-11-13: submission groundwork (brief 005)
+
+- `docs/submission/kiro-usage.md` (DRAFT): steering, specs, hooks, agents, property tests, mutation checks and the review routine, each claim with its journal date, PR or commit. Ends with what only Dat and Phạm Quốc Bảo can add.
+- `docs/submission/dogfood-plan.md` (DRAFT): order, dates, people, files, fallback. The official rules page returned HTTP 403 to the page reader, so the video rules are not quoted; Dang reads them.
+- `.github/workflows/keep-alive.yml`: one read-only query against sleuth-prod on Mondays and Thursdays at 03:17 UTC, plus manual runs and a run on PRs that change the file. Prints only ok or an error code. `docs/deploy-plan.md` quotes the Supabase pausing rule (7 days of low activity) and GitHub's 60-day rule for scheduled workflows in a public repo.
+- `docs/submission/launch-checklist.md` (DRAFT): 15 dated items with owners; most are open.
