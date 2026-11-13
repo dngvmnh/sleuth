@@ -1187,3 +1187,8 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
 - Gate on this branch: see the PR. Part B was not run and no production values were set.
 - Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
+
+## 2026-11-14: cleanup list for test data (Đăng)
+
+- New `docs/coordination/cleanup.md`: select-first SQL and Storage click paths for both projects. Production: `zz-test-%` rows, the two 4 KB files in folders `prj-0mwetmijy0001-78237676` and `prj-0mweu1pmk0001-c9e4ae11`, and how to remove the one project each live run of PR #30 or #32 prints. Development: Đạt's 11 `zz-test-*` projects from 13 November, 4 `zz-test-e2e-*` rehearsal projects and the anonymous "Copy of ProofPay demo" projects from PR #30 runs. `docs/deploy-plan.md` section 7 now points to it.
+- Found on the way (Đạt's PR #27 journal): the dev bucket accepted a `text/plain` upload, so its MIME list is not set. Added the click path.
