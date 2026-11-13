@@ -1160,6 +1160,13 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Tests: 10 unit (speech-only.test.ts), 1 property test over owner, list and account kind (60 runs), 3 engine tests, 1 Postgres handler test (VIDEO_ANALYSIS_PROVIDER=none: zero extractFrames calls, zero new frame rows, transcript stored, findings say speech only), 3 Postgres owner tests (anonymous guest, owner unknown to Auth, confirmed email account). Mutation check: with the owner gate removed from the handler, 4 tests failed.
 - Four Postgres test files that run one query at a time now open one pool client instead of four (Free pooler cap of 15).
 - Local full run: the Postgres suites failed while another session held 13 of the 15 pooler clients on sleuth-dev (pg_stat_activity: 11 idle and 2 active Supavisor sessions, none from this machine). The CI `db` job is the gate for those suites.
+## 2026-11-13: first-real-job script (brief 004 step 3)
+
+- New `scripts/prod-e2e.ts`: one anonymous guest runs sign-in, create, a 3-line script, a 2-item checklist, upload of our own clip through the signed URL, analysis (it waits for a worker run started by hand), evidence and finding counts, one review, an edit of one sentence (it picks a line that has evidence), the Final Seal and `report.csv`. Prints PASS, FAIL or SKIP with counts and ids only. A skipped step is reported as not proven. The header holds the read-only queue check for the SQL editor.
+- The clip is our own: `scripts/make-check-clip.ps1` regenerated it (6.5 s, 62918 bytes); the 10 November file was gone.
+- Rehearsal on sleuth-dev (local web in Supabase mode, one local `pnpm worker -- --once` with Deepgram and gemini-3.6-flash, our clip only): run 1, all 10 steps PASS (evidence 1; findings cursed_frame 1, ghost 1, phantom_dialogue 1; review resolved the cursed_frame; seal blocked by uncovered_items; CSV 32 rows). Run 2, steps 1-6 and 8-10 PASS, step 7 SKIP (the only finding was a Ghost, which has no evidence to review); step 8 staled the 1 evidence item on the edited line and nothing else. Results vary between runs because the providers do.
+- The dev worker run also claimed and failed one older queued dev job (it retried, then failed). Not investigated; dev only.
+- Not run on production: that needs Dang's shell and the queue check.
 ## 2026-11-13: guest sign-in check (brief 004 step 1)
 
 - New `scripts/guest-flow-check.ts`: drives Chromium through the real guest flow and prints PASS or FAIL only, plus the one project id it makes. It takes our own clip (`scripts/make-check-clip.ps1`, 6.5 s) so the browser reads a real length; no stub.
