@@ -1,7 +1,10 @@
 # Keeps the free sleuth-prod Supabase project from pausing (it pauses after low activity over
 # 7 days; see docs/deploy-plan.md "Keep-alive"). One cheap read-only query, twice a week.
-# Prints "ok" or "error <exit code>" and nothing else: no host, no row data, no error text.
-# The DATABASE_URL repository secret is the production session pooler URL (the worker uses it too).
+# scripts/keep-alive.ts uses the worker's own driver and options (postgres.js through
+# @sleuth/db, prepare: false, one connection, 20 s limit). It prints "ok" or
+# "error <category>" (auth, host, timeout, tls, config, other) and nothing else: no host,
+# user, URL or error text. DATABASE_URL is the production session pooler URL (the worker
+# uses the same secret).
 name: keep-alive
 
 on:
@@ -27,22 +30,16 @@ jobs:
     # Only the team's repository; never a fork.
     if: github.repository == 'dngvmnh/sleuth'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: One read-only query against sleuth-prod
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          PGCONNECT_TIMEOUT: "20"
-        run: |
-          if [ -z "$DATABASE_URL" ]; then echo "error missing_secret"; exit 1; fi
-          # psql (libpq) refuses query parameters it does not know, such as the pooler's
-          # "pgbouncer=true" that the worker's driver accepts. Drop the query string; ask for TLS.
-          url="${DATABASE_URL%%\?*}?sslmode=require"
-          if psql "$url" -X -q -t -A -v ON_ERROR_STOP=1 \
-               -c "select count(*) from projects where is_demo" > /dev/null 2>&1; then
-            echo "ok"
-          else
-            code=$?
-            echo "error $code"
-            exit 1
-          fi
+        run: pnpm --silent tsx scripts/keep-alive.ts

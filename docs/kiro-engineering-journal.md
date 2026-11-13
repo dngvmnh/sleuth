@@ -1193,3 +1193,9 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
 - Gate on this branch: see the PR. Part B was not run and no production values were set.
 - Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
+
+## 2026-11-14: keep-alive ping uses the worker's driver (PR #33)
+
+- The `ping` job failed in seconds with only `error 2` (psql could not connect; its text was hidden). New `scripts/keep-alive.ts` runs the same read-only query through `createDb` from `@sleuth/db` (postgres.js, `prepare: false`, one connection, 20 s limit), the worker's own driver and options. It prints `ok` or `error <category>` (auth, host, timeout, tls, config, other), chosen from the error code or name only.
+- Local check of the categories: sleuth-dev URL `ok`; wrong password `error auth`; unknown pooler user `error other`; unknown host `error host`; unroutable address `error timeout`; not a URL `error host`; no variable `error config`.
+- The workflow now sets up pnpm and Node 22 and installs like CI, then runs the script. Trigger, schedule, permissions, concurrency group and repository guard are unchanged.

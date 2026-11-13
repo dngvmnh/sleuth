@@ -186,7 +186,19 @@ The three test projects of that run (`zz-test-ec48xl`, `zz-test-836d6a`, `zz-tes
 
 **The pausing rule (Supabase):** Free plan projects that show low activity over a 7-day period are paused to save server resources. Typically a few user requests to the database each day over the previous week are enough to prevent pausing ([Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing), read 13 November 2026). Supabase emails the owner about a week before a pause. A paused project can be restored from the dashboard (Resume project) for up to 1 year (same page).
 
-**What we do:** `.github/workflows/keep-alive.yml` runs one read-only query (`select count(*) from projects where is_demo`) against `sleuth-prod` on Mondays and Thursdays at 03:17 UTC, plus a manual run. It uses the existing `DATABASE_URL` secret and prints only `ok` or `error <code>`. It runs only on `dngvmnh/sleuth`.
+**What we do:** `.github/workflows/keep-alive.yml` runs one read-only query (`select count(*) from projects where is_demo`) against `sleuth-prod` on Mondays and Thursdays at 03:17 UTC, plus a manual run. It uses the existing `DATABASE_URL` secret and runs only on `dngvmnh/sleuth`. The query runs in `scripts/keep-alive.ts`, which uses the worker's own driver and options (postgres.js through `@sleuth/db`, `prepare: false`, one connection, 20 s limit). An earlier version used `psql`, which failed on the same secret with exit code 2 and hid the reason.
+
+It prints only `ok` or `error <category>`. The category is read from the error's code or name, never from its text:
+
+| Output | Meaning | What to do |
+|---|---|---|
+| `ok` | The query ran | Nothing |
+| `error auth` | The password or user was refused | Re-save `DATABASE_URL` from Connect, Session pooler, with the current password |
+| `error host` | The host was not found or refused the connection | The secret holds a wrong host or a direct `db.<ref>` host; use the session pooler URL |
+| `error timeout` | No answer in 20 s | Check the project is not paused; run it again |
+| `error tls` | The TLS handshake failed | The URL forces a TLS mode the pooler does not offer; use the URL exactly as Supabase shows it |
+| `error config` | No secret, or not a URL | Add or fix the secret |
+| `error other` | Anything else, for example the pooler does not know the tenant (user name) | Re-copy the whole URL from Connect, Session pooler |
 
 **Why it may not be enough:**
 - Supabase calls activity "a few user requests ... each day". Two queries a week may be too few, so the weekly "open both projects" reminder stays (`docs/submission/launch-checklist.md`). If a warning email arrives, open the project in the dashboard at once.
