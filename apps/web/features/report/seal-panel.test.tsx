@@ -56,6 +56,18 @@ describe("SealPanel", () => {
     expect(screen.getAllByRole("link", { name: "Open the workspace" })).toHaveLength(4);
   });
 
+  it("describes the disabled button with the blocker sentences, not the list's label", () => {
+    // Narrator read only "The Final Seal is not available yet What blocks the Final Seal" (2026-11-11):
+    // a described-by wrapper around a labelled list gives the list's label, not its items.
+    show({ blockers: ["stale_evidence", "job_running"] });
+    const button = screen.getByRole("button", { name: "Apply the Final Seal" });
+    expect(button).toHaveAccessibleDescription(
+      `The Final Seal is not available yet: ${BLOCKER_TEXT.stale_evidence} ${BLOCKER_TEXT.job_running}`,
+    );
+    expect(button).not.toHaveAccessibleDescription(/What blocks the Final Seal/);
+    expect(button).not.toHaveAccessibleDescription(/Open the workspace/);
+  });
+
   it("asks for confirmation before sending, with an optional note", async () => {
     const { onSeal, user } = show();
     await user.click(screen.getByRole("button", { name: "Apply the Final Seal" }));

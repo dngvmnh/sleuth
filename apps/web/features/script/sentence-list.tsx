@@ -72,7 +72,11 @@ export const SentenceList = forwardRef<SentenceListHandle, SentenceListProps>(fu
                   data-state={state}
                   onClick={() => onSelect(segment.id)}
                   className={`flex w-full flex-wrap items-start gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-left text-sm ${
-                    selected ? "border-primary bg-raised" : "border-transparent hover:bg-raised"
+                    // In a Windows contrast theme every border takes the same system colour and
+                    // the raised background is dropped, so the selected line gets a double border.
+                    selected
+                      ? "border-primary bg-raised forced-colors:border-[3px] forced-colors:border-double"
+                      : "border-transparent hover:bg-raised"
                   } ${playing ? "border-l-4 border-l-warn" : ""}`}
                 >
                   <span className="w-6 shrink-0 text-right text-muted">{segment.index + 1}.</span>
