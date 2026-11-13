@@ -35,7 +35,10 @@ jobs:
           PGCONNECT_TIMEOUT: "20"
         run: |
           if [ -z "$DATABASE_URL" ]; then echo "error missing_secret"; exit 1; fi
-          if psql "$DATABASE_URL" -X -q -t -A -v ON_ERROR_STOP=1 \
+          # psql (libpq) refuses query parameters it does not know, such as the pooler's
+          # "pgbouncer=true" that the worker's driver accepts. Drop the query string; ask for TLS.
+          url="${DATABASE_URL%%\?*}?sslmode=require"
+          if psql "$url" -X -q -t -A -v ON_ERROR_STOP=1 \
                -c "select count(*) from projects where is_demo" > /dev/null 2>&1; then
             echo "ok"
           else
