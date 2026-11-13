@@ -57,7 +57,7 @@ import {
   sealOf,
 } from "./mappers";
 import { evidenceOfProject, findingsOfProject, mergeAnalysisResult, upsertFindings } from "./rows";
-import { UPLOAD_WINDOW_MS, type StorageClient } from "./storage";
+import { PLAYBACK_URL_SECONDS, UPLOAD_WINDOW_MS, type StorageClient } from "./storage";
 
 /** A database or an open transaction: both run the same queries. */
 export type Q = PgDatabase<PostgresJsQueryResultHKT, typeof schema>;
@@ -377,6 +377,26 @@ export function createSupabaseStore(options: SupabaseStoreOptions): SupabaseStor
 
     async getProjectDetail(actor, projectId) {
       return detailOf(db, await readableProject(db, actor, projectId));
+    },
+
+    async getPlaybackUrl(actor, projectId, assetVersionId) {
+      const project = await readableProject(db, actor, projectId);
+      const [asset] = await db
+        .select()
+        .from(t.assetVersions)
+        .where(
+          and(eq(t.assetVersions.id, assetVersionId), eq(t.assetVersions.projectId, projectId)),
+        );
+      if (!asset) throw new StoreError("not_found", 404, "Video version not found.");
+      const none = { url: null, expiresAt: null } as const;
+      // The demo's path is a placeholder, and without storage there is nothing to play.
+      if (project.isDemo || !storage) return none;
+      // Readable and not the demo means the caller owns it (readableProject), but say so plainly.
+      if (uid(actor) === null || project.ownerId !== uid(actor)) {
+        throw new StoreError("not_found", 404, "Project not found.");
+      }
+      if ((await storage.uploadedAt(asset.storagePath)) === null) return none;
+      return storage.createSignedDownloadUrl(asset.storagePath, PLAYBACK_URL_SECONDS);
     },
 
     async createProject(actor, input) {
