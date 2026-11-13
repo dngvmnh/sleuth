@@ -1,31 +1,63 @@
 /*
- * SLEUTH design tokens: a premium haunted film studio.
- * Contrast (WCAG AA, measured against --sleuth-bg and --sleuth-surface):
- *   text 15:1, muted about 8:1, primary about 6:1, warn about 10:1.
+ * SLEUTH design tokens. Two themes, chosen by `data-theme` on <html> (decision D-14):
+ *   hollow   (default): forest black, cream text, amber action, spectral teal for AI candidates.
+ *   midnight (fallback): the first look, midnight charcoal and spectral violet.
+ * Roll back in one line: set data-theme="midnight" in apps/web/app/layout.tsx.
+ * Contrast is checked by apps/web/components/icons/theme-foundations.test.tsx for both themes
+ * (WCAG AA: text 4.5:1 on surface, strong border and focus ring 3:1).
  * Use these tokens in components. Do not write raw hex values there.
  */
 :root {
+  --sleuth-bg: #0c140f; /* forest black */
+  --sleuth-surface: #121c16;
+  --sleuth-surface-raised: #19261e;
+  --sleuth-border: #2e4034; /* decorative lines only */
+  --sleuth-border-strong: #5b7a63; /* lines that carry meaning: inputs, selected state */
+  --sleuth-text: #efe7d2; /* cream */
+  --sleuth-text-muted: #a9b5a3;
+  --sleuth-primary: #e8a468; /* lantern amber, the action colour */
+  --sleuth-primary-strong: #f2c094;
+  --sleuth-on-primary: #1a120a;
+  --sleuth-gold: #d9b565; /* the seal and proven items */
+  --sleuth-spectral: #6fe0bc; /* AI candidates: never a verdict */
+  --sleuth-warn: #f2b84b;
+  --sleuth-danger: #f4908f;
+  --sleuth-ok: #a6d98b;
+  --sleuth-focus: #f2b84b;
+  /* Decorative fog and glow, as "r g b" so they can take an alpha. */
+  --sleuth-fog-a: 111 224 188;
+  --sleuth-fog-b: 232 164 104;
+
+  --sleuth-font-sans:
+    ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* `--sleuth-font-display-file` is set by next/font in app/layout.tsx (self-hosted, OFL). */
+  --sleuth-font-display:
+    var(--sleuth-font-display-file, "Iowan Old Style"), "Iowan Old Style", "Palatino Linotype",
+    Palatino, Georgia, "Times New Roman", serif;
+
+  --sleuth-radius: 0.5rem;
+  --sleuth-border-width: 1px;
+}
+
+:root[data-theme="midnight"] {
   --sleuth-bg: #0e0b16; /* midnight charcoal */
   --sleuth-surface: #171225; /* deep purple */
   --sleuth-surface-raised: #211a36;
   --sleuth-border: #3a2f5c;
+  --sleuth-border-strong: #7d6fae;
   --sleuth-text: #ece8f6;
   --sleuth-text-muted: #b8aed1;
   --sleuth-primary: #a78bfa; /* spectral violet */
   --sleuth-primary-strong: #c4b5fd;
   --sleuth-on-primary: #0e0b16;
+  --sleuth-gold: #e2c27a;
+  --sleuth-spectral: #86d9b0;
   --sleuth-warn: #f2b84b; /* candlelight amber */
   --sleuth-danger: #f4908f;
   --sleuth-ok: #86d9b0;
   --sleuth-focus: #f2b84b;
-
-  --sleuth-font-sans:
-    ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --sleuth-font-display:
-    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
-
-  --sleuth-radius: 0.5rem;
-  --sleuth-border-width: 1px;
+  --sleuth-fog-a: 167 139 250;
+  --sleuth-fog-b: 242 184 75;
 }
 
 /* Decorative fog and glow. Both are switched off for people who ask for less motion. */
@@ -35,13 +67,13 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(60rem 30rem at 15% 10%, rgb(167 139 250 / 0.12), transparent 70%),
-    radial-gradient(50rem 28rem at 85% 90%, rgb(242 184 75 / 0.06), transparent 70%);
+    radial-gradient(60rem 30rem at 15% 10%, rgb(var(--sleuth-fog-a) / 0.12), transparent 70%),
+    radial-gradient(50rem 28rem at 85% 90%, rgb(var(--sleuth-fog-b) / 0.06), transparent 70%);
   animation: sleuth-drift 40s ease-in-out infinite alternate;
 }
 
 .sleuth-glow {
-  box-shadow: 0 0 0.75rem rgb(167 139 250 / 0.55);
+  box-shadow: 0 0 0.75rem rgb(var(--sleuth-fog-a) / 0.55);
   animation: sleuth-pulse 3s ease-in-out infinite;
 }
 
@@ -57,10 +89,10 @@
 @keyframes sleuth-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0.35rem rgb(167 139 250 / 0.35);
+    box-shadow: 0 0 0.35rem rgb(var(--sleuth-fog-a) / 0.35);
   }
   50% {
-    box-shadow: 0 0 1rem rgb(167 139 250 / 0.7);
+    box-shadow: 0 0 1rem rgb(var(--sleuth-fog-a) / 0.7);
   }
 }
 
