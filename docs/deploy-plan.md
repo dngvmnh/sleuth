@@ -157,6 +157,26 @@ delete from projects where name like 'zz-test-%' and not is_demo;
 
 Child rows go with the project (cascade). Then Storage, `video-assets`: open each folder named with a deleted project id and delete it. Optionally, Authentication, Users: delete the anonymous users made today.
 
+## Keep-alive through judging (written 13 November 2026)
+
+**The pausing rule (Supabase):** Free plan projects that show low activity over a 7-day period are paused to save server resources. Typically a few user requests to the database each day over the previous week are enough to prevent pausing ([Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing), read 13 November 2026). Supabase emails the owner about a week before a pause. A paused project can be restored from the dashboard (Resume project) for up to 1 year (same page).
+
+**What we do:** `.github/workflows/keep-alive.yml` runs one read-only query (`select count(*) from projects where is_demo`) against `sleuth-prod` on Mondays and Thursdays at 03:17 UTC, plus a manual run. It uses the existing `DATABASE_URL` secret and prints only `ok` or `error <code>`. It runs only on `dngvmnh/sleuth`.
+
+**Why it may not be enough:**
+- Supabase calls activity "a few user requests ... each day". Two queries a week may be too few, so the weekly "open both projects" reminder stays (`docs/submission/launch-checklist.md`). If a warning email arrives, open the project in the dashboard at once.
+- `sleuth-dev` has no ping. Open it by hand.
+
+**Two limits of GitHub's scheduler:**
+- In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days ([Disabling and enabling a workflow](https://docs.github.com/en/actions/managing-workflow-runs/disabling-and-enabling-a-workflow), read 13 November 2026). Fix: re-enable it in Actions, keep-alive, Enable workflow, or push a commit before day 60.
+- Scheduled events can be delayed during periods of high load of GitHub Actions workflow runs ([Troubleshooting workflows](https://docs.github.com/en/enterprise-server@3.21/actions/how-tos/troubleshoot-workflows)). That is why the cron avoids minute 0. A late run of a few hours does not matter for a 7-day rule.
+
+**After submission while judging continues:**
+1. Leave the keep-alive schedule on, and do not merge anything risky to `main`.
+2. Each week, check the last keep-alive runs in Actions and open both Supabase projects.
+3. If a project pauses anyway, restore it from the dashboard (Resume project), then run `pnpm tsx scripts/prod-smoke.ts` part A.
+4. Do not turn on the worker schedule. It waits for the speech-only worker mode (brief 002b).
+
 ## Vercel Hobby terms (read 10 November 2026)
 
 Vercel's [fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage) limit Hobby teams to non-commercial personal use. Commercial use means a deployment used for the financial gain of anyone involved in any part of its production. The listed examples are payments from visitors, advertising a sale, paid hosting or coding work, affiliate links, and ads. Asking for donations is not commercial.
