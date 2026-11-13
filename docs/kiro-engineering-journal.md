@@ -1194,3 +1194,7 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `board.md`: rewritten from `origin/main` `395f490`. Spec ticks 56 of 60. The critical path table now marks steps 1, 2, 4, 5 proven on sleuth-dev only, with the run dates; nothing new is proven on production.
 - `updates/2026-11-14-dang.md`: per person, plus the note for Đạt on the demo's no-video panel (it says fixture mode on a Supabase site; the playback URL from #31 is on `main`).
 - Leak check on 14 Nov: `scripts/prod-e2e.ts` and `scripts/guest-flow-check.ts` were run against sleuth-dev with all output captured (42 and 15 lines) and searched for every key and connection string in `.env.local`, `token=`, `/storage/v1/object`, `eyJ`, `postgres://` and the clip's spoken words: 0 found. prod-e2e: 9 PASS, 1 SKIP (step 7: the only finding was a Ghost). guest-flow: 14 of 14 PASS.
+## 2026-11-14: cleanup list for test data (Đăng)
+
+- New `docs/coordination/cleanup.md`: select-first SQL and Storage click paths for both projects. Production: `zz-test-%` rows, the two 4 KB files in folders `prj-0mwetmijy0001-78237676` and `prj-0mweu1pmk0001-c9e4ae11`, and how to remove the one project each live run of PR #30 or #32 prints. Development: Đạt's 11 `zz-test-*` projects from 13 November, 4 `zz-test-e2e-*` rehearsal projects and the anonymous "Copy of ProofPay demo" projects from PR #30 runs. `docs/deploy-plan.md` section 7 now points to it.
+- Found on the way (Đạt's PR #27 journal): the dev bucket accepted a `text/plain` upload, so its MIME list is not set. Added the click path.
