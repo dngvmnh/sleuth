@@ -1171,3 +1171,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
 - Gate on this branch: see the PR. Part B was not run and no production values were set.
 - Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
+
+## 2026-11-14: decisions, board and daily update (Đăng)
+
+- `decisions-needed.md`: D-13 decided (PR #34). D-14 to D-18 (UI revamp) decided with Đăng's recommendations. D-10 open with the recommendation that Đăng records clips 1 to 3 by Wed 18 Nov and Bảo labels them. D-12 stays open until #33 merges and its `ping` is green.
+- `board.md`: rewritten from `origin/main` `395f490`. Spec ticks 56 of 60. The critical path table now marks steps 1, 2, 4, 5 proven on sleuth-dev only, with the run dates; nothing new is proven on production.
+- `updates/2026-11-14-dang.md`: per person, plus the note for Đạt on the demo's no-video panel (it says fixture mode on a Supabase site; the playback URL from #31 is on `main`).
+- Leak check on 14 Nov: `scripts/prod-e2e.ts` and `scripts/guest-flow-check.ts` were run against sleuth-dev with all output captured (42 and 15 lines) and searched for every key and connection string in `.env.local`, `token=`, `/storage/v1/object`, `eyJ`, `postgres://` and the clip's spoken words: 0 found. prod-e2e: 9 PASS, 1 SKIP (step 7: the only finding was a Ghost). guest-flow: 14 of 14 PASS.
