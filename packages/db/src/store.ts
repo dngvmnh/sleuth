@@ -15,6 +15,7 @@ import type {
   ReviewRequest,
   ScriptVersion,
   Seal,
+  PlaybackUrlResponse,
   StartAnalysisRequest,
   UploadUrlRequest,
 } from "@sleuth/contracts";
@@ -69,6 +70,16 @@ export interface ProjectStore {
     projectId: string,
     input: UploadUrlRequest,
   ): Promise<{ assetVersion: AssetVersion; uploadUrl: string; expiresAt: string }>;
+  /**
+   * A signed URL to play one video version. Readable rules first (a project the caller cannot read
+   * is not found). The demo and versions with no file in storage answer `url: null`. Only the
+   * owner of a private project can get a URL, because only the owner can read it.
+   */
+  getPlaybackUrl(
+    actor: Actor,
+    projectId: string,
+    assetVersionId: string,
+  ): Promise<PlaybackUrlResponse>;
   createScript(actor: Actor, projectId: string, text: string): Promise<CreateScriptResponse>;
   setChecklist(actor: Actor, projectId: string, labels: string[]): Promise<ChecklistItem[]>;
   startAnalysis(

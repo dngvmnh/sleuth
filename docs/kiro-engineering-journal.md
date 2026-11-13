@@ -1158,3 +1158,16 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Two first runs failed because of the script, not the app: Next.js keeps an empty role=alert route announcer, and the demo has two links. Both fixed.
 - Not covered by the script: review 005 item 4 (anonymous sign-ins switched off); it needs a dashboard toggle.
 - Leftovers in sleuth-dev: guest projects from these runs; the 7-day anonymous purge removes them.
+## 2026-11-13: playback URL for the owner's player (brief 004 step 2, contract change)
+
+- New `GET /projects/{id}/assets/{assetVersionId}/playback-url` (`getPlaybackUrl`) returns `{ url, expiresAt }` or both null. Null means no playable video: the demo, fixture mode, or a version whose file never reached storage.
+- Access follows the read rule: a private project's URL goes to its owner only; another user and a visitor get 404 `not_found`, the same as every other route. An asset of another project or an unknown id is 404.
+- Lifetime 600 s (`PLAYBACK_URL_SECONDS`): a browser fetches byte ranges from the same URL while playing and seeking, so it must outlast a review of a 3-minute clip; still short-lived. The worker's download stays at 300 s. The storage client's `createSignedDownloadUrl` takes an optional lifetime, so no other caller changes.
+- Tests: 4 contract tests on both stores (one is a property test over owner, other user and visitor against the demo and a private project), 2 route tests, 1 real-storage test on sleuth-dev (no URL before the file lands; after it lands, a URL on the Supabase host with no key, expiring within 600 s, that returns the bytes; 404 for others).
+- Gate: lint, typecheck clean; 81 test files and 966 tests passed (none skipped); 113 property tests; `openapi.yaml matches the contracts`; build; ghost scan clean. Golden fixtures unchanged.
+## 2026-11-13: smoke test expects 201, deploy plan synced with the production check
+
+- `scripts/prod-smoke.ts` now expects 201 from createUploadUrl (the contract says 201).
+- `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
+- Gate on this branch: see the PR. Part B was not run and no production values were set.
+- Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.

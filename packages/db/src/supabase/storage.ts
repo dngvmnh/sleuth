@@ -11,12 +11,26 @@ export interface StorageClient {
   remove(paths: string[]): Promise<void>;
   /** When the file at `path` landed in storage (ISO), or null if nothing is there. */
   uploadedAt(path: string): Promise<string | null>;
-  /** A read URL for the worker, valid at most `DOWNLOAD_URL_SECONDS`. Server and worker only. */
-  createSignedDownloadUrl(path: string): Promise<{ url: string; expiresAt: string }>;
+  /**
+   * A read URL, valid `seconds` (default `DOWNLOAD_URL_SECONDS`, the worker's download). The web
+   * server passes `PLAYBACK_URL_SECONDS` for the owner's player. Server and worker only.
+   */
+  createSignedDownloadUrl(
+    path: string,
+    seconds?: number,
+  ): Promise<{ url: string; expiresAt: string }>;
 }
 
 /** Lifetime of a worker's download URL: long enough to fetch a 3-minute video, no longer. */
 export const DOWNLOAD_URL_SECONDS = 300;
+
+/**
+ * Lifetime of the owner's playback URL. A browser keeps fetching byte ranges from the same URL while
+ * the person plays, pauses and seeks, so it must outlast a review of a 3-minute clip (about three
+ * full plays with seeking). Ten minutes does that and keeps a copied link short-lived. When it
+ * expires the player asks for a new one; the URL is never stored.
+ */
+export const PLAYBACK_URL_SECONDS = 600;
 
 /**
  * How long after the upload URL is made the file must land (ingestion 2.1). Supabase signed upload
@@ -77,8 +91,8 @@ export function createStorageClient(config: StorageConfig): StorageClient {
       if (error) throw new StorageError("Could not delete files from storage.");
     },
 
-    async createSignedDownloadUrl(path) {
-      const { data, error } = await files().createSignedUrl(path, DOWNLOAD_URL_SECONDS);
+    async createSignedDownloadUrl(path, seconds = DOWNLOAD_URL_SECONDS) {
+      const { data, error } = await files().createSignedUrl(path, seconds);
       if (error || !data) throw new StorageError("Could not create a download URL.");
       const token = new URL(data.signedUrl).searchParams.get("token") ?? "";
       const exp = tokenExpiry(token);
