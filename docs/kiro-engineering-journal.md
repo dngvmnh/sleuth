@@ -1109,3 +1109,55 @@ After the fix:
 - `pnpm lint`, `pnpm typecheck` and `git diff --check`: clean.
 
 Still not verified: a real Supabase sign-in, the cookie surviving a reload, and two users kept apart. There is no Supabase test environment on this machine. Nothing was committed or pushed.
+
+### 2026-11-13: live check of guest sign-in on the dev Supabase project
+
+Setup:
+- Branch `feat/web-anonymous-signin` at `e8fa7cd`.
+- The env is the "sleuth dev" set in `apps/web/.env.local`. It is git-ignored and not tracked, and no values were printed.
+- The file has every required name set. But its `SLEUTH_DATA_MODE` is not `supabase`, so the server was started with `SLEUTH_DATA_MODE=supabase` set in the shell.
+- `next dev` on `127.0.0.1:3001`, opened as `http://localhost:3001`.
+- Supabase mode was confirmed: a POST /projects with no session got 401, and so did one with a forged `x-fixture-user`.
+- No migration, seed, worker or AI provider was used.
+
+**Browser, with real cookies.** Playwright Chromium was used with separate contexts for A, B and a visitor. The "Create a project" and "Make an editable copy" requests were renamed on the way out to `zz-test-*`. The cookie and the sign-in were untouched.
+
+Final run: 30 of 30 checks pass.
+- Viewing the dashboard, demo and report made 0 `/auth/v1/signup` calls and left no auth cookie. The guest note shows on the demo.
+- Create a project made 1 real anonymous sign-in, then the project (201), and set an `sb-*-auth-token` cookie.
+- After a reload, A still sees the project. A can open it, and it is editable. A cookie request to GET it returned 200. No new guest was made.
+- Make an editable copy gave 201 with the same owner as A, no new guest, and the copy opens editable.
+- B double-clicked: 1 sign-in and 1 create POST. B is a different user.
+- B cannot reach A's project or copy:
+  - GET returns 404 and writing a script returns 404;
+  - A's projects are not in B's list;
+  - B's page for A's project says not found.
+- The visitor cannot read A's project (404) or write it (404). The visitor's list holds only the demo, and the visitor made no guest.
+- A still reads its project after B signs in.
+
+The first three runs had failures in the test script, not in the app:
+- a response body read too early;
+- visibility checks that did not wait;
+- the copy's POST body could not be read after the page left.
+
+The script was fixed and the app code was not changed.
+
+**API smoke test** (`scripts/prod-smoke.ts`). Set in the shell only: `PROD_SITE_URL=http://localhost:3001`, plus the dev URL and anon key mapped to `PROD_SUPABASE_URL` and `PROD_SUPABASE_ANON_KEY`.
+- Part A: 14 of 14 pass.
+- Part B: 17 of 19 pass. Two backend or config points for Đăng:
+  1. "signed upload URL issued" expects status 200, but the API answers 201 with an `uploadUrl`. The script and the API disagree; the URL was issued.
+  2. "bucket refuses a .txt body": the dev bucket accepted a `text/plain` upload (200). The bucket's allowed MIME types do not seem to be set on dev. The 51 MB upload was refused (400).
+
+Test data made, for cleanup (the API has no delete route; use `docs/deploy-plan.md` section 7):
+- 11 projects named `zz-test-*`, from 13:45 to 13:49 UTC:
+  - `zz-test-4waug-A-1`;
+  - `zz-test-wp25u-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-w9ui3-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-aglvg-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-hgli8c` (smoke).
+  - Their ids run from `prj-0mwf14qud0001-eb75deee` to `prj-0mwf19d62000l-f5cc5b6b`.
+- About 9 anonymous auth users: 7 from the browser runs and 2 from the smoke test.
+- 3 smoke asset versions: `av-0mwf19hj8000n-2959d91c`, `av-0mwf19k1l000p-14c9f07f` and `av-0mwf19msw000s-ea33f596`. The first two have storage objects (4 KB webm, and the accepted .txt).
+- Two older rows, `zz-test-e2e-zkgp8m` and `zz-test-e2e-15jv2c` from 11:34 and 11:39 UTC, were not made here.
+
+The live checks ran against the dev project only, not production. No frontend bug was found, so no app code changed in this step. Nothing was committed or pushed.
