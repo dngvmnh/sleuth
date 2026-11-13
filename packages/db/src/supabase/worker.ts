@@ -7,7 +7,7 @@ import type {
   ScriptVersion,
   TranscriptSegment,
 } from "@sleuth/contracts";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "../client";
 import * as t from "../schema";
 import type { AnalysisResult } from "../store";
@@ -41,9 +41,20 @@ export class WorkerStoreError extends Error {
   }
 }
 
+/**
+ * Who owns the job's project. The worker decides from this whether frames may go to a third
+ * party (decision D-4: never a visitor's video). `realAccount` is true only when Supabase Auth
+ * holds the owner and says the account is not anonymous; an unknown owner is not trusted.
+ */
+export interface JobOwner {
+  userId: string | null;
+  realAccount: boolean;
+}
+
 export interface JobInputs {
   job: ProcessingJob;
   projectId: string;
+  owner: JobOwner;
   /** The video the job was queued for. Fetch it with `createVideoDownloadUrl`. */
   asset: AssetVersion;
   /** The script version the job was queued for, segments in order. */
@@ -88,6 +99,16 @@ export function createWorkerStore(options: WorkerStoreOptions): WorkerStore {
   const now = options.now ?? (() => new Date());
 
   /** The job, locked, if this worker holds it and it still matches the project's current versions. */
+  /** Owner of a project; a real account only if Auth knows it and it is not anonymous. */
+  async function ownerOf(q: Q, ownerId: string | null): Promise<JobOwner> {
+    if (ownerId === null) return { userId: null, realAccount: false };
+    const rows = await q.execute(
+      sql`select is_anonymous from auth.users where id = ${ownerId}::uuid limit 1`,
+    );
+    const row = (rows as unknown as { is_anonymous?: boolean | null }[])[0];
+    return { userId: ownerId, realAccount: row !== undefined && row.is_anonymous === false };
+  }
+
   async function leasedJob(q: Q, jobId: string, workerId: string) {
     const [row] = await q
       .select()
@@ -115,7 +136,8 @@ export function createWorkerStore(options: WorkerStoreOptions): WorkerStore {
   return {
     async loadJobInputs(jobId, workerId) {
       return db.transaction(async (tx) => {
-        const { job } = await leasedJob(tx, jobId, workerId);
+        const { job, project } = await leasedJob(tx, jobId, workerId);
+        const owner = await ownerOf(tx, project.ownerId);
         const [asset] = await tx
           .select()
           .from(t.assetVersions)
@@ -141,6 +163,7 @@ export function createWorkerStore(options: WorkerStoreOptions): WorkerStore {
         return {
           job,
           projectId: job.projectId,
+          owner,
           asset: assetOf(asset),
           script: scriptOf(script, segments),
           checklist: checklist.map(checklistOf),

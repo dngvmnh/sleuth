@@ -75,6 +75,8 @@ Repository secrets to add (GitHub, Settings, Secrets and variables, Actions, New
 | `TRANSCRIPTION_API_KEY` | Deepgram key | yes |
 | `VIDEO_ANALYSIS_API_KEY` | Gemini key | yes |
 
+Optional repository **variable** (not a secret): `VIDEO_ANALYSIS_OWNER_IDS`, comma separated user ids of our own real (not anonymous) accounts whose clips may have frames sent to Gemini. Unset means every job is speech only (decision D-4). A visitor or anonymous guest is speech only even if listed.
+
 Risk: anyone with write access to the repo can read these secrets through a workflow. Keep the collaborator list to the three of us. Scheduled runs use `main` only, and pull requests from forks get no secrets.
 
 ### 3. Web on Vercel Hobby

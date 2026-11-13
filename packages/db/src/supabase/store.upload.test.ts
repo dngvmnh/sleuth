@@ -45,7 +45,8 @@ suite("signed upload URLs on Supabase Storage", () => {
   const uploaded: string[] = [];
 
   beforeAll(async () => {
-    handle = openTestDb();
+    // Queries run one at a time here: one client keeps the Free pooler's 15-client cap free.
+    handle = openTestDb(1);
     storage = createStorageClient({
       url: supaUrl as string,
       serviceRoleKey: serviceKey as string,

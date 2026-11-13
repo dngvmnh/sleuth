@@ -7,7 +7,11 @@ Status: accepted on 11 November 2026 by Phạm Quốc Bảo, as amended below fo
 D-4 (`docs/coordination/decisions-needed.md`) replaced the paid plan below. Where this section and the 9 November text disagree, this section wins.
 
 1. **Free tiers only, no card on either account.** Đăng owns both accounts. Transcription uses Deepgram's one-time sign-up credit. Video analysis uses the Gemini API free tier.
-2. **Data rule.** A visitor's video goes to Deepgram only. No frame of a visitor's video is sent to Gemini, because on the free tier content may be used to improve Google's products. Only our own recorded clips may use Gemini. The worker enforces this with a speech-only mode (brief `docs/coordination/briefs/002-no-video-analysis-mode.md`). Until that mode ships, the worker workflow stays manual and production runs no real worker on visitor uploads.
+2. **Data rule.** A visitor's video goes to Deepgram only. No frame of a visitor's video is sent to Gemini, because on the free tier content may be used to improve Google's products. Only our own recorded clips may use Gemini. The worker enforces this with a speech-only mode (brief `docs/coordination/briefs/002-no-video-analysis-mode.md`, built on 13 November under decision D-13):
+   - `VIDEO_ANALYSIS_PROVIDER=none`: no frame is cut or sent, and no Gemini client or key is used.
+   - `VIDEO_ANALYSIS_PROVIDER=gemini`: frames go to Gemini only for a project whose owner is a real (not anonymous) Supabase Auth account listed in `VIDEO_ANALYSIS_OWNER_IDS`. An empty list means nobody. Every visitor, and every anonymous guest, is speech-only.
+   - A missing setting is still refused in supabase mode (`provider_not_configured`); it never falls back to Gemini.
+   - A speech-only run says so in every finding's limits ("Checked by speech only ...").
 3. **Models.** Deepgram `nova-3` with `mip_opt_out=true`. Gemini `gemini-3.8-flash`, with `gemini-3.6-flash` as the fallback (`VIDEO_ANALYSIS_FALLBACK_MODEL`). After its retries fail with a server error, a timeout or no answer, a job switches to the fallback and stays on it. Reason: on 10 November `gemini-3.8-flash` failed 3 of 3 tries on the free tier and `gemini-3.6-flash` worked 3 of 4 (`scripts/provider-check.ts`, counts only). Both ids are config, so changing them needs no code.
 4. **No dollar ceiling per job.** Without a card, neither account can bill, so the spend limit is zero by construction: Deepgram stops when its credit is used up, and the Gemini free tier is rate-limited, not billed. Each job is still bounded by fixed caps:
 

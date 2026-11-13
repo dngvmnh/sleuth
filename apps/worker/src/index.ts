@@ -56,6 +56,12 @@ async function main() {
   );
   if (config.ALLOW_MOCK_PROVIDERS)
     log("mock_providers", { warning: "results are not a real analysis" });
+  // Counts only: which video provider, and how many owners may have frames sent (D-4).
+  log("video_analysis", {
+    provider: providers.videoAnalysis?.name ?? "none",
+    frameOwners:
+      config.VIDEO_ANALYSIS_PROVIDER === "gemini" ? config.VIDEO_ANALYSIS_OWNER_IDS.length : 0,
+  });
   const { queue, close } = createPgQueue(
     config.DATABASE_URL as string,
     config.WORKER_STALE_SECONDS,

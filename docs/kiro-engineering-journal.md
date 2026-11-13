@@ -1150,3 +1150,13 @@ PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow
 - task 14 ticked.
 
 The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
+
+## 2026-11-13: speech-only worker mode (brief 002b, built by Đăng under D-13)
+
+- `VIDEO_ANALYSIS_PROVIDER=none`: no frame folder, no frame files, no Gemini client and no `VIDEO_ANALYSIS_API_KEY` read; the pipeline runs on the transcript alone. Unset or `mock` in supabase mode is still refused (`provider_not_configured`), so a missing setting never falls back to Gemini.
+- `VIDEO_ANALYSIS_PROVIDER=gemini` now sends frames only for a project owned by a real Supabase Auth account (not anonymous, and known to Auth) that is listed in `VIDEO_ANALYSIS_OWNER_IDS`. Empty list means nobody. `loadJobInputs` returns `owner: { userId, realAccount }` read from `auth.users`.
+- Engine: `speechOnly` adds "Checked by speech only ..." to every finding's limits and every explanation. The rules are unchanged: a screen claim gets no candidate from speech alone, so its item stays a Ghost; outside-proof lines still get `needs_outside_proof`; nothing is confirmed. Existing fields only, so no contract change.
+- Already done by Phạm Quốc Bảo on 11 November, not repeated: Gemini retry and fallback model, ADR 0007 amendment, no per-job dollar ceiling (free tier, no card). ADR 0007 now also states how the data rule is enforced.
+- Tests: 10 unit (speech-only.test.ts), 1 property test over owner, list and account kind (60 runs), 3 engine tests, 1 Postgres handler test (VIDEO_ANALYSIS_PROVIDER=none: zero extractFrames calls, zero new frame rows, transcript stored, findings say speech only), 3 Postgres owner tests (anonymous guest, owner unknown to Auth, confirmed email account). Mutation check: with the owner gate removed from the handler, 4 tests failed.
+- Four Postgres test files that run one query at a time now open one pool client instead of four (Free pooler cap of 15).
+- Local full run: the Postgres suites failed while another session held 13 of the 15 pooler clients on sleuth-dev (pg_stat_activity: 11 idle and 2 active Supavisor sessions, none from this machine). The CI `db` job is the gate for those suites.
