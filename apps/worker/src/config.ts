@@ -9,7 +9,26 @@ const EnvSchema = z.object({
   MAX_VIDEO_BYTES: z.coerce.number().int().positive().default(52_428_800),
   /** `mock` until a real adapter is chosen (ADR 0007) and built (evidence-analysis 10). */
   TRANSCRIPTION_PROVIDER: z.string().default("mock"),
+  /**
+   * `none` is speech-only: no frame is cut or sent anywhere, and no video-analysis key is read.
+   * The default stays `mock`, which supabase mode refuses, so a missing setting stops the worker
+   * instead of falling back to a provider that sends frames (decision D-4).
+   */
   VIDEO_ANALYSIS_PROVIDER: z.string().default("mock"),
+  /**
+   * With `VIDEO_ANALYSIS_PROVIDER=gemini`: the only project owners whose frames may go to Gemini,
+   * comma separated user ids. Our own team accounts only, never a visitor. Empty means nobody, so
+   * every job is speech-only. An anonymous or unknown owner is speech-only even when listed.
+   */
+  VIDEO_ANALYSIS_OWNER_IDS: z
+    .string()
+    .default("")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter((s) => s !== ""),
+    ),
   /** Secrets. Held by the worker only; never logged, never put in an error. */
   TRANSCRIPTION_API_KEY: z.string().optional(),
   VIDEO_ANALYSIS_API_KEY: z.string().optional(),

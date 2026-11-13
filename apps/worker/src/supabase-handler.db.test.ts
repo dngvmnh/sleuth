@@ -54,7 +54,8 @@ suite("Supabase handler on Postgres (evidence-analysis 12)", () => {
   let api: SupabaseStore;
 
   beforeAll(async () => {
-    handle = openTestDb();
+    // Queries run one at a time here: one client keeps the Free pooler's 15-client cap free.
+    handle = openTestDb(1);
     sql = postgres(url as string, { max: 1 });
     await deleteProjectsOwnedBy(handle.db, OWNER_ID);
     api = createSupabaseStore({ db: handle.db, dailyAnalysisLimit: 1000 });
@@ -114,6 +115,57 @@ suite("Supabase handler on Postgres (evidence-analysis 12)", () => {
     const [counted] =
       await sql`select count(*)::int as n from transcript_segments where project_id = ${projectId}`;
     expect(counted?.n).toBeGreaterThan(0);
+  });
+
+  it("finishes a visitor's job speech-only with VIDEO_ANALYSIS_PROVIDER=none: no frames anywhere", async () => {
+    const { projectId, job } = await claimed();
+    const [framesBefore] =
+      await sql`select count(*)::int as n from frame_observations where project_id = ${projectId}`;
+    let frameCalls = 0;
+    const speechOnly = createSupabaseHandler({
+      store: createWorkerStore({ db: handle.db, storage }),
+      providers: createProviders({
+        SLEUTH_DATA_MODE: "supabase",
+        // The mock transcript stands in for Deepgram; nothing here reaches the network.
+        TRANSCRIPTION_PROVIDER: "mock",
+        VIDEO_ANALYSIS_PROVIDER: "none",
+        ALLOW_MOCK_PROVIDERS: true,
+        MAX_FRAMES_PER_VIDEO: 60,
+      }),
+      workerId: WORKER,
+      maxVideoSeconds: 180,
+      maxVideoBytes: 1_000_000,
+      maxFrames: 60,
+      media: {
+        ...media,
+        extractFrames: (...args) => {
+          frameCalls += 1;
+          return media.extractFrames(...args);
+        },
+      },
+    });
+    await speechOnly(job);
+
+    expect(frameCalls).toBe(0);
+    const [frames] =
+      await sql`select count(*)::int as n from frame_observations where project_id = ${projectId}`;
+    const [spoken] =
+      await sql`select count(*)::int as n from transcript_segments where project_id = ${projectId}`;
+    expect(spoken?.n).toBeGreaterThan(0);
+    const fresh = (await api.listEvidence(owner, projectId)).filter(
+      (e) => e.analysisRunId === `run-${job.id}`,
+    );
+    for (const e of fresh) {
+      expect(e.frameObservationIds).toEqual([]);
+      expect(e.status).toBe("needs_outside_proof");
+    }
+    const findings = (await api.listFindings(owner, projectId)).filter(
+      (f) => f.analysisRunId === `run-${job.id}`,
+    );
+    expect(findings.length).toBeGreaterThan(0);
+    for (const f of findings) expect(f.limits).toMatch(/^Checked by speech only/);
+    // The copied demo may bring stored frames; this run wrote none of its own.
+    expect(frames?.n).toBe(framesBefore?.n);
   });
 
   it("writes the same rows when the job runs again (a retry)", async () => {
