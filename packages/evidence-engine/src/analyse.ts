@@ -39,7 +39,17 @@ export interface EngineInput {
    * item is still served by a line it did not analyse. Ignored on a full run.
    */
   existingEvidence?: readonly EvidenceCandidate[];
+  /**
+   * No frames were analysed (the worker's speech-only mode, decision D-4). The rules do not change:
+   * a line that needs a screen proof gets no candidate from speech alone, so its item stays
+   * uncovered. Every finding and candidate of the run says it was checked by speech only.
+   */
+  speechOnly?: boolean;
 }
+
+/** Added to the limits of every finding, and to every explanation, of a speech-only run. */
+export const SPEECH_ONLY_NOTE =
+  "Checked by speech only: no video frames were analysed, so nothing on screen was checked.";
 
 export interface EngineOutput {
   evidence: EvidenceCandidate[];
@@ -67,7 +77,7 @@ function finding(
     evidenceId: parts.evidenceId ?? null,
     found: parts.found,
     notFound: parts.notFound,
-    limits: parts.limits,
+    limits: input.speechOnly ? `${SPEECH_ONLY_NOTE} ${parts.limits}` : parts.limits,
     status: "open",
     analysisRunId: input.analysisRunId,
   };
@@ -147,6 +157,15 @@ export function analyse(input: EngineInput): EngineOutput {
     const startMs = clamp(Math.min(...times), input.durationMs);
     const endMs = clamp(Math.max(...times), input.durationMs);
     const confidence = rankConfidence({ outsideProof, label: aligned.label, matches });
+    const explanation = explainEvidence({
+      startMs: spokenSeg.startMs,
+      endMs: spokenSeg.endMs,
+      coverage: aligned.coverage,
+      label: aligned.label,
+      outsideProof,
+      matchedFrames: matches.length,
+      bestSharedWords: bestSharedWords(matches),
+    });
 
     const ev: EvidenceCandidate = {
       id: `ev-${segment.id}-${input.assetVersionId}`,
@@ -160,15 +179,7 @@ export function analyse(input: EngineInput): EngineOutput {
       endMs,
       transcriptSegmentIds: [spokenSeg.id],
       frameObservationIds: matches.map((m) => m.observation.id),
-      explanation: explainEvidence({
-        startMs: spokenSeg.startMs,
-        endMs: spokenSeg.endMs,
-        coverage: aligned.coverage,
-        label: aligned.label,
-        outsideProof,
-        matchedFrames: matches.length,
-        bestSharedWords: bestSharedWords(matches),
-      }),
+      explanation: input.speechOnly ? `${explanation} ${SPEECH_ONLY_NOTE}` : explanation,
       confidence,
       status: outsideProof ? "needs_outside_proof" : "candidate",
       source: "ai",

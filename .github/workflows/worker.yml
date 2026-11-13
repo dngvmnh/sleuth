@@ -4,10 +4,11 @@
 # anonymous projects once per run (ADR 0008). The keys are repository secrets; see
 # docs/deploy-plan.md for the list.
 #
-# The schedule is OFF on purpose. Decision D-4 says visitors' videos go to the transcription
-# provider only, never as frames to Gemini. That "no video analysis" worker mode is not built yet,
-# so a schedule would send visitors' frames to Gemini. Until it is built, run this by hand
-# (Actions tab, "Run workflow"). Then remove the "#" before "schedule" and "cron" below.
+# Decision D-4: visitors' videos go to the transcription provider only, never as frames to
+# Gemini. The worker enforces it: with VIDEO_ANALYSIS_PROVIDER=gemini, frames go out only for
+# owners listed in VIDEO_ANALYSIS_OWNER_IDS (a repository variable; our own team accounts only).
+# Unset or empty means every job is speech only. The schedule is still OFF until Đăng turns it on:
+# remove the "#" before "schedule" and "cron" below.
 name: worker
 
 on:
@@ -54,6 +55,8 @@ jobs:
           TRANSCRIPTION_PROVIDER: deepgram
           TRANSCRIPTION_API_KEY: ${{ secrets.TRANSCRIPTION_API_KEY }}
           VIDEO_ANALYSIS_PROVIDER: gemini
+          # Empty unless the variable is set: then no job sends frames (speech only).
+          VIDEO_ANALYSIS_OWNER_IDS: ${{ vars.VIDEO_ANALYSIS_OWNER_IDS }}
           VIDEO_ANALYSIS_API_KEY: ${{ secrets.VIDEO_ANALYSIS_API_KEY }}
           VIDEO_ANALYSIS_MODEL: gemini-3.6-flash
           MAX_VIDEO_BYTES: "52428800"
