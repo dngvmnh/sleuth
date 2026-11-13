@@ -166,6 +166,8 @@ Remove-Item Env:TEST_DATABASE_URL
 
 ### 7. Remove test data
 
+The full, current list of test rows and files on both projects is in `docs/coordination/cleanup.md` (14 November 2026). This section keeps the general recipe.
+
 The API has no delete route. After a smoke run, open the Supabase dashboard, SQL Editor, `sleuth-prod`, and run:
 
 ```sql

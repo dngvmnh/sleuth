@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "../styles/globals.css";
+
+// Display serif, self-hosted (SIL Open Font License 1.1, see ./fonts/OFL-instrument-serif.txt).
+// Latin subset only; the fallback serifs in tokens.css cover other characters.
+const display = localFont({
+  src: [
+    { path: "./fonts/instrument-serif-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" },
+  ],
+  variable: "--sleuth-font-display-file",
+  display: "swap",
+  fallback: ["Iowan Old Style", "Palatino Linotype", "Georgia", "serif"],
+});
 
 export const metadata: Metadata = {
   title: "SLEUTH: QA for demo videos",
@@ -10,7 +23,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // Theme (decision D-14): "hollow" is the launch look. Set "midnight" to roll back.
+    <html lang="en" data-theme="hollow" className={display.variable}>
       <body className="min-h-screen antialiased">
         <div className="sleuth-fog" aria-hidden="true" />
         <div className="relative z-10">{children}</div>
