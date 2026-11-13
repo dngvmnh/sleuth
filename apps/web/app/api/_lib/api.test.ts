@@ -12,6 +12,7 @@ import { PATCH as review } from "../v1/evidence/[id]/review/route";
 import { POST as createScript } from "../v1/projects/[id]/scripts/route";
 import { POST as createUploadUrl } from "../v1/projects/[id]/assets/upload-url/route";
 import { POST as startAnalysis } from "../v1/projects/[id]/analysis/route";
+import { GET as playbackUrl } from "../v1/projects/[id]/assets/[assetVersionId]/playback-url/route";
 import { buildCsv, buildHtml, htmlEscape } from "./report";
 import { createFixtureStore } from "@sleuth/db/fixture";
 
@@ -32,6 +33,48 @@ describe("API routes in fixture mode", () => {
     expect(res.status).toBe(200);
     const body = ListProjectsResponseSchema.parse(await res.json());
     expect(body.projects.map((p) => p.id)).toContain("proofpay-demo");
+  });
+
+  it("gives no playback URL to a non-owner, and url null to the owner in fixture mode", async () => {
+    const owner = "playback-owner";
+    const created = await createProject(json("POST", { name: "Playback" }, owner), ctx());
+    const id = ((await created.json()) as { project: { id: string } }).project.id;
+    const upload = await createUploadUrl(
+      json(
+        "POST",
+        { fileName: "a.mp4", mimeType: "video/mp4", sizeBytes: 1000, durationMs: 5000 },
+        owner,
+      ),
+      ctx({ id }),
+    );
+    const assetVersionId = ((await upload.json()) as { assetVersion: { id: string } }).assetVersion
+      .id;
+    const get = (user: string) =>
+      playbackUrl(
+        new Request("http://localhost/x", { headers: { "x-fixture-user": user } }),
+        ctx({ id, assetVersionId }),
+      );
+
+    for (const who of ["someone-else", "anonymous"]) {
+      const res = await get(who);
+      expect(res.status).toBe(404);
+      const text = await res.text();
+      expect(text).not.toContain('url":"');
+      expect(ErrorResponseSchema.parse(JSON.parse(text)).error.code).toBe("not_found");
+    }
+    const mine = await get(owner);
+    expect(mine.status).toBe(200);
+    expect(await mine.json()).toEqual({ url: null, expiresAt: null });
+  });
+
+  it("answers url null for the demo video", async () => {
+    const res = await playbackUrl(
+      new Request("http://localhost/x", { headers: { "x-fixture-user": "anonymous" } }),
+      // The demo's video version id in fixtures/golden/proofpay-demo/asset-version.json.
+      ctx({ id: "proofpay-demo", assetVersionId: "av-1" }),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ url: null, expiresAt: null });
   });
 
   it("returns the expected evidence for the demo", async () => {
