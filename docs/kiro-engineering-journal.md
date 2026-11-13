@@ -1157,6 +1157,22 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `docs/submission/dogfood-plan.md` (DRAFT): order, dates, people, files, fallback. The official rules page returned HTTP 403 to the page reader, so the video rules are not quoted; Dang reads them.
 - `.github/workflows/keep-alive.yml`: one read-only query against sleuth-prod on Mondays and Thursdays at 03:17 UTC, plus manual runs and a run on PRs that change the file. Prints only ok or an error code. `docs/deploy-plan.md` quotes the Supabase pausing rule (7 days of low activity) and GitHub's 60-day rule for scheduled workflows in a public repo.
 - `docs/submission/launch-checklist.md` (DRAFT): 15 dated items with owners; most are open.
+## 2026-11-13: speech-only worker mode (brief 002b, built by Đăng under D-13)
+
+- `VIDEO_ANALYSIS_PROVIDER=none`: no frame folder, no frame files, no Gemini client and no `VIDEO_ANALYSIS_API_KEY` read; the pipeline runs on the transcript alone. Unset or `mock` in supabase mode is still refused (`provider_not_configured`), so a missing setting never falls back to Gemini.
+- `VIDEO_ANALYSIS_PROVIDER=gemini` now sends frames only for a project owned by a real Supabase Auth account (not anonymous, and known to Auth) that is listed in `VIDEO_ANALYSIS_OWNER_IDS`. Empty list means nobody. `loadJobInputs` returns `owner: { userId, realAccount }` read from `auth.users`.
+- Engine: `speechOnly` adds "Checked by speech only ..." to every finding's limits and every explanation. The rules are unchanged: a screen claim gets no candidate from speech alone, so its item stays a Ghost; outside-proof lines still get `needs_outside_proof`; nothing is confirmed. Existing fields only, so no contract change.
+- Already done by Phạm Quốc Bảo on 11 November, not repeated: Gemini retry and fallback model, ADR 0007 amendment, no per-job dollar ceiling (free tier, no card). ADR 0007 now also states how the data rule is enforced.
+- Tests: 10 unit (speech-only.test.ts), 1 property test over owner, list and account kind (60 runs), 3 engine tests, 1 Postgres handler test (VIDEO_ANALYSIS_PROVIDER=none: zero extractFrames calls, zero new frame rows, transcript stored, findings say speech only), 3 Postgres owner tests (anonymous guest, owner unknown to Auth, confirmed email account). Mutation check: with the owner gate removed from the handler, 4 tests failed.
+- Four Postgres test files that run one query at a time now open one pool client instead of four (Free pooler cap of 15).
+- Local full run: the Postgres suites failed while another session held 13 of the 15 pooler clients on sleuth-dev (pg_stat_activity: 11 idle and 2 active Supavisor sessions, none from this machine). The CI `db` job is the gate for those suites.
+## 2026-11-13: first-real-job script (brief 004 step 3)
+
+- New `scripts/prod-e2e.ts`: one anonymous guest runs sign-in, create, a 3-line script, a 2-item checklist, upload of our own clip through the signed URL, analysis (it waits for a worker run started by hand), evidence and finding counts, one review, an edit of one sentence (it picks a line that has evidence), the Final Seal and `report.csv`. Prints PASS, FAIL or SKIP with counts and ids only. A skipped step is reported as not proven. The header holds the read-only queue check for the SQL editor.
+- The clip is our own: `scripts/make-check-clip.ps1` regenerated it (6.5 s, 62918 bytes); the 10 November file was gone.
+- Rehearsal on sleuth-dev (local web in Supabase mode, one local `pnpm worker -- --once` with Deepgram and gemini-3.6-flash, our clip only): run 1, all 10 steps PASS (evidence 1; findings cursed_frame 1, ghost 1, phantom_dialogue 1; review resolved the cursed_frame; seal blocked by uncovered_items; CSV 32 rows). Run 2, steps 1-6 and 8-10 PASS, step 7 SKIP (the only finding was a Ghost, which has no evidence to review); step 8 staled the 1 evidence item on the edited line and nothing else. Results vary between runs because the providers do.
+- The dev worker run also claimed and failed one older queued dev job (it retried, then failed). Not investigated; dev only.
+- Not run on production: that needs Dang's shell and the queue check.
 ## 2026-11-13: guest sign-in check (brief 004 step 1)
 
 - New `scripts/guest-flow-check.ts`: drives Chromium through the real guest flow and prints PASS or FAIL only, plus the one project id it makes. It takes our own clip (`scripts/make-check-clip.ps1`, 6.5 s) so the browser reads a real length; no stub.

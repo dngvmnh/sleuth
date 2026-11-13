@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ChecklistItem, FrameObservation, TranscriptSegment } from "@sleuth/contracts";
 import { segmentScript } from "@sleuth/domain";
-import { analyse } from "./analyse";
+import { analyse, SPEECH_ONLY_NOTE } from "./analyse";
 import { planFrames } from "./frames";
 import { mergeEvidence, mergeFindings } from "./merge";
+import { runPipeline } from "./pipeline";
 import { needsOutsideProof } from "./text";
 
 const base = { projectId: "p1", assetVersionId: "av1", durationMs: 20000, analysisRunId: "run1" };
@@ -100,6 +101,49 @@ describe("analyse", () => {
       observations: [fr("f1", 15000, "invoice form", ["New Invoice"])],
     });
     expect(out.evidence).toEqual([]);
+  });
+});
+
+describe("speech-only analysis (decision D-4)", () => {
+  const input = {
+    ...base,
+    segments: segs("Click New Invoice to start.\nOur data is encrypted."),
+    checklist: [item("c1", "Create new invoice")],
+    transcript: [
+      tr("t1", 0, 2000, "Click New Invoice to start."),
+      tr("t2", 3000, 5000, "Our data is encrypted."),
+    ],
+    observations: [],
+    speechOnly: true,
+  };
+
+  it("gives a screen claim no candidate from speech alone, so its item stays a Ghost", () => {
+    const out = analyse(input);
+    expect(out.evidence.map((e) => e.status)).toEqual(["needs_outside_proof"]);
+    expect(out.findings.map((f) => f.type).sort()).toEqual(["ghost", "needs_outside_proof"]);
+    expect(out.evidence.every((e) => e.status !== "confirmed")).toBe(true);
+  });
+
+  it("says on every finding and candidate that it was checked by speech only", () => {
+    const out = analyse(input);
+    for (const f of out.findings) expect(f.limits.startsWith(SPEECH_ONLY_NOTE)).toBe(true);
+    for (const e of out.evidence) expect(e.explanation.endsWith(SPEECH_ONLY_NOTE)).toBe(true);
+    const normal = analyse({ ...input, speechOnly: false });
+    for (const f of normal.findings) expect(f.limits).not.toContain(SPEECH_ONLY_NOTE);
+  });
+
+  it("never plans or sends a frame when the pipeline has no video provider", async () => {
+    const out = await runPipeline({
+      ...base,
+      segments: input.segments,
+      checklist: input.checklist,
+      transcription: { name: "t", transcribe: () => Promise.resolve(input.transcript) },
+      videoAnalysis: null,
+      frameIntervalMs: 2000,
+      maxFrames: 60,
+    });
+    expect(out.observations).toEqual([]);
+    expect(out.findings.every((f) => f.limits.startsWith(SPEECH_ONLY_NOTE))).toBe(true);
   });
 });
 

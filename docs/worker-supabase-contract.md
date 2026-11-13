@@ -40,6 +40,7 @@ export const supabaseHandler = (workerId: string): JobHandler => async (job) => 
 |---|---|
 | `job` | the claimed job |
 | `projectId` | its project |
+| `owner` | `{ userId, realAccount }`. `realAccount` is true only when Supabase Auth holds the owner and it is not anonymous. The worker sends frames to a third party only for a real, listed account (decision D-4, `VIDEO_ANALYSIS_OWNER_IDS`) |
 | `asset` | the video version the job was queued for (`storagePath`, `durationMs`, `mimeType`) |
 | `script` | the script version the job was queued for, segments in order |
 | `checklist` | checklist items in order |

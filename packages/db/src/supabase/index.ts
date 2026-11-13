@@ -10,6 +10,7 @@ export {
   createWorkerStore,
   WorkerStoreError,
   type JobInputs,
+  type JobOwner,
   type WorkerErrorCode,
   type WorkerResult,
   type WorkerStore,
