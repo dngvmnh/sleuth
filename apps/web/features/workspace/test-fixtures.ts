@@ -110,6 +110,7 @@ export interface Routes {
   evidence?: () => Response | Promise<Response>;
   findings?: () => Response | Promise<Response>;
   review?: (init?: RequestInit) => Response | Promise<Response>;
+  playback?: () => Response | Promise<Response>;
 }
 
 /** A client whose fetch is answered by `routes`. Unlisted routes answer 500. */
@@ -120,6 +121,7 @@ export function clientFor(routes: Routes) {
     const method = init?.method ?? "GET";
     calls.push({ url: u, method });
     if (u.includes("/review")) return (routes.review ?? (() => json({}, 500)))(init);
+    if (u.endsWith("/playback-url")) return (routes.playback ?? (() => json({ url: null, expiresAt: null })))();
     if (u.endsWith("/evidence")) return (routes.evidence ?? (() => json({}, 500)))();
     if (u.endsWith("/findings")) return (routes.findings ?? (() => json({}, 500)))();
     return (routes.project ?? (() => json({}, 500)))();

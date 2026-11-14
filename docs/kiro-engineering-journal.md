@@ -1380,3 +1380,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `apps/worker/src/schedule.test.ts`: 4 tests. The schedule and concurrency group exist, the run is `--once`, and an empty queue returns after one claim.
 - ADR `docs/decisions/0009-worker-schedule.md` records the limits: GitHub may delay a scheduled run, and it pauses schedules after 60 days of no repository activity.
 - Kiro features used: the handover as a spec, steering rules, and the worker-area rules. Checks run: lint, typecheck, test (979 passed, 70 skipped because they need Postgres), test:property (114), check:contracts (14), build, ghost-scan. Nothing failed. The first edit of the workflow failed to match because the comment text differed from what I remembered, so I read the file bytes before editing again.
+
+## 2026-11-14: WP4 part 2, the real player (Đăng, brief 006 video section)
+
+- `api-client.getPlaybackUrl` (3 tests), `usePlaybackUrl` (asks again 30 s before `expiresAt`, never more often than every 5 s, null on error, stops on unmount; 6 tests), `useVideoPlayer` (the HTML adapter behind the same state shape as the simulated clock), `PlaybackVideo` (keeps the viewer's place when a fresh URL arrives).
+- With a URL the workspace shows the real `<video>` and hides the simulated clock; the timeline, sentence list and Lantern read the same player. With `null` (the demo, fixture mode, a failed request) it keeps the simulated clock. The panel now says 'No playable video file' and no longer claims fixture mode on the live site.
+- Not done: captions (we have a transcript, not a WebVTT file). Not run against a real signed URL.
+- Found by the full browser run: PR #43 changed the queued text and missed `tests/e2e/analysis.spec.ts`. The browser specs do not run in CI. Fixed here: 3 of 3 passed. The full chromium run: 71 passed, then this one fixed.

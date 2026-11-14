@@ -34,10 +34,30 @@ describe("Workspace", () => {
     expect(screen.getByRole("region", { name: "Evidence Lantern" })).toBeInTheDocument();
   });
 
+  it("plays the real video, and hides the simulated clock, when the server gives a playback URL", async () => {
+    const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
+    const { client, calls } = clientFor(
+      okRoutes({ playback: () => json({ url: "https://files.example.test/v.mp4?token=t", expiresAt }) }),
+    );
+    render(<Workspace projectId="p1" client={client} />);
+    const video = await screen.findByLabelText("Project video");
+    expect(video).toHaveAttribute("src", "https://files.example.test/v.mp4?token=t");
+    expect(screen.queryByText("Simulated clock (not video)")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "No playable video file" })).toBeNull();
+    expect(calls.some((c) => c.url.endsWith("/projects/p1/assets/av1/playback-url"))).toBe(true);
+  });
+
+  it("falls back to the simulated clock when the playback request fails", async () => {
+    const { client } = clientFor(okRoutes({ playback: () => json({ error: { code: "x", message: "x" } }, 500) }));
+    render(<Workspace projectId="p1" client={client} />);
+    expect(await screen.findByRole("heading", { name: "No playable video file" })).toBeInTheDocument();
+    expect(screen.getByText("Simulated clock (not video)")).toBeInTheDocument();
+  });
+
   it("says there is no video and shows only a simulated clock", async () => {
     const { client } = clientFor(okRoutes());
     render(<Workspace projectId="p1" client={client} />);
-    expect(await screen.findByRole("heading", { name: "No video in fixture mode" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "No playable video file" })).toBeInTheDocument();
     expect(screen.getByText("Simulated clock (not video)")).toBeInTheDocument();
     expect(document.querySelector("video")).toBeNull();
   });

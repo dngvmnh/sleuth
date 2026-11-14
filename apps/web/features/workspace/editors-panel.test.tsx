@@ -34,6 +34,7 @@ function stateWith(over: Partial<ProjectState> = {}): ProjectState {
     sync: vi.fn(async () => undefined),
     startAnalysis: vi.fn(),
     fetchJob: vi.fn(),
+    fetchPlaybackUrl: vi.fn(),
     ...over,
   };
 }

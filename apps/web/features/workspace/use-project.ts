@@ -64,6 +64,8 @@ export interface ProjectState {
   startAnalysis: () => Promise<ProcessingJob>;
   /** Read one job of this project. */
   fetchJob: (jobId: string) => Promise<ProcessingJob>;
+  /** Ask for a short-lived playback URL of one asset version (`url: null` when nothing plays). */
+  fetchPlaybackUrl: (assetVersionId: string) => Promise<{ url: string | null; expiresAt: string | null }>;
 }
 
 function messageOf(error: unknown): string {
@@ -199,6 +201,11 @@ export function useProject(projectId: string, client?: ApiClient): ProjectState 
     [api],
   );
 
+  const fetchPlaybackUrl = useCallback(
+    async (assetVersionId: string) => api.getPlaybackUrl(live.current.projectId, assetVersionId),
+    [api],
+  );
+
   const makeCopy = useCallback(
     async (name: string): Promise<string> => {
       const res = await api.createProject(name, true);
@@ -314,5 +321,6 @@ export function useProject(projectId: string, client?: ApiClient): ProjectState 
     sync: reloadQuietly,
     startAnalysis,
     fetchJob,
+    fetchPlaybackUrl,
   };
 }

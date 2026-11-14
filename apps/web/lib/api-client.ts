@@ -12,6 +12,7 @@ import {
   ListEvidenceResponseSchema,
   ListFindingsResponseSchema,
   ListProjectsResponseSchema,
+  PlaybackUrlResponseSchema,
   ListReshootsResponseSchema,
   ReviewResponseSchema,
   SealBlockerSchema,
@@ -135,6 +136,18 @@ export function createApiClient(options: ApiClientOptions = {}) {
         "POST",
         `/projects/${encodeURIComponent(projectId)}/assets/upload-url`,
         UploadUrlRequestSchema.parse(params),
+      ),
+
+    /**
+     * A short-lived signed URL to play one asset version, or `{ url: null, expiresAt: null }` when
+     * nothing plays (the demo, fixture mode, a file that never reached storage). Never store the URL:
+     * ask again after `expiresAt`.
+     */
+    getPlaybackUrl: (projectId: string, assetVersionId: string) =>
+      call(
+        PlaybackUrlResponseSchema,
+        "GET",
+        `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetVersionId)}/playback-url`,
       ),
 
     // ---- scripts ----
