@@ -1,6 +1,6 @@
 # SLEUTH coordination board
 
-Owner: coordinator session. Updated: Saturday 14 November 2026, about 01:30 SGT, by Đăng's builder session. Source: `origin/main` `37da5c1`, read with git and `gh`, and `tasks.md` on that commit.
+Owner: coordinator session. Updated: Saturday 14 November 2026, about 12:30 SGT, by Đăng's builder session. Source: `origin/main` `bcba5e0`, read with git and `gh`, and `tasks.md` on that commit.
 
 Dates (SGT): feature freeze Wed 2 Dec 23:59 (18 days). UI freeze Sun 29 Nov (D-15). Internal submit Fri 4 Dec 18:00. Official deadline Sat 5 Dec 06:00. Kiro credits request closes Wed 2 Dec 04:00.
 
@@ -8,12 +8,13 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59 (18 days). UI freeze Sun 29 Nov (D-1
 
 | Item | State |
 |---|---|
-| `origin/main` | `37da5c1`. Merged 13 to 14 Nov: #29 (smoke test expects 201, deploy-plan sync), #31 (owner-only playback URL, `contract-change`), #30 (guest-flow check), #32 (prod-e2e script), #34 (speech-only worker mode). |
-| Open PRs (Đăng) | #33 submission groundwork and keep-alive (`ping` red until the secret is fixed); #35 cleanup list; #36 this board; #37 theme foundations. `main` was merged into each on 14 Nov (journal: both sides kept). |
-| Open PRs (Đạt) | #27 guest sign-in. Conflicts with `main` in the journal only. Needs Đạt to merge `main` into it. |
-| Worker workflow | Manual only. #34 is merged, so a scheduled run is now speech only for every job unless `VIDEO_ANALYSIS_OWNER_IDS` is set. Turning the schedule on is Đăng's step. |
+| `origin/main` | `bcba5e0`. CI green on `bcba5e0` (`check`, `db`). |
+| Merged 13 to 14 Nov | #29 to #32, #33 (submission groundwork and keep-alive), #34 (speech-only worker mode), #35 to #37, #38 (prod-e2e team-account mode). |
+| Open PRs | #27 (Đạt, guest sign-in). Conflicts with `main` in the journal only. Đạt merges `main` into it. |
+| Keep-alive | `keep-alive` workflow green on `main` (`bcba5e0`, manual run), so the `DATABASE_URL` secret works. The cause of the old `psql` error (`error 2`) is unknown; the workflow now uses the worker's driver. |
+| Worker workflow | Manual only. Every job is speech only unless `VIDEO_ANALYSIS_OWNER_IDS` lists a real team account. Turning the schedule on is Đăng's step. |
 
-## 2. Spec ticks at `395f490`
+## 2. Spec ticks at `bcba5e0`
 
 | Spec | Ticked | Open |
 |---|---|---|
@@ -29,42 +30,40 @@ Total 56 of 60.
 
 | Person | Done since 13 Nov | Now | Blocked by | Blocking |
 |---|---|---|---|---|
-| Đăng | #29, #30, #31 merged. #32 to #35 open, CI green before the main merge. Guest-flow check 14 of 14 PASS on sleuth-dev against #27's code. prod-e2e rehearsal on sleuth-dev: 9 PASS, 1 SKIP. Leak check of both scripts: 0 secrets, signed URLs or transcript strings in the output. | Theme foundations (D-14 to D-18 decided). | `DATABASE_URL` secret (Đăng's own click) for keep-alive and the worker. #27 deploy for the live checks. | Đạt (theme tokens, fonts and icons for the revamp). |
-| Đạt | #26 merged (review-workspace 14 ticked). #27 open. | #27: merge `main`, re-run the browser specs. | Nobody. | Live sign-in on the site (#27). Real video player (playback URL is on `main` now). Clips 4 and 5 (ea 14, 15). |
-| Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) was merged on 14 Nov; a review after the fact is still welcome. | Unknown; no reply. | ea 11 protocol and labels, ea 13 first evaluation. No accuracy numbers until these run. |
+| Đăng | #29 to #38 merged (all his). Guest-flow check 14 of 14 on sleuth-dev against #27's code. prod-e2e rehearsal on dev in guest mode: 9 PASS, 1 SKIP; speech-only findings 2 of 2. Keep-alive green. | Live production checks (his shell); recording kit for clips 1 to 3; brief 006 for Đạt. | #27 deploy, for the guest-flow check only. | Đạt's revamp is unblocked (theme on `main`). |
+| Đạt | #26 merged. #27 open. | #27: merge `main`, re-run the browser specs. Then brief 006 (UI revamp). | Nobody. | Live guest sign-in (#27). Real video player. Clips 4 and 5 (ea 14, 15). |
+| Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) merged 14 Nov; review after the fact requested. | Unknown; no reply. | ea 11 (protocol, labels for clips 1 to 3), ea 13 (first evaluation). No accuracy numbers until these run. |
 
 ## 4. Critical path: one real run on production
 
+What needs #27: only the browser guest-flow check (`scripts/guest-flow-check.ts`). The smoke test part B and `scripts/prod-e2e.ts` sign in through the Supabase API, not the browser, so they can run on production now.
+
 | # | Step | Status | Evidence |
 |---|---|---|---|
-| 1 | A guest signs in in the browser, creates a project and uploads | Proven on sleuth-dev; **unproven on the live site** | `scripts/guest-flow-check.ts` (PR #30, merged) against a local dev server on #27's code with sleuth-dev: 14 of 14 PASS, 13 Nov, and again 14 Nov. Live site: waits for #27 to be merged and deployed. API path on production: 32 of 32, 13 Nov (reported by Đăng). |
-| 2 | The worker takes the job, transcribes and finds evidence | Proven on sleuth-dev; unproven on production | `scripts/prod-e2e.ts` (PR #32, merged) rehearsal with a local worker run (Deepgram, gemini-3.6-flash, our own 6.5 s clip): job `succeeded`, 13 and 14 Nov. Production: needs the `DATABASE_URL` secret, the queue check and Đăng's shell. |
-| 3 | Findings show on the timeline with the video | Partly: API counts proven on dev; player not wired | Rehearsals listed evidence and findings by type. Playback URL route merged (#31). The real player is Đạt's next task. |
-| 4 | Resolve one finding | Proven once on dev | Rehearsal run 1 (13 Nov) resolved a Cursed Frame through the review call. Later runs only produced a Ghost, which has no evidence to review, so step 7 was SKIP. |
-| 5 | Edit one sentence: only its evidence goes stale | Proven on dev | Rehearsal 14 Nov: 1 modified line, its 1 evidence item went stale, nothing else changed. |
-| 6 | Export the Final Seal | Blockers and CSV proven on dev | Seal answered 409 with `stale_evidence, uncovered_items`; `report.csv` 30 rows. A sealed project was not reached. |
+| 1 | A guest signs in, creates a project and uploads | API path proven on production; browser path proven on dev only | Production API: smoke test 32 of 32, 13 Nov (reported by Đăng). Browser: `scripts/guest-flow-check.ts` 14 of 14 on sleuth-dev against #27's code, 13 and 14 Nov. Live browser: waits for #27. |
+| 2 | The worker takes the job, transcribes and finds evidence | Proven on sleuth-dev; **unproven on production** | prod-e2e rehearsals with a local worker, 13 and 14 Nov: job `succeeded`. Guest mode on production settings: worker `speechOnly=1`. Production: Đăng's shell run pending. |
+| 3 | Findings show on the timeline with the video | API counts proven on dev; player not wired | Playback URL route on `main` (#31); the demo answers `{ url: null, expiresAt: null }` on the live site (checked by Đăng). Player: brief 006 for Đạt. |
+| 4 | Resolve one finding | Proven once on dev | 13 Nov rehearsal resolved a Cursed Frame. Guest mode cannot prove it (speech only gives no candidate to review); needs the team-account run. |
+| 5 | Edit one sentence: only its evidence goes stale | Proven on dev | 14 Nov rehearsal: 1 modified line, its 1 evidence item stale, nothing else changed. Guest mode has no evidence to stale. |
+| 6 | Export the Final Seal | Blockers and CSV proven on dev | Seal 409 with `uncovered_items`; `report.csv` 30 rows. A sealed project not reached. |
 
-Earliest step not proven on production: **step 1, the browser sign-in on the live site** (waits for #27). Then step 2 (Gate B in brief 004).
+Earliest step not proven on production: **step 2, the first real job** (prod-e2e in guest mode, Đăng's shell).
 
 ## 5. Top five risks
 
 1. No real job has run on production. 18 days to freeze.
-2. The `DATABASE_URL` repository secret likely holds the old password (keep-alive `ping` failed with `error 2`). That also breaks the manual worker.
-3. Bảo has been silent since 12 Nov. ea 11 and 13 (clips, protocol, first evaluation) are his. No accuracy numbers exist.
-4. The UI revamp (D-14 to D-18) lands two weeks before freeze. Keep `midnight` as a one-line rollback.
-5. Free-tier limits: Supabase Free pauses after 7 quiet days; Gemini 3.8 Flash failed on the free tier; the Deepgram credit is one-time.
+2. Bảo has been silent since 12 Nov. ea 11 and 13 are his. No accuracy numbers exist.
+3. The UI revamp lands two weeks before freeze. `midnight` stays a one-line rollback.
+4. Local database tests fail when run all at once: our own parallel test files open more connections than the sleuth-dev session pooler allows (peak 23 backends on 14 Nov). CI uses its own database and stays the gate.
+5. Free-tier limits: Supabase Free pauses after 7 quiet days (keep-alive covers prod only); Gemini 3.8 Flash failed on the free tier; the Deepgram credit is one-time.
 
 ## 6. Merge order for open PRs
 
-Already merged: #29, #31, #30, #32, #34.
-1. #35 cleanup list: docs only, no risk.
-2. #36 this PR (decisions and board): docs only.
-3. #37 theme foundations: tokens, fonts, icons. Đạt builds on it, so earlier is better.
-4. #27 (Đạt), after Đạt merges `main` into it: unlocks the live checks.
-5. #33 submission groundwork: its `ping` goes green only after the `DATABASE_URL` secret is fixed.
+1. #27 (Đạt), after Đạt merges `main` into it: unlocks the live guest-flow check.
+2. Đăng's new PRs from 14 Nov (board, brief 006, clip kits, script tests): docs and tests, any order.
 
 ## 7. Briefs, reviews, decisions
 
-- Briefs: 003 done (#29). 004: steps 1 to 4 done in code (#30, #31, #32, #34); live runs are gated. 005: #33. 002b: #34 (merged).
-- Decisions: see `decisions-needed.md`. Open: D-10, D-11, D-12. Decided today: D-13 to D-18.
-- Cleanup: `docs/coordination/cleanup.md` (#35).
+- Briefs: 003 done. 004: code done (#30, #31, #32, #34, #38); live runs pending. 005: #33 merged. 002b: #34 merged. 006: UI revamp for Đạt.
+- Decisions: see `decisions-needed.md`. Open: D-10, D-11. Decided: D-12 (14 Nov), D-13 to D-18.
+- Cleanup: `docs/coordination/cleanup.md`.

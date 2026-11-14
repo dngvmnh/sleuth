@@ -1,6 +1,6 @@
 # Decisions needed
 
-Updated Saturday 14 November 2026, early morning, by Đăng. Team rule: free options only for hosting and AI.
+Updated Saturday 14 November 2026, noon, by Đăng. Team rule: free options only for hosting and AI.
 
 ## Open
 
@@ -8,7 +8,6 @@ Updated Saturday 14 November 2026, early morning, by Đăng. Team rule: free opt
 |---|---|---|---|---|
 | D-10 | Who records clips 1 to 3 (ea 11). | Đăng | Wed 18 Nov | **Đăng's recommendation:** Đăng records clips 1 to 3 by Wed 18 Nov (API and database demos, the same style as clip 5's `demo.ps1`). Bảo writes the protocol and labels them by watching, before any run. Đạt keeps clips 4 and 5 (ea 14, 15). The recorder and the labeller are different people, which keeps the labels honest. |
 | D-11 | What visitors may do at launch. | Đăng | Mon 16 Nov | "Try your own video" is speech-only: Deepgram transcript, no frames to Gemini (D-4 data rule). Our own clips use Gemini through an allow-list of owner ids (`VIDEO_ANALYSIS_OWNER_IDS`, PR #34). |
-| D-12 | Keep Supabase Free and the worker alive through judging. | Đăng | Wed 18 Nov | Yes: PR #33 adds a keep-alive workflow (one read-only query to `sleuth-prod` twice a week) plus the weekly manual look at both projects. Mark decided when #33 merges and its `ping` run is green. Open blocker: the `ping` job failed with `error 2` (cannot connect); the `DATABASE_URL` secret probably holds the password from before the 10 Nov reset. |
 
 ## Decided
 
@@ -22,6 +21,7 @@ Updated Saturday 14 November 2026, early morning, by Đăng. Team rule: free opt
 | D-6 | Can one person enter both DEAD AIR and SLEUTH? | Yes. Đăng read the official rules on 9 November 2026: [kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). | Đăng |
 | D-7 | Eligibility answers | All three are university students and adults. Phạm Quốc Bảo and Đạt did not register for Kiroween 2025. | Team, 10 Nov |
 | D-8 | Who adds the hourly purge to `apps/worker` | Đăng wrote it; Bảo owns the worker going forward. | PR #6, ADR 0008 |
+| D-12 | Keep Supabase Free and the worker alive through judging | Yes. The keep-alive workflow (PR #33) runs one read-only query against `sleuth-prod` on Mondays and Thursdays, through the worker's own driver. It is green on `main` (`bcba5e0`), so the `DATABASE_URL` secret works. Đăng still opens both projects once a week; `sleuth-dev` has no ping. Decided 14 Nov. | PR #33, `docs/deploy-plan.md` |
 | D-13 | Bảo had not started brief 002b; who builds it | Đăng built it on 13 Nov: PR #34 (`feat/worker-speech-only-mode`), merged on 14 Nov. Bảo was asked to review. | PR #34 |
 | D-14 | New look: default for launch, or a skin for the video only? | Default for launch, behind a `data-theme` attribute on `<html>`, so it rolls back in one line. Decided by Đăng, 14 Nov. | Item 5 (theme foundations) |
 | D-15 | Who does the revamp? | Đạt builds components and screens. Đăng does tokens, fonts, icons and the contrast test. UI freeze Sun 29 Nov. Decided by Đăng, 14 Nov. | Item 5 |
