@@ -1228,6 +1228,13 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 
 - Board, decisions and the 14 Nov update now match `main` `bcba5e0`: #29 to #38 merged, CI green, 56 of 60 spec ticks, D-12 decided (keep-alive green on `main`). The earlier guess about an old password in the `DATABASE_URL` secret is removed; the cause of the old `psql` error is unknown and the secret works. Only the browser guest-flow check waits for #27.
 - Dev database check (read-only, sleuth-dev, counts only): `max_connections` 60, 3 reserved. At rest: 16 backends, 7 of them client backends (Supavisor 1 active and 1 auth query, PostgREST 1, Storage API 1, postgres_exporter 1, 2 with no name). No Vercel preview or dev server held connections. During one local run of the database test files, Supavisor backends rose from 1 to 23 within 16 s and `store.write.test.ts` failed with XX000 FATAL. So the refusals come from our own test files running in parallel through the session pooler, not from another holder. The same file alone passes 9 of 9. CI runs its own database, so it stays the gate. A local fix, if wanted: run the database files with `--no-file-parallelism`.
+
+## 2026-11-14: script tests run in CI (Đăng)
+
+- `vitest.config.ts` (shared file): the node project now includes `scripts/*.test.ts`. This is the smallest change: `pnpm test` already runs in the CI `check` job, so no workflow edit is needed, and the tests run locally with the same command.
+- `scripts/prod-e2e.test.ts` is rewritten from `node:test` to vitest (4 tests, same checks).
+- New `scripts/keep-alive.test.ts`: 21 tests for `categoryOf`. 18 codes map to auth, host, timeout, tls, config or other; a TypeError gives config; unknown input gives other. A wrapped `cause` is read one level down, the outer code wins, and a cause that points at itself does not loop. A property test (200 runs) shows the message text never changes the category and the printed line is always one fixed word. Mutation check: with the cause lookup removed, 1 test failed.
+- `vitest run scripts`: 2 files, 25 tests passed.
 ## 2026-11-14: brief 006, UI revamp for Đạt (Đăng)
 
 - `docs/coordination/briefs/006-ui-revamp-for-dat.md`: one PR per screen, in this order: #27 first, then the flaky clock test, tokens in components (strong border on the outline button and inputs, finding icon in `FindingBadge`), dashboard, workspace (coverage bar says "covered", tabs), report (draft, sealed and broken banners; print stays white), and `not-found.tsx` and `error.tsx`. Also the no-video panel copy and the real player on the playback URL. UI freeze Sun 29 Nov. Clips 4 and 5 stay his.
