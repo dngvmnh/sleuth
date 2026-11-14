@@ -18,6 +18,17 @@ export interface VideoElementLike {
   removeEventListener(type: string, listener: () => void): void;
 }
 
+/** Window event that tells other parts of the page (the Night wind) that the video plays or stops. */
+export const MEDIA_EVENT = "sleuth:media";
+
+export type MediaAnnouncement = "play" | "pause";
+
+/** Default announcer: a window CustomEvent. Does nothing outside a browser. */
+export function announceMedia(detail: MediaAnnouncement): void {
+  if (typeof window === "undefined" || typeof CustomEvent === "undefined") return;
+  window.dispatchEvent(new CustomEvent(MEDIA_EVENT, { detail }));
+}
+
 const EVENT_TO_KIND: Readonly<Record<string, PlayerChangeKind>> = {
   timeupdate: "time",
   durationchange: "time",
@@ -36,10 +47,18 @@ export class HtmlVideoPlayer implements PlayerPort {
   private listeners = new Set<PlayerListener>();
   private disposed = false;
   private readonly handlers = new Map<string, () => void>();
+  private announcedPlay = false;
 
-  constructor(private readonly video: VideoElementLike) {
+  constructor(
+    private readonly video: VideoElementLike,
+    private readonly announce: (detail: MediaAnnouncement) => void = announceMedia,
+  ) {
     for (const [type, kind] of Object.entries(EVENT_TO_KIND)) {
-      const handler = () => this.emit(kind);
+      const handler = () => {
+        if (kind === "play") this.setAnnounced(true);
+        else if (kind === "pause" || kind === "ended") this.setAnnounced(false);
+        this.emit(kind);
+      };
       this.handlers.set(type, handler);
       video.addEventListener(type, handler);
     }
@@ -85,9 +104,17 @@ export class HtmlVideoPlayer implements PlayerPort {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    // A player that goes away mid-play must not leave the Night wind ducked.
+    this.setAnnounced(false);
     for (const [type, handler] of this.handlers) this.video.removeEventListener(type, handler);
     this.handlers.clear();
     this.listeners.clear();
+  }
+
+  private setAnnounced(playing: boolean): void {
+    if (this.announcedPlay === playing) return;
+    this.announcedPlay = playing;
+    this.announce(playing ? "play" : "pause");
   }
 
   private emit(kind: PlayerChangeKind): void {

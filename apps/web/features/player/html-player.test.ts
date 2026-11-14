@@ -148,3 +148,41 @@ describe("HtmlVideoPlayer", () => {
     expect(video.currentTime).toBe(0);
   });
 });
+
+describe("HtmlVideoPlayer media announcements (Night wind ducking)", () => {
+  it("announces play once, then pause on pause, ended and dispose", async () => {
+    const video = new StubVideo();
+    const announce = vi.fn();
+    const p = new HtmlVideoPlayer(video, announce);
+    p.play();
+    await Promise.resolve();
+    video.fire("play");
+    expect(announce.mock.calls).toEqual([["play"]]);
+    p.pause();
+    expect(announce.mock.calls).toEqual([["play"], ["pause"]]);
+    p.play();
+    await Promise.resolve();
+    video.ended = true;
+    video.fire("ended");
+    expect(announce.mock.calls.at(-1)).toEqual(["pause"]);
+    p.play();
+    await Promise.resolve();
+    p.dispose();
+    expect(announce.mock.calls.at(-1)).toEqual(["pause"]);
+  });
+
+  it("announces nothing when the browser refuses to play", async () => {
+    const video = new StubVideo();
+    video.playRejects = true;
+    const announce = vi.fn();
+    const p = new HtmlVideoPlayer(video, announce);
+    p.play();
+    await Promise.resolve();
+    p.dispose();
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  it("the default announcer is safe outside a browser", () => {
+    expect(() => new HtmlVideoPlayer(new StubVideo()).dispose()).not.toThrow();
+  });
+});

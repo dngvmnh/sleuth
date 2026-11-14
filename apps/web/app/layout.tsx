@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
+import { Grain, Vignette } from "@/components/ornaments";
 import "../styles/globals.css";
 
 // Display serif, self-hosted (SIL Open Font License 1.1, see ./fonts/OFL-instrument-serif.txt).
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" data-theme="hollow" className={display.variable}>
       <body className="min-h-screen antialiased">
         <div className="sleuth-fog" aria-hidden="true" />
+        <Vignette />
         <div className="relative z-10">{children}</div>
+        <Grain />
       </body>
     </html>
   );

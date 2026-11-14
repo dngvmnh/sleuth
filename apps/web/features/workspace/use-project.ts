@@ -12,6 +12,7 @@ import type {
   ReviewRequest,
 } from "@sleuth/contracts";
 import { useApiClient } from "@/components/guest-auth-provider";
+import { useSaveStatus } from "@/components/shell/save-status";
 import { ApiClientError, type ApiClient } from "@/lib/api-client";
 
 /** Project detail as the API returns it (the contracts package exports the schema, not this type). */
@@ -90,6 +91,8 @@ function initial(projectId: string): Loaded {
 export function useProject(projectId: string, client?: ApiClient): ProjectState {
   const shared = useApiClient();
   const api = useMemo(() => client ?? shared, [client, shared]);
+  // Writes report into the footer's save indicator (a no-op without the shell).
+  const { track } = useSaveStatus();
   const [state, setState] = useState<Loaded>(() => initial(projectId));
   const [attempt, setAttempt] = useState(0);
   const [reviewingId, setReviewingId] = useState<string | undefined>(undefined);
@@ -167,23 +170,25 @@ export function useProject(projectId: string, client?: ApiClient): ProjectState 
 
   const saveScript = useCallback(
     async (text: string): Promise<CreateScriptResponse> => {
-      const res = await api.createScript(live.current.projectId, { text });
+      const res = await track(api.createScript(live.current.projectId, { text }));
       // The server marked evidence stale and added findings; show them.
       await reloadQuietly();
       return res;
     },
-    [api, reloadQuietly],
+    [api, reloadQuietly, track],
   );
 
   const saveChecklist = useCallback(
     async (labels: string[]): Promise<ChecklistItem[]> => {
-      const res = await api.setChecklist(live.current.projectId, {
-        items: labels.map((label) => ({ label })),
-      });
+      const res = await track(
+        api.setChecklist(live.current.projectId, {
+          items: labels.map((label) => ({ label })),
+        }),
+      );
       await reloadQuietly();
       return res.items;
     },
-    [api, reloadQuietly],
+    [api, reloadQuietly, track],
   );
 
   const requestUploadUrl = useCallback(
@@ -256,7 +261,7 @@ export function useProject(projectId: string, client?: ApiClient): ProjectState 
       evidenceId: string,
       request: ReviewRequest,
     ) => {
-      const res = await api.reviewEvidence(evidenceId, request);
+      const res = await track(api.reviewEvidence(evidenceId, request));
       if (!ctx.stillHere()) return;
       setState((prev) =>
         prev.projectId !== ctx.projectId
@@ -269,7 +274,7 @@ export function useProject(projectId: string, client?: ApiClient): ProjectState 
         prev.projectId !== ctx.projectId ? prev : { ...prev, findings: fresh.findings },
       );
     },
-    [api],
+    [api, track],
   );
 
   const review = useCallback(
