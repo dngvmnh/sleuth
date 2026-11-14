@@ -12,6 +12,10 @@ SLEUTH is only as good as the numbers we can show. This page says how the clips 
 6. **Nothing secret on screen or in the audio.**
 7. **Voice.** The narration may be the recorder's own voice or a disclosed text-to-speech voice (decided by Đăng, 14 November, #66). Never a cloned or imitated real person's voice. The clip table names the voice of every clip.
 
+### Limit: the person who labels also recorded the clips
+
+Đạt (@phatdat220707) records all five clips and also labels them (decision D-10, changed on 14 November). He knows what he meant to leave out or add, so his labels may match the planned problems more closely than a fresh viewer's would, and may miss problems he did not plan. To reduce this he labels only from a full watch of the finished video, at least an hour after recording, and commits `labels.json` before anyone runs `pnpm eval`. Every place that quotes `pnpm eval` numbers says that the recorder labelled the clips, beside the numbers.
+
 ### Limit: a synthetic voice makes the results optimistic
 
 Clips 1 to 3 are narrated by a text-to-speech voice (Microsoft Zira). A clean synthetic voice, with even pace, clear pauses and no background noise, is easier for speech recognition than a person talking during a real demo. So every result that depends on the transcript (Phantom Dialogue, reordered and unscripted lines, and the time windows used to match frames) is likely **better than it would be on real demos**. Every place that quotes `pnpm eval` numbers says how many clips used a synthetic voice, beside the numbers.
@@ -112,7 +116,7 @@ The run prints a table with one row per finding type (plus unscripted and reorde
 
 ## Labelling a clip in 20 minutes
 
-For the person who did **not** record the clip. Do this before anyone runs `pnpm eval` on it.
+For the person who labels the clip (Đạt, who also recorded it; see the limit above). Do this before anyone runs `pnpm eval` on it, and not straight after recording.
 
 1. Open `tests/evaluation/clips/<name>/clip.json`. Read the numbered script and the checklist once (2 minutes).
 2. Watch the whole video once, without stopping, with sound (the clip is at most 2 minutes).
@@ -127,10 +131,10 @@ The number printed at the end, and the clip count beside it, go into `docs/evide
 | Clip | Case | Recorded by | Voice | Labelled by | State |
 |---|---|---|---|---|---|
 | `example` | Hand-written text only; tests the harness | nobody (no video) | none (no audio) | hand-written, not watched | Done. Not counted as one of the five clips. |
-| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (90 s), checked against the kit in #58; to label |
-| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (74 s), checked in #58; to label |
-| `clip-3` | One security claim | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (85 s), checked in #58; to label |
-| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | not recorded yet | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller agreed (#66) |
-| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | not recorded yet | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller agreed (#66) |
+| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (90 s), checked against the kit in #58; to label |
+| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (74 s), checked in #58; to label |
+| `clip-3` | One security claim | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (85 s), checked in #58; to label |
+| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | not recorded yet | Đạt (@phatdat220707) | To record by 24 Nov (task 14) |
+| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | not recorded yet | Đạt (@phatdat220707) | To record by 24 Nov (task 15), kit in `clips/clip-5` |
 
-Recorder and labeller are never the same person. Phạm Quốc Bảo (@baofrovn) labels all five clips, including clips 4 and 5, and records none of them (#58, #66). Labels are due 2 days after each drive link: clips 1 to 3 by Fri 20 Nov, clips 4 and 5 by Thu 26 Nov (SGT).
+Đạt (@phatdat220707) records and labels all five clips (decision D-10, changed on 14 November; #66). The labeller is not independent of the recorder; see "Limit: the person who labels also recorded the clips". Each clip is labelled before anyone runs `pnpm eval` on it, and Đạt also runs the first evaluation (#67).

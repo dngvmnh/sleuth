@@ -6,7 +6,7 @@ Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options o
 
 | ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
-| D-10 | Who records and who labels the evaluation clips (ea 11, 14, 15). | Đăng | Changed 14 Nov | **Changed on 14 Nov (issue #58):** Đạt (@phatdat220707) records clips 1 to 5: clips 1 to 3 by Wed 18 Nov (kits in `tests/evaluation/clips/clip-1` to `clip-3`), clips 4 and 5 by Tue 24 Nov. Phạm Quốc Bảo labels all five by watching. The recorder never labels a clip they recorded. Before: Đăng recorded clips 1 to 3. |
+| D-10 | Who records and who labels the evaluation clips (ea 11, 14, 15). | Đăng | Changed 14 Nov | **Changed on 14 Nov (issue #58):** Đạt (@phatdat220707) records clips 1 to 5: clips 1 to 3 by Wed 18 Nov (kits in `tests/evaluation/clips/clip-1` to `clip-3`), clips 4 and 5 by Tue 24 Nov. **Changed again on 14 Nov:** Đạt also labels all five, updates the protocol and runs the first evaluation (ea 11, 13; issues #66, #67). The recorder now labels; the bias this adds is a stated limit in `docs/evaluation-protocol.md`. Before: Đăng recorded clips 1 to 3, then Phạm Quốc Bảo was to label them. |
 
 ## Decided
 

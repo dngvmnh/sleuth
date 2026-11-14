@@ -78,9 +78,6 @@ describe("evaluation clip-2", () => {
     expect(parsed.labelledBy).not.toBeNull();
   });
 
-  it("is recorded and labelled by different people (decision D-10)", () => {
-    if (parsed.labelledBy !== null) expect(parsed.labelledBy).not.toBe(parsed.recordedBy);
-  });
 
   it("never sends a secret or a real account from demo.ps1", () => {
     const demo = readFileSync(dir("demo.ps1"), "utf8");

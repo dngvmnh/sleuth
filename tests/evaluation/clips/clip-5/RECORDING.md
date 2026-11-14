@@ -57,4 +57,4 @@ Stop recording. Check the length is 60 to 120 seconds.
 2. Watch the clip once, start to end. Do not run SLEUTH on it first.
 3. Write `labels.json` from what you saw and heard: the exact words of your extra sentence and roughly when (seconds), any script line you skipped or changed, and which checklist items are shown. Use the format from evidence-analysis 9 (`docs/evaluation-protocol.md`, task 11) once it exists.
 4. Set `labelledBy` in `clip.json` to your name.
-5. Run `pnpm test`, open a PR, ask Phạm Quốc Bảo to review the format only, then tick task 15.
+5. Run `pnpm test`, open a PR, ask Đăng to review the format only, then tick task 15.
