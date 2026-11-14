@@ -214,6 +214,29 @@ describe("getProject", () => {
   });
 });
 
+describe("getPlaybackUrl", () => {
+  it("sends GET .../assets/{assetVersionId}/playback-url and parses a url", async () => {
+    const body = { url: "https://example.test/v.mp4?token=x", expiresAt: NOW };
+    const fetchImpl = vi.fn().mockResolvedValue(ok(body));
+    const client = createApiClient({ fetchImpl });
+    const result = await client.getPlaybackUrl("p 1", "av/1");
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("/api/v1/projects/p%201/assets/av%2F1/playback-url");
+    expect(result).toEqual(body);
+  });
+
+  it("accepts the null answer", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(ok({ url: null, expiresAt: null }));
+    const client = createApiClient({ fetchImpl });
+    expect(await client.getPlaybackUrl("p1", "av1")).toEqual({ url: null, expiresAt: null });
+  });
+
+  it("rejects an answer that has a url but no expiry", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(ok({ url: "https://example.test/v.mp4", expiresAt: null }));
+    const client = createApiClient({ fetchImpl });
+    await expect(client.getPlaybackUrl("p1", "av1")).rejects.toBeInstanceOf(Error);
+  });
+});
+
 describe("listEvidence", () => {
   it("sends GET /api/v1/projects/{id}/evidence", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(ok({ evidence: [EVIDENCE] }));

@@ -1393,6 +1393,12 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `FindingBadge` shows the finding's icon (a different shape per type) beside the spooky and plain names.
 - New `app/not-found.tsx` and `app/error.tsx` (retry, link home, never prints the error text). `error-pages.test.tsx`: 7 tests. A Playwright axe check of the 404 page: 11 of 11 in `a11y.spec.ts` passed.
 
+## 2026-11-14: WP4 part 2, the real player (Đăng, brief 006 video section)
+
+- `api-client.getPlaybackUrl` (3 tests), `usePlaybackUrl` (asks again 30 s before `expiresAt`, never more often than every 5 s, null on error, stops on unmount; 6 tests), `useVideoPlayer` (the HTML adapter behind the same state shape as the simulated clock), `PlaybackVideo` (keeps the viewer's place when a fresh URL arrives).
+- With a URL the workspace shows the real `<video>` and hides the simulated clock; the timeline, sentence list and Lantern read the same player. With `null` (the demo, fixture mode, a failed request) it keeps the simulated clock. The panel now says 'No playable video file' and no longer claims fixture mode on the live site.
+- Not done: captions (we have a transcript, not a WebVTT file). Not run against a real signed URL.
+- Found by the full browser run: PR #43 changed the queued text and missed `tests/e2e/analysis.spec.ts`. The browser specs do not run in CI. Fixed here: 3 of 3 passed. The full chromium run: 71 passed, then this one fixed.
 ## 2026-11-14 afternoon: first real job on production, guest mode (results reported by Đăng)
 
 - `scripts/prod-smoke.ts` parts A and B against the live site: ALL CHECKS PASSED. Test project `zz-test-prpfcc` deleted.

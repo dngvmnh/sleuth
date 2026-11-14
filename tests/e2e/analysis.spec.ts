@@ -44,7 +44,7 @@ test("Run analysis queues a real job and polls it every 2 seconds, one check at 
   expect(job.status).toBe("queued");
 
   await expect(page.getByTestId("job-processing")).toContainText(
-    "Analysis queued. Waiting for a worker to pick it up. Attempt 0 of 3.",
+    "Queued. Analysis starts within about 10 to 15 minutes. Attempt 0 of 3.",
   );
   await expect.poll(() => checks.length, { timeout: 15_000 }).toBeGreaterThanOrEqual(3);
   const gaps = checks.slice(1).map((t, i) => t - (checks[i] ?? t));
@@ -54,7 +54,7 @@ test("Run analysis queues a real job and polls it every 2 seconds, one check at 
   // The UI shows the real state the server reports: still queued.
   const fromApi = await request.get(`/api/v1/projects/${id}/jobs/${job.id}`);
   expect(((await fromApi.json()) as { job: { status: string } }).job.status).toBe("queued");
-  await expect(page.getByTestId("job-processing")).toContainText("Analysis queued.");
+  await expect(page.getByTestId("job-processing")).toContainText("Queued. Analysis starts within about 10 to 15 minutes.");
 });
 
 test("leaving the workspace stops the polling", async ({ page, request }) => {
