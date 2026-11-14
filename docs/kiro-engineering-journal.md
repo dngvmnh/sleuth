@@ -1552,3 +1552,10 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Header (#79): the grid is now `auto / minmax(0,1fr) / auto` from 1024 px, the nav and chips do not wrap there, and the identity chip's second line shows from 1280 px (screen readers always get it). Height is 76 px on the dashboard, a workspace and a report at 1024, 1280 and 1440 px, also with the Night wind slider showing.
 - New `tests/e2e/shell.spec.ts` (8 tests). Against the old header it fails: the report header was 97 px against 76 px on the dashboard, and the chips sat 40 px apart.
 - Checks: lint 0 problems, typecheck clean, unit tests 1163 passed and 70 skipped, build ok, Playwright chromium 83 passed, ghost-scan clean.
+
+## 2026-11-14: evaluation protocol clip table (Phạm Quốc Bảo, #66)
+
+- `docs/evaluation-protocol.md`: recorder of clips 1 to 3 changed from Đăng to Đạt, to match PR #59 and each `clip.json`. Clips 4 and 5: labeller marked agreed (#66).
+- Added the rule in the doc: Phạm Quốc Bảo labels all five clips and records none.
+- Found, not changed: `tests/evaluation/clips/clip-5/clip.json` still says `recordedBy` Đăng, while #66 says Đạt records all five. There is no `clip-4` folder yet. Both are in the clip kits, which are not mine to edit.
+- Docs only. No labels written yet: no clip has been recorded (`durationMs` is empty in clips 1, 2, 3 and 5).
