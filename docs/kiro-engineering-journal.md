@@ -1533,3 +1533,13 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Specs changed on purpose: the H1 is now the hero heading (smoke, analysis), and the spooky-label check is scoped to the cabinet. New e2e: the clue card opens its line.
 - Review round: the hero art gained a still star field, a third (distant) hill layer, a front row of dark trees, a soft glow behind two lit windows and a mist band at the foot of the hill. The bat's first crossing now waits 2 to 8 s. The clue card sits under the house, clear of the door. The coverage line reads `00 / 05 checklist items proven so far · 4 findings waiting for a person`; both numbers come from the API, with one notch per checklist item.
 - Checks: lint 0 problems, typecheck clean, unit tests 1146 passed and 70 skipped, build ok, Playwright chromium 74 passed, ghost-scan clean.
+
+## 2026-11-14: workspace "A house of claims" (brief 007 step 3, Đăng)
+
+- Kiro features used: steering (`.kiro/steering/frontend.md`), the brief and issue #77 as the task spec, the `ghost-scan` hook, and a Kiro frontend session in its own git worktree.
+- Header: eyebrow `CHAPTER II · THE INVESTIGATION`, the project name, and `A house of <em>claims</em>.`. The counts line, the links and every test id are kept.
+- New `features/workspace/claims-map.tsx`: one room per script line and per checklist item, sized S, M or L by text length. States come from `deriveSegmentStates` (the timeline's rules); a checklist item takes the best state of the lines linked to it. Covered is solid gold with a check, Candidate waiting is dashed teal with a lantern and a soft 4 s glow, No proof yet is dotted with a lock, Stale after edit is double amber with a clock. Legend, a big numeral (`00 of 11 claims covered` on the demo) and the existing coverage bar. A click selects the line and seeks the clock; a checklist room with no evidence says so.
+- The Lantern is a forest panel with the eyebrow `THE LANTERN`. The player sits in a projector frame (gold rule and corner marks). `sleuth:media` still comes from `HtmlVideoPlayer`.
+- Script, Checklist, Upload and Analysis are now tabs (brief 006 asked for them, but they were never built): the WAI-ARIA tabs pattern with automatic activation, the amber underline, and every panel kept mounted, so a draft survives a tab change. The e2e specs open the tab they need.
+- Not in this step: in a project, the shell header's right-side chips wrap onto two rows at 1440 px because of the Report link. That is `components/shell` (step 1), so it is left for a follow-up.
+- Checks: lint 0 problems, typecheck clean, unit tests 1161 passed and 70 skipped, build ok, Playwright chromium 74 passed plus the new claims-map spec (75), ghost-scan clean.
