@@ -8,6 +8,7 @@ import { ChecklistEditor } from "../checklist/checklist-editor";
 import { ScriptEditor } from "../script/script-editor";
 import { UploadFlow } from "../upload/upload-flow";
 import { AnalysisPanel } from "./analysis-panel";
+import { ToolTabs } from "./tool-tabs";
 import type { ProjectState } from "./use-project";
 
 function messageOf(error: unknown): string {
@@ -90,27 +91,52 @@ export function EditorsPanel({
           ) : null}
         </div>
       ) : null}
-      <UploadFlow readOnly={isDemo} requestUploadUrl={state.requestUploadUrl} onUploaded={state.sync} />
-      <AnalysisPanel
-        readOnly={isDemo}
-        evidence={state.evidence}
-        findings={state.findings}
-        startAnalysis={state.startAnalysis}
-        fetchJob={state.fetchJob}
-        onSucceeded={state.sync}
+      <ToolTabs
+        label="Project tools"
+        tabs={[
+          {
+            id: "script",
+            label: "Script",
+            content: (
+              <ScriptEditor
+                text={state.detail?.scriptVersion?.text ?? ""}
+                readOnly={isDemo}
+                onSave={state.saveScript}
+              />
+            ),
+          },
+          {
+            id: "checklist",
+            label: "Checklist",
+            content: (
+              <ChecklistEditor
+                items={state.detail?.checklist ?? []}
+                readOnly={isDemo}
+                onSave={state.saveChecklist}
+              />
+            ),
+          },
+          {
+            id: "upload",
+            label: "Upload",
+            content: <UploadFlow readOnly={isDemo} requestUploadUrl={state.requestUploadUrl} onUploaded={state.sync} />,
+          },
+          {
+            id: "analysis",
+            label: "Analysis",
+            content: (
+              <AnalysisPanel
+                readOnly={isDemo}
+                evidence={state.evidence}
+                findings={state.findings}
+                startAnalysis={state.startAnalysis}
+                fetchJob={state.fetchJob}
+                onSucceeded={state.sync}
+              />
+            ),
+          },
+        ]}
       />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ScriptEditor
-          text={state.detail?.scriptVersion?.text ?? ""}
-          readOnly={isDemo}
-          onSave={state.saveScript}
-        />
-        <ChecklistEditor
-          items={state.detail?.checklist ?? []}
-          readOnly={isDemo}
-          onSave={state.saveChecklist}
-        />
-      </div>
     </div>
   );
 }

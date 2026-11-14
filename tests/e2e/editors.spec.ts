@@ -8,6 +8,9 @@ const expect = baseExpect.configure({ timeout: 30_000 });
 const line = (page: Page, n: number) => page.getByRole("button", { name: new RegExp(`^${n}\\.`) });
 const scriptField = (page: Page) => page.getByLabel("Script text. Each sentence becomes one numbered line.");
 
+// Script, Checklist, Upload and Analysis are tabs: open the one a step needs.
+const openTab = (page: Page, name: string) => page.getByRole("tab", { name, exact: true }).click();
+
 async function openCopy(page: Page, request: APIRequestContext): Promise<string> {
   const res = await request.post("/api/v1/projects", {
     data: { name: `Editor copy ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, copyFromDemo: true },
@@ -58,6 +61,7 @@ test("a punctuation-only edit says no evidence affected", async ({ page, request
 
 test("the checklist can be added to, reordered and trimmed, and saves the whole list", async ({ page, request }) => {
   const id = await openCopy(page, request);
+  await openTab(page, "Checklist");
   const items = page.getByRole("list", { name: "Checklist items" }).getByRole("listitem");
   const before = await items.count();
   expect(before).toBeGreaterThan(1);
@@ -92,5 +96,6 @@ test("the demo editors are read-only and Make an editable copy opens an editable
   await expect(page).toHaveURL(/\/projects\/(?!proofpay-demo)[^/]+$/);
   await expect(page.getByRole("heading", { level: 1, name: "Copy of ProofPay demo (public example)" })).toBeVisible();
   await expect(scriptField(page)).not.toHaveAttribute("readonly", "");
+  await openTab(page, "Checklist");
   await expect(page.getByRole("button", { name: "Save checklist" })).toBeVisible();
 });
