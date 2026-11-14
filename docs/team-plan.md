@@ -190,8 +190,8 @@ First pull request: `feat/domain-segment-state` (change-impact task 2). It is sm
 | 2 | Pure timeline helpers | review-workspace 4 | `apps/web/features/timeline/geometry.ts`, `segment-at.ts` and property tests |
 | 3 | Player port and simulated player | review-workspace 5 | `apps/web/features/player/*` |
 | 3 | Workspace data hook and page skeleton | review-workspace 6 | `apps/web/app/(workspace)/projects/[id]/page.tsx`, `apps/web/features/workspace/*` |
-| Any | Record and label the clip with an unscripted line (moved from Đăng; Bảo reviews the format only; tick only after evidence-analysis 9 and 11 are on main) | evidence-analysis 15 | `tests/evaluation/clips/clip-5` |
-| Wed 18 Nov | Record evaluation clips 1 to 3 (reassigned from Đăng, [issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Bảo labels them; the recorder never labels. Clips 4 and 5 by Tue 24 Nov | evidence-analysis 11 | `tests/evaluation/clips/clip-1` to `clip-3` |
+| Any | Record and label the clip with an unscripted line (moved from Đăng; Đăng reviews the format only; tick only after evidence-analysis 9 and 11 are on main) | evidence-analysis 15 | `tests/evaluation/clips/clip-5` |
+| Wed 18 Nov | Record evaluation clips 1 to 3 (reassigned from Đăng, [issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Đạt labels them too (D-10, changed 14 Nov), then runs the first evaluation (ea 13, #67). Clips 4 and 5 by Tue 24 Nov | evidence-analysis 11 | `tests/evaluation/clips/clip-1` to `clip-3` |
 
 First pull request: `feat/web-test-tooling` (review-workspace task 1, plus task 2 if small). Tell the team before you change `pnpm-lock.yaml`.
 

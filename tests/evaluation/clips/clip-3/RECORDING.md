@@ -1,6 +1,6 @@
 # Clip 3: recording script (evidence-analysis 11)
 
-For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Phạm Quốc Bảo labels it afterwards by watching; the recorder never labels. One take, your own screen. Narrate in your own voice or with a text-to-speech voice; if it is synthetic, say so (name the voice) when you send the link, so the clip table can list it (#66). Never a cloned or imitated real voice. No third-party footage, nothing secret on screen or in the audio.
+For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Đạt also labels it afterwards by watching, before anyone runs SLEUTH on it (decision D-10, changed 14 Nov; the bias this adds is stated in `docs/evaluation-protocol.md`). One take, your own screen. Narrate in your own voice or with a text-to-speech voice; if it is synthetic, say so (name the voice) when you send the link, so the clip table can list it (#66). Never a cloned or imitated real voice. No third-party footage, nothing secret on screen or in the audio.
 
 ## What the clip must test
 
@@ -56,6 +56,6 @@ Stop recording. Check the length is 60 to 120 seconds. If it is too short, recor
 ## After the take
 
 1. Run `powershell -ExecutionPolicy Bypass -File tests/evaluation/clips/clip-3/finalise.ps1 -StoredAt "<shared drive link>"`. It fills the length, date, hash and link in `clip.json`.
-2. Do not watch it for labels yourself and do not run SLEUTH or `pnpm eval` on it. Send the drive link to Phạm Quốc Bảo.
-3. Phạm Quốc Bảo watches it from start to end and writes `labels.json` (`docs/evaluation-protocol.md`), then sets `labelledBy` in `clip.json`.
+2. Do not run SLEUTH or `pnpm eval` on it yet. Wait at least an hour so you label what the clip shows, not what you remember planning.
+3. Watch it from start to end and write `labels.json` (`docs/evaluation-protocol.md`, "Labelling a clip in 20 minutes"), then set `labelledBy` in `clip.json` to your name. Commit `labels.json` on its own before any evaluation run.
 4. Run `pnpm test`. The recording and its labels land in the same PR.

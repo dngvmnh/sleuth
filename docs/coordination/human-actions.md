@@ -26,14 +26,13 @@ Shell rule: run every command in PowerShell on native Windows, from a clean work
 
 ## Phạm Quốc Bảo (@baofrovn)
 
-- [ ] Agree to label clips 4 and 5 too (proposed in `docs/evaluation-protocol.md`; Đạt records them, so Đạt cannot label them).
-- [ ] Label clips 1 to 3 against `docs/evaluation-protocol.md` by Sat 21 Nov, after Đạt sends the links. About 20 minutes per clip. Do not label a clip you recorded.
-- [ ] Then run `pnpm eval --providers real` on them, and send the table to Đăng.
+- Nothing on the evaluation. Labels, the protocol update and the first evaluation moved to Đạt on 14 Nov (decision D-10, #66, #67).
 
 ## Đạt (@phatdat220707)
 
-- [ ] Record clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58), reassigned from Đăng, decision D-10). Kits: `tests/evaluation/clips/clip-1` to `clip-3`, start with `RECORDING.md`, finish with `finalise.ps1`. Send the links to Bảo, who labels them; you must not.
-- [ ] Record clips 4 and 5 by Tue 24 Nov (ea 14, ea 15).
+- [ ] Record clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58), reassigned from Đăng, decision D-10). Kits: `tests/evaluation/clips/clip-1` to `clip-3`, start with `RECORDING.md`, finish with `finalise.ps1`. Then label them yourself, at least an hour after recording and before any evaluation run (#66).
+- [ ] Record clips 4 and 5 by Tue 24 Nov (ea 14, ea 15), and label them the same way.
+- [ ] Update `docs/evaluation-protocol.md` for the AI voice and your labelling (#66), then run `pnpm eval -- --providers real` on the five clips and post the printed table on #67 (ea 13).
 - [ ] Record the demo-video footage by Mon 30 Nov, following `docs/submission/demo-script.md`.
 - [ ] Check the UI on a phone and on a laptop after each UI PR is deployed. Note anything that is cut off or unreadable.
 

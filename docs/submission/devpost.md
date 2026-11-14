@@ -81,7 +81,7 @@ See `docs/submission/kiro-usage.md`. In short: five specs, nine steering files, 
 ## What we learned
 
 - Writing the spec first made the rules (candidates, not verdicts) testable instead of a slogan.
-- Measuring beats claiming: we publish no accuracy number until real clips are labelled by someone other than the person who recorded them.
+- Measuring beats claiming: we publish no accuracy number until our own clips are labelled by watching, before the tool runs. With three people, the person who recorded the clips also labels them; any number we publish says so.
 
 ## What's next
 

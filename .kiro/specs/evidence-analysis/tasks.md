@@ -1,6 +1,6 @@
 # Evidence analysis: tasks
 
-All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 9 run against fixtures, generated clips and recorded responses with no keys. Task 10 and 11 need keys or the ingestion work. After every task: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts` (the golden fixture test must stay green; if it must change, ask Đăng).
+Tasks are Phạm Quốc Bảo's (@baofrovn) unless a task names another owner; 11, 13, 14 and 15 are Đạt's (decision D-10). Each is half a day or less. Tasks 1 to 9 run against fixtures, generated clips and recorded responses with no keys. Task 10 and 11 need keys or the ingestion work. After every task: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:property`, `pnpm check:contracts` (the golden fixture test must stay green; if it must change, ask Đăng).
 
 - [x] 1. FFmpeg wrapper: probe and audio extraction
   - Owner: Bảo
@@ -76,7 +76,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Closed: Deepgram and Gemini adapters (PR #18), Gemini fallback model (PR #22); no dollar ceiling, reasons in the ADR 0007 amendment; manual run by Đăng on 10 Nov with scripts/provider-check.ts printed counts only.
 
 - [ ] 11. Record and label three clips, write the protocol
-  - Owner: Bảo
+  - Owner: Đạt (@phatdat220707), moved from Bảo on 14 Nov (decision D-10)
   - Files: `tests/evaluation/clips/clip-1` to `clip-3`, `docs/evaluation-protocol.md`
   - Do: record three demo clips of our own (different screens; one with a deliberately missing step, one with a security claim). Write `labels.json` by watching the clip, without looking at tool output. Videos stay out of Git unless under 5 MB; note where they live. The protocol says who recorded and who labelled each clip.
   - Done when: three clips with labels exist and the protocol is merged. Tasks 14 and 15 add two more.
@@ -90,7 +90,7 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Requirements: 8.1 to 8.3, 1.4
 
 - [ ] 13. First evaluation run and write-up
-  - Owner: Bảo
+  - Owner: Đạt (@phatdat220707), moved from Bảo on 14 Nov (decision D-10)
   - Files: `docs/evaluation-results.md`
   - Do: run `pnpm eval` with real providers on the five clips; record the printed table, provider names, date, and the three worst disagreements with a guess at why.
   - Done when: the document contains only numbers the harness printed. This feeds the Devpost text.
@@ -100,14 +100,14 @@ All tasks are Phạm Quốc Bảo's (@baofrovn), half a day or less. Tasks 1 to 
   - Owner: Đạt (@phatdat220707)
   - Files: `tests/evaluation/clips/clip-4`
   - Do: record a 60 to 120 second demo of the SLEUTH UI in which the presenter says two script lines in the wrong order. Write `clip.json` and `labels.json` following `docs/evaluation-protocol.md` (task 11). Do not run the tool before labelling.
-  - Done when: the clip folder is merged with labels; Bảo reviews the format only.
+  - Done when: the clip folder is merged with labels; Đăng reviews the format only.
   - Requirements: 7.1
 
 - [ ] 15. Record and label one clip with an unscripted line
   - Owner: Đạt (@phatdat220707)
   - Files: `tests/evaluation/clips/clip-5`
   - Do: record a 60 to 120 second demo of the API or database flow in which the presenter adds a sentence that is not in the script. Label it by watching, before running the tool.
-  - Done when: the clip folder is merged with labels; Bảo reviews the format only.
+  - Done when: the clip folder is merged with labels; Đăng reviews the format only.
   - Requirements: 7.1
 
 - [x] 16. Queue claim test on a real Postgres (needs database; after ingestion task 5)
