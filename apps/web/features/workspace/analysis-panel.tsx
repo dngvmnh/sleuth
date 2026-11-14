@@ -22,7 +22,7 @@ function messageOf(error: unknown): string {
 }
 
 const STATUS_TEXT: Record<"queued" | "running", string> = {
-  queued: "Analysis queued. Waiting for a worker to pick it up.",
+  queued: "Queued. Analysis starts within about 10 to 15 minutes.",
   running: "Analysis running.",
 };
 
@@ -92,8 +92,8 @@ export function AnalysisPanel({
               statusText={`${STATUS_TEXT[job.status as "queued" | "running"]} Attempt ${job.attempts} of ${job.maxAttempts}.`}
             />
             <p className="mt-2 text-xs text-muted">
-              The status is checked every 2 seconds. If no worker is running (fixture mode in the web app has
-              none), the job stays queued.
+              The real job state is checked every 2 seconds. You can leave this page and come back; the result
+              is kept. If no worker is running (fixture mode in the web app has none), the job stays queued.
             </p>
           </div>
         ) : null}

@@ -1368,3 +1368,11 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Tests per clip: the harness schema, the script splitting into its own lines, the lines matching `RECORDING.md`, recorded fields all empty or all filled, no `labels.json` before the recording, recorder and labeller being different people, and no secret in `demo.ps1`. Plus one case check each: clip-1 has no outside-proof line and one step per item; clip-2 has no `upload-url` call; clip-3 has exactly line 5 flagged by `needsOutsideProof`. `tests/evaluation`: 5 files, 49 tests passed.
 - `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
 - Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.
+
+## 2026-11-14: WP1, the worker runs by itself (Đăng, ADR 0009)
+
+- `.github/workflows/worker.yml`: `schedule` on, every 10 minutes. `concurrency` kept (no overlap). `ffmpeg` is installed only when the runner lacks it.
+- `analysis-panel.tsx`: a queued job now says "Queued. Analysis starts within about 10 to 15 minutes." The state shown is the real polled state.
+- `apps/worker/src/schedule.test.ts`: 4 tests. The schedule and concurrency group exist, the run is `--once`, and an empty queue returns after one claim.
+- ADR `docs/decisions/0009-worker-schedule.md` records the limits: GitHub may delay a scheduled run, and it pauses schedules after 60 days of no repository activity.
+- Kiro features used: the handover as a spec, steering rules, and the worker-area rules. Checks run: lint, typecheck, test (979 passed, 70 skipped because they need Postgres), test:property (114), check:contracts (14), build, ghost-scan. Nothing failed. The first edit of the workflow failed to match because the comment text differed from what I remembered, so I read the file bytes before editing again.
