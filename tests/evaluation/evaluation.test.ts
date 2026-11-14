@@ -3,7 +3,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it, vi } from "vitest";
-import { formatReport, scoreClip, summarise, type ProducedAnalysis } from "./report";
+import {
+  EVAL_END,
+  EVAL_START,
+  formatEvidenceConfidenceSection,
+  formatReport,
+  overall,
+  scoreClip,
+  summarise,
+  withEvaluationSection,
+  type ClipScore,
+  type ProducedAnalysis,
+} from "./report";
 import { providersFromEnv } from "./real";
 import { analyseWithMock, evaluate, loadClip, main } from "./run";
 import { LabelledFindingSchema, LabelsSchema, type Labels } from "./schema";
@@ -380,4 +391,78 @@ describe("--providers real", () => {
     expect(same.label).toBe("deepgram (nova-3) + gemini (gemini-3.6-flash)");
     expect(p.fallbacks()).toBe(0);
   });
+});
+
+describe("evidence-confidence result block", () => {
+  const score = (right: number, extra: number, missed: number): ClipScore => {
+    const zero = { right: 0, extra: 0, missed: 0 };
+    return {
+      clip: "c",
+      counts: {
+        ghost: { right, extra, missed },
+        phantom_dialogue: zero,
+        cursed_frame: zero,
+        needs_outside_proof: zero,
+        unscripted: zero,
+        reordered: zero,
+      },
+      disagreements: [],
+    };
+  };
+
+  it("totals precision, recall and the false-warning rate from the counts", () => {
+    const o = overall(summarise([score(3, 1, 2), score(1, 0, 0)]));
+    expect(o).toMatchObject({ labelled: 6, found: 5, right: 4 });
+    expect(o.precision).toBeCloseTo(0.8);
+    expect(o.recall).toBeCloseTo(4 / 6);
+    expect(o.falseWarningRate).toBeCloseTo(0.2);
+  });
+
+  it("gives null, not a made-up number, when nothing was found or labelled", () => {
+    const o = overall(summarise([score(0, 0, 0)]));
+    expect(o.precision).toBeNull();
+    expect(o.recall).toBeNull();
+    expect(o.falseWarningRate).toBeNull();
+  });
+
+  it("states the clip count and the provider, and warns that a mock run is not accuracy", () => {
+    const text = formatEvidenceConfidenceSection({ providers: "mock", clipsRun: ["example"], scores: [score(1, 0, 0)], ranOn: "2026-11-14" });
+    expect(text).toContain("Clips run: **1** (example)");
+    expect(text).toContain("providers: **mock**");
+    expect(text).toContain("do not quote it as accuracy");
+    expect(text.startsWith(EVAL_START) && text.endsWith(EVAL_END)).toBe(true);
+  });
+
+  it("replaces its own block and leaves the rest of the document alone", () => {
+    const a = formatEvidenceConfidenceSection({ providers: "real", clipsRun: ["clip-1", "clip-2"], scores: [score(2, 0, 0)], ranOn: "2026-11-20" });
+    const first = withEvaluationSection("# Doc\n\nBefore.\n", a);
+    expect(first).toContain("Before.");
+    const b = formatEvidenceConfidenceSection({ providers: "real", clipsRun: ["clip-1"], scores: [score(1, 1, 0)], ranOn: "2026-11-21" });
+    const second = withEvaluationSection(first, b);
+    expect(second.split(EVAL_START)).toHaveLength(2);
+    expect(second).toContain("Clips run: **1** (clip-1)");
+    expect(second).not.toContain("clip-2");
+    expect(second).toContain("Before.");
+  });
+
+  it("writes the block into a document with --write-doc", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sleuth-eval-doc-"));
+    const doc = join(dir, "doc.md");
+    writeFileSync(doc, "# Doc\n");
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      expect(await main(["--clips", CLIPS, "--results", join(dir, "r"), "--write-doc", "--doc", doc])).toBe(0);
+    } finally {
+      log.mockRestore();
+      afterAllDirs.push(dir);
+    }
+    const { readFileSync } = await import("node:fs");
+    const text = readFileSync(doc, "utf8");
+    expect(text).toContain(EVAL_START);
+    expect(text).toMatch(/Clips run: \*\*\d+\*\*/);
+  });
+});
+const afterAllDirs: string[] = [];
+afterAll(() => {
+  for (const d of afterAllDirs) rmSync(d, { recursive: true, force: true });
 });

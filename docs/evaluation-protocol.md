@@ -88,6 +88,7 @@ For the mock run only: the transcript and the on-screen frames written by hand, 
 pnpm eval                            # mock providers, every ready clip
 pnpm eval -- --clips <folder>        # another folder of clips
 pnpm eval -- --providers real        # Deepgram and Gemini on the recorded videos (task 13)
+pnpm eval -- --write-doc             # also put clips, precision, recall and false-warning rate into docs/evidence-confidence.md
 ```
 
 `--providers real` needs:
@@ -104,13 +105,25 @@ The run prints a table with one row per finding type (plus unscripted and reorde
 - **Mock numbers test our matching code on hand-written inputs.** They say nothing about how well speech to text or the vision model work. Only a run with real providers measures that, and the table header says which providers produced it.
 - A finding counts as right only when both the type and the target (line or checklist item) match.
 
+## Labelling a clip in 20 minutes
+
+For the person who did **not** record the clip. Do this before anyone runs `pnpm eval` on it.
+
+1. Open `tests/evaluation/clips/<name>/clip.json`. Read the numbered script and the checklist once (2 minutes).
+2. Watch the whole video once, without stopping, with sound (the clip is at most 2 minutes).
+3. Watch it again. Keep `clip.json` open and, for each script line, ask: was it said (in any wording)? For each checklist item: was it shown on screen? Write down line and item numbers as you go (6 minutes).
+4. Write `labels.json` next to `clip.json`. Use the five kinds in the table above. One entry per problem. Count from 1. Leave out anything you are unsure about; an empty list is fine (8 minutes).
+5. Add `labelledBy` (your name) and `labelledOn` (today). Commit only `labels.json`, in its own commit, before anyone runs the evaluation.
+6. Run `pnpm eval -- --providers real --clips tests/evaluation/clips` yourself and read the disagreements. Do not edit the labels after you have seen the output, even if you think a label was wrong. Write what you think in the PR instead (4 minutes).
+
+The number printed at the end, and the clip count beside it, go into `docs/evidence-confidence.md` with `pnpm eval -- --write-doc`. Nobody types those numbers by hand.
 ## Clips
 
 | Clip | Case | Recorded by | Labelled by | State |
 |---|---|---|---|---|
 | `example` | Hand-written text only; tests the harness | nobody (no video) | hand-written, not watched | Done. Not counted as one of the five clips. |
-| `clip-1` | Plain demo of one screen | Phạm Quốc Bảo | Phạm Quốc Bảo | To record (evidence-analysis task 11) |
-| `clip-2` | One deliberately missing step | Phạm Quốc Bảo | Phạm Quốc Bảo | To record (task 11) |
-| `clip-3` | One security claim | Phạm Quốc Bảo | Phạm Quốc Bảo | To record (task 11) |
-| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | Đạt | To record (task 14) |
-| `clip-5` | One sentence not in the script | Đăng (@dngvmnh) | Đăng | Prepared, not recorded (task 15) |
+| `clip-1` | Plain demo of one screen | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov (D-10), kit in `clips/clip-1` |
+| `clip-2` | One deliberately missing step | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-2` |
+| `clip-3` | One security claim | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-3` |
+| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller proposed, not yet agreed |
+| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller proposed, not yet agreed |

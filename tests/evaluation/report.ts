@@ -144,6 +144,85 @@ export function summarise(scores: readonly ClipScore[]): Record<Row, RowSummary>
   return out;
 }
 
+export interface Overall {
+  labelled: number;
+  found: number;
+  right: number;
+  precision: number | null;
+  recall: number | null;
+  /** extra / found: the share of what the tool flagged that no person had labelled. */
+  falseWarningRate: number | null;
+}
+
+/** Totals over every row. Nothing is estimated: each number is a sum of `scoreClip` counts. */
+export function overall(summary: Record<Row, RowSummary>): Overall {
+  let right = 0;
+  let extra = 0;
+  let missed = 0;
+  for (const row of ROWS) {
+    right += summary[row].right;
+    extra += summary[row].extra;
+    missed += summary[row].missed;
+  }
+  const found = right + extra;
+  const labelled = right + missed;
+  return {
+    labelled,
+    found,
+    right,
+    precision: found === 0 ? null : right / found,
+    recall: labelled === 0 ? null : right / labelled,
+    falseWarningRate: found === 0 ? null : extra / found,
+  };
+}
+
+export const EVAL_START = "<!-- eval:start -->";
+export const EVAL_END = "<!-- eval:end -->";
+
+const pct = (n: number | null): string => (n === null ? "n/a" : `${Math.round(n * 1000) / 10}%`);
+
+/**
+ * The block that goes into `docs/evidence-confidence.md`: totals, the number of clips and the
+ * provider names. A mock run says so, because it tests the matching code and nothing else.
+ */
+export function formatEvidenceConfidenceSection(input: {
+  providers: string;
+  clipsRun: readonly string[];
+  scores: readonly ClipScore[];
+  ranOn: string;
+}): string {
+  const o = overall(summarise(input.scores));
+  const lines = [
+    EVAL_START,
+    "## Measured result (`pnpm eval`)",
+    "",
+    `Run on ${input.ranOn} with providers: **${input.providers}**. Clips run: **${input.clipsRun.length}** (${input.clipsRun.join(", ") || "none"}).`,
+    "",
+  ];
+  if (input.providers === "mock")
+    lines.push(
+      "This was a mock run: a hand-written transcript and frames went through the real matching code. It tests the plumbing and the matching rules. It says nothing about speech or vision quality, so do not quote it as accuracy.",
+      "",
+    );
+  lines.push(
+    "| Clips | Labelled | Found | Right | Precision | Recall | False-warning rate |",
+    "|---|---|---|---|---|---|---|",
+    `| ${input.clipsRun.length} | ${o.labelled} | ${o.found} | ${o.right} | ${pct(o.precision)} | ${pct(o.recall)} | ${pct(o.falseWarningRate)} |`,
+    "",
+    "Precision is right / found. Recall is right / labelled. The false-warning rate is the share of what was found that nobody labelled. With few clips these numbers move a lot; the clip count is part of the result.",
+    EVAL_END,
+  );
+  return lines.join("\n");
+}
+
+/** Put the block into a document: replace the marked block, or add it at the end. */
+export function withEvaluationSection(doc: string, section: string): string {
+  const start = doc.indexOf(EVAL_START);
+  const end = doc.indexOf(EVAL_END);
+  if (start !== -1 && end > start) return doc.slice(0, start) + section + doc.slice(end + EVAL_END.length);
+  return `${doc.replace(/\s*$/, "")}\n\n${section}\n`;
+}
+
 export function rowName(row: Row): string {
   if (row === "unscripted") return "Unscripted line (spoken, not in the script)";
   if (row === "reordered") return "Reordered line (spoken out of order)";
