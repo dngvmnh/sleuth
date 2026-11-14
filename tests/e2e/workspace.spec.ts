@@ -57,3 +57,15 @@ test("a failed load shows an error and Try again loads the project", async ({ pa
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /ProofPay demo/ })).toBeVisible();
 });
+
+test("a claims-map room selects its line, moves the clock and opens the Lantern", async ({ page }) => {
+  await page.goto("/projects/proofpay-demo");
+  const map = page.getByTestId("claims-map");
+  await expect(map.getByRole("button", { name: /^Line 1,/ })).toBeVisible();
+  await map.getByRole("button", { name: /^Line 3, candidate waiting/ }).click();
+  await expect(page.getByText("11.0 s of 52.0 s")).toBeVisible();
+  await expect(page.locator("section[aria-labelledby='lantern-heading']")).toContainText("Evidence for line 3");
+  await expect(map.getByRole("button", { name: /^Line 3,/ })).toHaveAttribute("aria-pressed", "true");
+  // Checklist rooms follow the same rules, one room per item.
+  await expect(map.getByRole("button", { name: /^Checklist item \d+,/ })).toHaveCount(5);
+});

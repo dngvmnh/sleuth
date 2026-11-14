@@ -24,7 +24,8 @@ import { buildMarkers, formatSeconds, primaryMarkerFor, type TimelineMarker } fr
 import { segmentAtMs } from "../timeline/segment-at";
 import { deriveSegmentStates } from "@sleuth/domain";
 import { Timeline } from "../timeline/timeline";
-import { CoverageBar } from "./coverage-bar";
+import { PanelCorners } from "@/components/ornaments";
+import { buildRooms, ClaimsMap } from "./claims-map";
 import { EditorsPanel } from "./editors-panel";
 import { useProject, type ProjectState } from "./use-project";
 
@@ -54,7 +55,11 @@ function Header({ state }: { state: ProjectState }) {
           Back to dashboard
         </Link>
       </p>
-      <h1 className="mt-2 font-display text-3xl tracking-tight">{project.name}</h1>
+      <p className="eyebrow mt-4">Chapter II · The investigation</p>
+      <h1 className="mt-2 font-display text-4xl tracking-tight text-foreground sm:text-5xl">{project.name}</h1>
+      <p className="mt-1 font-display text-2xl text-muted">
+        A house of <em className="italic text-primary">claims</em>.
+      </p>
       {project.isDemo ? (
         <p className="mt-2">
           <span className="rounded border border-line px-2 py-0.5 text-xs text-muted">
@@ -83,7 +88,8 @@ function Header({ state }: { state: ProjectState }) {
 
 function FindingCounts({ state }: { state: ProjectState }) {
   return (
-    <section aria-labelledby="findings-heading" className="rounded-md border border-line bg-surface p-4">
+    <section aria-labelledby="findings-heading" className="panel p-5">
+      <PanelCorners />
       <h2 id="findings-heading" className="font-display text-lg text-foreground">
         Findings
       </h2>
@@ -143,6 +149,10 @@ function WorkspaceView({ state, initialLine }: { state: ProjectState; initialLin
   );
   const states = useMemo(() => deriveSegmentStates(segments, state.evidence), [segments, state.evidence]);
   const markers = useMemo(() => buildMarkers(segments, state.evidence), [segments, state.evidence]);
+  const rooms = useMemo(
+    () => buildRooms(segments, states, state.detail?.checklist ?? [], state.evidence),
+    [segments, states, state.detail, state.evidence],
+  );
 
   // Opened on a line: move the clock to its evidence once.
   const openedOn = useRef(selection.evidenceId);
@@ -240,10 +250,6 @@ function WorkspaceView({ state, initialLine }: { state: ProjectState; initialLin
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-6 py-10">
       <Header state={state} />
-      <CoverageBar
-        covered={segments.filter((s) => states[s.id] === "covered").length}
-        total={segments.length}
-      />
 
       {state.status === "empty" ? (
         <div role="status" className="rounded-md border border-line bg-surface p-6">
@@ -256,8 +262,18 @@ function WorkspaceView({ state, initialLine }: { state: ProjectState; initialLin
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-6">
-          <section aria-label="Player">
+        <div className="min-w-0 space-y-6">
+          <ClaimsMap
+            rooms={rooms}
+            selectedSegmentId={selection.segmentId}
+            onSelectLine={selectSegment}
+            onAnnounce={setAnnouncement}
+            linesCovered={segments.filter((s) => states[s.id] === "covered").length}
+            linesTotal={segments.length}
+          />
+          {/* The projector: a thin gold frame with corner marks round the player. */}
+          <section aria-label="Player" className="panel border-gold/60 p-3 outline-gold/30" data-testid="projector">
+            <PanelCorners className="text-gold" />
             {playbackUrl ? (
               <PlaybackVideo url={playbackUrl} onElement={setVideoElement} />
             ) : (
