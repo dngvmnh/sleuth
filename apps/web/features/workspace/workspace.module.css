@@ -1,0 +1,25 @@
+/*
+ * Workspace-only motion (brief 007 step 3). Kept in this feature folder so step 1's
+ * globals.css stays untouched.
+ */
+
+/* A room with a candidate waiting breathes a soft glow: 4 s, small, never a flash. */
+.waiting {
+  animation: room-wait 4s ease-in-out infinite;
+}
+
+@keyframes room-wait {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgb(var(--sleuth-fog-a) / 0);
+  }
+  50% {
+    box-shadow: 0 0 10px rgb(var(--sleuth-fog-a) / 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting {
+    animation: none;
+  }
+}

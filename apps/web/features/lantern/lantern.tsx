@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { EvidenceCandidate, Finding, FindingType, ScriptSegment } from "@sleuth/contracts";
 import { FindingBadge } from "@/components/finding-badge";
+import { PanelCorners } from "@/components/ornaments";
 import { Button } from "@/components/ui/button";
 import { formatSeconds } from "../timeline/markers";
 
@@ -90,14 +91,20 @@ export interface LanternProps {
  */
 export function Lantern({ segment, evidence, findings, onPlayPart, actions }: LanternProps) {
   const heading = (text: string) => (
-    <h2 id="lantern-heading" className="font-display text-lg text-foreground">
-      {text}
-    </h2>
+    <>
+      <p className="eyebrow" aria-hidden="true">
+        The lantern
+      </p>
+      <h2 id="lantern-heading" className="mt-1 font-display text-xl text-foreground">
+        {text}
+      </h2>
+    </>
   );
 
   if (!segment) {
     return (
-      <section aria-labelledby="lantern-heading" className="rounded-md border border-line bg-surface p-4">
+      <section aria-labelledby="lantern-heading" className="panel p-5" data-testid="lantern-panel">
+        <PanelCorners />
         {heading("Evidence Lantern")}
         <p className="mt-2 text-sm text-muted">
           Select a marker on the timeline or a line of the script to see its evidence here.
@@ -111,7 +118,8 @@ export function Lantern({ segment, evidence, findings, onPlayPart, actions }: La
 
   if (!evidence) {
     return (
-      <section aria-labelledby="lantern-heading" className="rounded-md border border-line bg-surface p-4">
+      <section aria-labelledby="lantern-heading" className="panel p-5" data-testid="lantern-panel">
+        <PanelCorners />
         {heading(`Line ${line}: no evidence`)}
         <p className="mt-2 text-sm text-muted">{segment.text}</p>
         <div className="mt-3">
@@ -138,7 +146,8 @@ export function Lantern({ segment, evidence, findings, onPlayPart, actions }: La
   const others = lineFindings.filter((f) => f.id !== own?.id);
 
   return (
-    <section aria-labelledby="lantern-heading" className="rounded-md border border-line bg-surface p-4">
+    <section aria-labelledby="lantern-heading" className="panel p-5" data-testid="lantern-panel">
+        <PanelCorners />
       {heading(`Evidence for line ${line}`)}
       <p className="mt-2 text-sm text-muted">{segment.text}</p>
 

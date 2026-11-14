@@ -9,6 +9,9 @@ const expect = baseExpect.configure({ timeout: 30_000 });
 
 const panel = (page: Page) => page.locator("section[aria-labelledby='analysis-heading']");
 
+// Script, Checklist, Upload and Analysis are tabs: open the one a step needs.
+const openTab = (page: Page, name: string) => page.getByRole("tab", { name, exact: true }).click();
+
 /**
  * Each test acts as its own fixture user. The daily analysis limit (5 per user per UTC day)
  * is counted per user for the life of the dev server, and Playwright reuses a running server
@@ -25,6 +28,7 @@ async function openCopy(page: Page, request: APIRequestContext): Promise<{ id: s
   expect(res.status()).toBe(201);
   const id = ((await res.json()) as { project: { id: string } }).project.id;
   await page.goto(`/projects/${id}`);
+  await openTab(page, "Analysis");
   await expect(panel(page).getByRole("button", { name: "Run analysis" })).toBeVisible();
   return { id, headers };
 }
@@ -83,6 +87,7 @@ test("leaving the workspace stops the polling", async ({ page, request }) => {
 
 test("the demo cannot start an analysis", async ({ page }) => {
   await page.goto("/projects/proofpay-demo");
+  await openTab(page, "Analysis");
   await expect(panel(page)).toContainText("The demo is read-only. Make an editable copy to run an analysis.");
   await expect(panel(page).getByRole("button", { name: "Run analysis" })).toHaveCount(0);
 });

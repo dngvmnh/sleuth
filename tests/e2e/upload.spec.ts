@@ -10,6 +10,9 @@ const expect = baseExpect.configure({ timeout: 30_000 });
 
 const line = (page: Page, n: number) => page.getByRole("button", { name: new RegExp(`^${n}\\.`) });
 const upload = (page: Page) => page.locator("section[aria-labelledby='upload-heading']");
+
+// Script, Checklist, Upload and Analysis are tabs: open the one a step needs.
+const openTab = (page: Page, name: string) => page.getByRole("tab", { name, exact: true }).click();
 const fakeVideo = (name: string) => ({ name, mimeType: "video/mp4", buffer: Buffer.from("not really a video") });
 
 async function stubVideoLength(page: Page, seconds: number) {
@@ -46,6 +49,7 @@ async function openCopy(page: Page, request: APIRequestContext): Promise<string>
 test("a 200-second video is refused with the limit message before anything is sent", async ({ page, request }) => {
   await stubVideoLength(page, 200);
   await openCopy(page, request);
+  await openTab(page, "Upload");
   let asked = false;
   page.on("request", (r) => {
     if (r.url().includes("/upload-url")) asked = true;
@@ -66,6 +70,7 @@ test("a failed upload keeps the script and checklist and Try again finishes it",
   const field = page.getByLabel("Script text. Each sentence becomes one numbered line.");
   const draft = `${await field.inputValue()} One more line I am still writing.`;
   await field.fill(draft);
+  await openTab(page, "Checklist");
   await page.getByLabel("New item").fill("Show the payment screen");
   await page.getByRole("button", { name: "Add item" }).click();
 
@@ -76,6 +81,7 @@ test("a failed upload keeps the script and checklist and Try again finishes it",
       body: JSON.stringify({ error: { code: "storage_unavailable", message: "Storage is not answering." } }),
     }),
   );
+  await openTab(page, "Upload");
   await upload(page).getByLabel("Choose a video file").setInputFiles(fakeVideo("take-2.mp4"));
   const alert = upload(page).getByRole("alert");
   await expect(alert).toContainText("Asking the server for an upload address failed.");
@@ -83,7 +89,9 @@ test("a failed upload keeps the script and checklist and Try again finishes it",
 
   // Nothing the user entered was lost.
   await expect(field).toHaveValue(draft);
+  await openTab(page, "Checklist");
   await expect(page.getByRole("list", { name: "Checklist items" })).toContainText("Show the payment screen");
+  await openTab(page, "Upload");
 
   await page.unroute("**/assets/upload-url");
   const created = page.waitForResponse((r) => r.url().includes("/upload-url") && r.request().method() === "POST");
@@ -104,6 +112,7 @@ test("a failed upload keeps the script and checklist and Try again finishes it",
 test("the demo has no file picker", async ({ page }) => {
   await page.goto("/projects/proofpay-demo");
   await expect(line(page, 1)).toBeVisible();
+  await openTab(page, "Upload");
   await expect(upload(page)).toContainText("The demo is read-only. Make an editable copy to upload a video.");
   await expect(upload(page).getByLabel("Choose a video file")).toHaveCount(0);
 });

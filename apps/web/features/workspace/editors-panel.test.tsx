@@ -171,6 +171,41 @@ describe("EditorsPanel", () => {
     );
     expect(screen.queryByRole("button", { name: "Make an editable copy" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("textbox")[0]).not.toHaveAttribute("readonly");
-    expect(screen.getByRole("button", { name: "Save checklist" })).toBeInTheDocument();
+    // The checklist lives in its own tab; its panel stays mounted while hidden.
+    expect(screen.getByRole("button", { name: "Save checklist", hidden: true })).toBeInTheDocument();
+  });
+
+  it("shows Script, Checklist, Upload and Analysis as tabs that keep a draft between visits", async () => {
+    const user = userEvent.setup();
+    render(
+      <EditorsPanel
+        state={stateWith({ detail: { ...detail, project: { ...detail.project, isDemo: false } } })}
+        navigate={vi.fn()}
+      />,
+    );
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(["Script", "Checklist", "Upload", "Analysis"]);
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tablist", { name: "Project tools" })).toBeInTheDocument();
+    // Only the open tab is a tab stop; its panel is labelled by it.
+    expect(tabs.map((t) => t.tabIndex)).toEqual([0, -1, -1, -1]);
+    const panel = screen.getByRole("tabpanel");
+    expect(panel).toHaveAccessibleName("Script");
+
+    const field = screen.getByLabelText("Script text. Each sentence becomes one numbered line.");
+    await user.clear(field);
+    await user.type(field, "A draft line.");
+
+    // Arrows move and open; Home and End jump.
+    tabs[0]?.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(tabs[1]).toHaveFocus();
+    expect(tabs[1]).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Save checklist" })).toBeVisible();
+    await user.keyboard("{End}");
+    expect(tabs[3]).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{ArrowRight}");
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByLabelText("Script text. Each sentence becomes one numbered line.")).toHaveValue("A draft line.");
   });
 });
