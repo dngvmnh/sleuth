@@ -222,4 +222,23 @@ describe("AnalysisPanel", () => {
     expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
     expect(screen.getByText(/The demo is read-only/)).toBeInTheDocument();
   });
-});
+
+  it("shows the free-tier limits before any analysis is started", () => {
+    show();
+    expect(screen.getByTestId("analysis-limits")).toHaveTextContent("50 MB");
+    expect(screen.getByTestId("analysis-limits")).toHaveTextContent("5 by default");
+  });
+
+  it("warns when a job has been queued for more than 30 minutes, and not before", async () => {
+    const fresh = new Date(Date.now() - 10 * 60_000).toISOString();
+    const old = new Date(Date.now() - 31 * 60_000).toISOString();
+    const startAnalysis = vi.fn(async () => job("j1", "queued", { createdAt: fresh }));
+    const fetchJob = vi.fn(async () => job("j1", "queued", { createdAt: old }));
+    show({ startAnalysis, fetchJob });
+    fireEvent.click(screen.getByRole("button", { name: "Run analysis" }));
+    await flush();
+    expect(screen.queryByTestId("job-stalled")).toBeNull();
+    await advance(2000);
+    expect(screen.getByTestId("job-stalled")).toHaveTextContent("waited more than 30 minutes");
+    expect(screen.getByTestId("job-processing")).toHaveTextContent("Queued.");
+  });});
