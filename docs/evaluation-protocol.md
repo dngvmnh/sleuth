@@ -10,6 +10,11 @@ SLEUTH is only as good as the numbers we can show. This page says how the clips 
 4. **Videos stay out of Git** (`*.mp4` is ignored) unless a file is under 5 MB. `clip.json` says where the copy lives and its SHA-256, so anyone can check they have the same file.
 5. **Length:** 60 to 120 seconds, English, one video per clip. The product limit is 180 seconds.
 6. **Nothing secret on screen or in the audio.**
+7. **Voice.** The narration may be the recorder's own voice or a disclosed text-to-speech voice (decided by Đăng, 14 November, #66). Never a cloned or imitated real person's voice. The clip table names the voice of every clip.
+
+### Limit: a synthetic voice makes the results optimistic
+
+Clips 1 to 3 are narrated by a text-to-speech voice (Microsoft Zira). A clean synthetic voice, with even pace, clear pauses and no background noise, is easier for speech recognition than a person talking during a real demo. So every result that depends on the transcript (Phantom Dialogue, reordered and unscripted lines, and the time windows used to match frames) is likely **better than it would be on real demos**. Every place that quotes `pnpm eval` numbers says how many clips used a synthetic voice, beside the numbers.
 
 ## What goes in a clip folder
 
@@ -119,13 +124,13 @@ For the person who did **not** record the clip. Do this before anyone runs `pnpm
 The number printed at the end, and the clip count beside it, go into `docs/evidence-confidence.md` with `pnpm eval -- --write-doc`. Nobody types those numbers by hand.
 ## Clips
 
-| Clip | Case | Recorded by | Labelled by | State |
-|---|---|---|---|---|
-| `example` | Hand-written text only; tests the harness | nobody (no video) | hand-written, not watched | Done. Not counted as one of the five clips. |
-| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov (D-10), kit in `clips/clip-1` |
-| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-2` |
-| `clip-3` | One security claim | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-3` |
-| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller agreed (#66) |
-| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller agreed (#66) |
+| Clip | Case | Recorded by | Voice | Labelled by | State |
+|---|---|---|---|---|---|
+| `example` | Hand-written text only; tests the harness | nobody (no video) | none (no audio) | hand-written, not watched | Done. Not counted as one of the five clips. |
+| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (90 s), checked against the kit in #58; to label |
+| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (74 s), checked in #58; to label |
+| `clip-3` | One security claim | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Phạm Quốc Bảo (@baofrovn) | Recorded 14 Nov (85 s), checked in #58; to label |
+| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | not recorded yet | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller agreed (#66) |
+| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | not recorded yet | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller agreed (#66) |
 
 Recorder and labeller are never the same person. Phạm Quốc Bảo (@baofrovn) labels all five clips, including clips 4 and 5, and records none of them (#58, #66). Labels are due 2 days after each drive link: clips 1 to 3 by Fri 20 Nov, clips 4 and 5 by Thu 26 Nov (SGT).

@@ -1559,3 +1559,11 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Added the rule in the doc: Phạm Quốc Bảo labels all five clips and records none.
 - Found, not changed: `tests/evaluation/clips/clip-5/clip.json` still says `recordedBy` Đăng, while #66 says Đạt records all five. There is no `clip-4` folder yet. Both are in the clip kits, which are not mine to edit.
 - Docs only. No labels written yet: no clip has been recorded (`durationMs` is empty in clips 1, 2, 3 and 5).
+
+## 2026-11-14: synthetic voice in the evaluation clips (Phạm Quốc Bảo, #66)
+
+- Đăng decided on 14 Nov (#58, #66) that the evaluation clips may use a text-to-speech voice. Đạt's clips 1 to 3 use Microsoft Zira.
+- `docs/evaluation-protocol.md`: rule 7 (own voice or disclosed synthetic voice, never a cloned one), a "Voice" column in the clip table, and the limit that a clean synthetic voice makes transcript-based results optimistic for real demos.
+- Clip kits 1, 2, 3 and 5 (`RECORDING.md`): "your own voice" now allows a disclosed text-to-speech voice.
+- Clip facts checked with `ffprobe` on Đạt's drafts: clip 1 90.0 s, clip 2 74.3 s, clip 3 84.6 s, all H.264/AAC 1280x720. Files are 84 to 102 MB, so they stay out of Git. `finalise.ps1` (duration, hash, link) is still Đạt's step.
+- Docs only.
