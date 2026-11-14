@@ -1386,6 +1386,12 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `apps/worker/src/schedule.test.ts`: 4 tests. The schedule and concurrency group exist, the run is `--once`, and an empty queue returns after one claim.
 - ADR `docs/decisions/0009-worker-schedule.md` records the limits: GitHub may delay a scheduled run, and it pauses schedules after 60 days of no repository activity.
 - Kiro features used: the handover as a spec, steering rules, and the worker-area rules. Checks run: lint, typecheck, test (979 passed, 70 skipped because they need Postgres), test:property (114), check:contracts (14), build, ghost-scan. Nothing failed. The first edit of the workflow failed to match because the comment text differed from what I remembered, so I read the file bytes before editing again.
+## 2026-11-14: WP4 part 1, tokens in components, 404 and error pages (Đăng, brief 006 items 2, 3 and 7)
+
+- `workspace-flow.test.tsx`: the shared-clock test waits for the update (`waitFor`). 20 runs in a row: 20 passed.
+- Outline button and every text field use `border-line-strong` (3:1 for lines that carry meaning). Decorative lines keep `border-line`.
+- `FindingBadge` shows the finding's icon (a different shape per type) beside the spooky and plain names.
+- New `app/not-found.tsx` and `app/error.tsx` (retry, link home, never prints the error text). `error-pages.test.tsx`: 7 tests. A Playwright axe check of the 404 page: 11 of 11 in `a11y.spec.ts` passed.
 
 ## 2026-11-14 afternoon: first real job on production, guest mode (results reported by Đăng)
 

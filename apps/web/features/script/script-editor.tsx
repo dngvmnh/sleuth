@@ -104,7 +104,7 @@ export function ScriptEditor({ text, readOnly, onSave }: ScriptEditorProps) {
           setDraft(e.currentTarget.value);
           setResult(undefined);
         }}
-        className="mt-1 w-full rounded-md border border-line bg-background p-2 text-sm text-foreground"
+        className="mt-1 w-full rounded-md border border-line-strong bg-background p-2 text-sm text-foreground"
       />
       {readOnly ? null : (
         <div className="mt-2 flex flex-wrap items-center gap-3">

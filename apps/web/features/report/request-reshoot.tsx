@@ -58,7 +58,7 @@ export function RequestReshoot({
         rows={2}
         maxLength={1000}
         onChange={(e) => setNote(e.currentTarget.value)}
-        className="mt-1 w-full rounded-md border border-line bg-background p-2 text-sm text-foreground"
+        className="mt-1 w-full rounded-md border border-line-strong bg-background p-2 text-sm text-foreground"
       />
       <div className="mt-1 flex flex-wrap gap-2">
         <Button

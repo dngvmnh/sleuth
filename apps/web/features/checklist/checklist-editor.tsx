@@ -133,7 +133,7 @@ export function ChecklistEditor({ items, readOnly, onSave }: ChecklistEditorProp
                     add();
                   }
                 }}
-                className="mt-1 rounded-md border border-line bg-background p-2 text-sm text-foreground"
+                className="mt-1 rounded-md border border-line-strong bg-background p-2 text-sm text-foreground"
               />
             </label>
             <Button
