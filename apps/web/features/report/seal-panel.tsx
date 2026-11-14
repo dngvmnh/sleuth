@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Seal, SealBlocker } from "@sleuth/contracts";
 import { LiveRegion } from "@/components/live-region";
+import { LockIcon, WaxSealIcon } from "@/components/icons";
+import { PanelCorners } from "@/components/ornaments";
 import { Button } from "@/components/ui/button";
+import styles from "./report.module.css";
 import { SealConfirmation } from "./seal-confirmation";
 import type { SealResult } from "./use-report";
 
@@ -18,6 +21,15 @@ export const BLOCKER_TEXT: Record<SealBlocker, string> = {
     "Some checklist items have no usable evidence (Ghost, no visual evidence). Find evidence, ask for a reshoot, or change the checklist.",
   job_running: "An analysis is still queued or running. Wait for it to finish.",
   no_analysis: "This project has no analysis yet. Run an analysis in the workspace.",
+};
+
+/** What to do about each locked door, in plain words. The link name stays "Open the workspace". */
+export const BLOCKER_FIX: Record<SealBlocker, string> = {
+  undecided_candidates: "Fix it in the Evidence Lantern.",
+  stale_evidence: "Fix it in the script and timeline.",
+  uncovered_items: "Fix it in the checklist or with a reshoot.",
+  job_running: "Nothing to do but wait.",
+  no_analysis: "Fix it in the Analysis tab.",
 };
 
 export const NOTE_MAX = 1000;
@@ -94,10 +106,21 @@ export function SealPanel({ projectId, seal, blockers, canManage, onSeal }: Seal
   };
 
   return (
-    <section aria-labelledby="seal-heading" className="rounded-md border border-line bg-surface p-4 print:hidden">
-      <h2 id="seal-heading" className="font-display text-xl text-foreground">
-        Final Seal
-      </h2>
+    <section aria-labelledby="seal-heading" className="panel p-5 print:hidden">
+      <PanelCorners />
+      <div className={styles.sealHead}>
+        <span className={`${styles.sealMark} ${activeSeal ? "" : styles.sealMarkMuted}`}>
+          <WaxSealIcon size={56} />
+        </span>
+        <div>
+          <p className="eyebrow" aria-hidden="true">
+            The seal
+          </p>
+          <h2 id="seal-heading" className="mt-1 font-display text-2xl text-foreground">
+            Final Seal
+          </h2>
+        </div>
+      </div>
 
       {justSealed ? <SealConfirmation ref={confirmationRef} seal={justSealed} /> : null}
 
@@ -116,16 +139,22 @@ export function SealPanel({ projectId, seal, blockers, canManage, onSeal }: Seal
               <p id={blockersId} className="text-sm font-medium text-foreground">
                 The Final Seal is not available yet:
               </p>
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted" aria-label="What blocks the Final Seal">
+              <ul className={styles.doors} aria-label="What blocks the Final Seal">
                 {blockers.map((b) => (
-                  <li key={b} data-blocker={b}>
-                    <span id={`${blockersId}-${b}`}>{BLOCKER_TEXT[b]}</span>{" "}
-                    {b !== "job_running" ? (
-                      // Underlined, not colour only: it sits inside a sentence (axe link-in-text-block).
-                      <Link className="text-primary-strong underline underline-offset-4" href={workspace}>
-                        Open the workspace
-                      </Link>
-                    ) : null}
+                  <li key={b} data-blocker={b} className={styles.door}>
+                    <span className={styles.doorIcon}>
+                      <LockIcon size={22} />
+                    </span>
+                    <span className={styles.doorTag}>Locked door</span>
+                    <span className="text-sm text-muted">
+                      <span id={`${blockersId}-${b}`}>{BLOCKER_TEXT[b]}</span> {BLOCKER_FIX[b]}{" "}
+                      {b !== "job_running" ? (
+                        // Underlined, not colour only: it sits inside a sentence (axe link-in-text-block).
+                        <Link className="text-primary-strong underline underline-offset-4" href={workspace}>
+                          Open the workspace
+                        </Link>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
