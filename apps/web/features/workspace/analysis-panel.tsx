@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EvidenceCandidate, Finding, ProcessingJob } from "@sleuth/contracts";
 import { ProcessingState } from "@/components/state-panel";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,18 @@ export function AnalysisPanel({
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | undefined>(undefined);
   const active = job !== null && (job.status === "queued" || job.status === "running");
+  // The clock is read in a timer callback, not during render, so render stays pure.
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const tick = () => setNow(Date.now());
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 15_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [active, job]);
 
   const start = async () => {
     if (starting || active || readOnly) return;
@@ -105,7 +117,7 @@ export function AnalysisPanel({
             </p>
           </div>
         ) : null}
-        {job && job.status === "queued" && Date.now() - Date.parse(job.createdAt) > STALLED_AFTER_MS ? (
+        {job && job.status === "queued" && now > 0 && now - Date.parse(job.createdAt) > STALLED_AFTER_MS ? (
           <p role="alert" data-testid="job-stalled" className="mt-3 text-sm text-warn">
             This job has waited more than 30 minutes. The worker may be late or stopped. You can keep waiting, or
             come back later: the job is kept. If it is still queued after an hour, tell the team.
