@@ -1393,3 +1393,8 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `scripts/prod-e2e.ts` in guest mode, 04:14 to 04:17 UTC, `main` at `bcba5e0`. The queue check showed only our job. Worker runs 43555627213 and 43555808634 both succeeded (`speechOnly=1`, 2 transcript segments, 0 evidence, 3 findings). The script passed steps 1 to 6, 8, 9 and 10: job succeeded after 1 attempt, 2 Ghost findings, speech-only findings 2 of 2, seal 409 `uncovered_items`, `report.csv` 30 rows. Step 7 was SKIP because speech only gives no candidate to review. Step 8 is weak, because the edited line had no evidence. Both `zz-test-e2e-*` projects were deleted.
 - So the first real job is proven on production in speech-only mode, and no frame reached Gemini. Steps 7 and 8 still need the team-account run with a clip that produces evidence (#45).
 - `board.md` section 4 and `cleanup.md` are updated: six Storage folders are left to delete by hand.
+
+## 2026-11-14: WP4 part 4, coverage bar (Đăng, brief 006 item 5, first half)
+
+- `CoverageBar` above the workspace: 'n of m script lines covered', a progressbar with its number, and the words 'a person confirmed the evidence' (never 'confirmed' as the label). 3 unit tests.
+- Not done: the Script, Checklist, Upload and Analysis tabs. The browser specs expect the four panels visible together; hiding three of them would break them, and the gain is small. Left for a human decision.

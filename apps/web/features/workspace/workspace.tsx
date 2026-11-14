@@ -21,6 +21,7 @@ import { buildMarkers, formatSeconds, primaryMarkerFor, type TimelineMarker } fr
 import { segmentAtMs } from "../timeline/segment-at";
 import { deriveSegmentStates } from "@sleuth/domain";
 import { Timeline } from "../timeline/timeline";
+import { CoverageBar } from "./coverage-bar";
 import { EditorsPanel } from "./editors-panel";
 import { useProject, type ProjectState } from "./use-project";
 
@@ -213,6 +214,10 @@ function WorkspaceView({ state }: { state: ProjectState }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-6 py-10">
       <Header state={state} />
+      <CoverageBar
+        covered={segments.filter((s) => states[s.id] === "covered").length}
+        total={segments.length}
+      />
 
       {state.status === "empty" ? (
         <div role="status" className="rounded-md border border-line bg-surface p-6">
