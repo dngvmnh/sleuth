@@ -259,3 +259,22 @@ describe("Workspace flow: one clock for player, timeline, script and Lantern", (
     await waitFor(() => expect(screen.getByTestId("playhead")).toHaveStyle({ left: "50%" }));
   });
 });
+
+describe("Workspace opened on a line (?line=)", () => {
+  it("selects that line, opens its evidence and moves the clock there", async () => {
+    const { client } = clientFor(routes);
+    render(<Workspace projectId="p1" client={client} initialLine="s3" />);
+    await screen.findByRole("heading", { level: 1, name: "Test project" });
+    expect(line(3)).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("heading", { name: "Evidence for line 3" })).toBeInTheDocument();
+    await waitFor(() => expect(clockText()).toBe("8.0 s of 20.0 s"));
+  });
+
+  it("ignores an unknown line", async () => {
+    const { client } = clientFor(routes);
+    render(<Workspace projectId="p1" client={client} initialLine="nope" />);
+    await screen.findByRole("heading", { level: 1, name: "Test project" });
+    expect(clockText()).toBe("0.0 s of 20.0 s");
+    expect(line(1)).toHaveAttribute("aria-pressed", "false");
+  });
+});

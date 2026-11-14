@@ -12,7 +12,7 @@ import {
   type GuestAuth,
   type GuestAuthPort,
 } from "@/lib/guest-auth";
-import { ProjectList } from "./project-list";
+import { initialsOf, ProjectList } from "./project-list";
 import { formatLastChange } from "./use-dashboard";
 
 const demo: Project = {
@@ -176,7 +176,8 @@ describe("ProjectList", () => {
       });
     });
     render(<ProjectList client={client} />);
-    expect(await screen.findByText(/2 open findings/)).toBeInTheDocument();
+    // The number is a big numeral beside its caption; together they read "2 open findings".
+    await waitFor(() => expect(screen.getByTestId("open-count")).toHaveTextContent("2 open findings"));
   });
 
   it("shows no number when the findings request fails", async () => {
@@ -341,5 +342,14 @@ describe("formatLastChange", () => {
 
   it("says unknown for a value that is not a date", () => {
     expect(formatLastChange("not a date")).toBe("unknown");
+  });
+});
+
+describe("film poster initials", () => {
+  it("takes up to two initials and skips small words", () => {
+    expect(initialsOf("Copy of ProofPay demo")).toBe("CP");
+    expect(initialsOf("ProofPay demo (public example)")).toBe("PD");
+    expect(initialsOf("the")).toBe("T");
+    expect(initialsOf("   ")).toBe("?");
   });
 });
