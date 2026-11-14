@@ -23,7 +23,9 @@
  *
  *   After the job: "speech-only findings: n of total" shows which mode really ran.
  *
- * The clip must be our own footage. Guest mode: scripts/make-check-clip.ps1. Team-account run (steps 7 and 8 need real evidence):`n * scripts/make-evidence-clip.ps1, whose script and checklist are in scripts/evidence-clip.json. The worker is NOT
+ * The clip must be our own footage. Guest mode: scripts/make-check-clip.ps1. Team-account run
+ * (steps 7 and 8 need real evidence): scripts/make-evidence-clip.ps1, whose script and checklist
+ * are in scripts/evidence-clip.json. The worker is NOT
  * started here: after "analysis queued" the script waits (default 10 minutes, PROD_E2E_WAIT_MIN
  * up to 30) while you run the read-only queue check and start the worker workflow by hand.
  * It makes one project named zz-test-e2e-<random>; delete it afterwards by the printed id.
