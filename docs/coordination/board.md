@@ -31,7 +31,7 @@ Total 56 of 60.
 | Person | Done since 13 Nov | Now | Blocked by | Blocking |
 |---|---|---|---|---|
 | Đăng | #29 to #38 merged (all his). Guest-flow check 14 of 14 on sleuth-dev against #27's code. prod-e2e rehearsal on dev in guest mode: 9 PASS, 1 SKIP; speech-only findings 2 of 2. Keep-alive green. | Live production checks (his shell); recording kit for clips 1 to 3; brief 006 for Đạt. | #27 deploy, for the guest-flow check only. | Đạt's revamp is unblocked (theme on `main`). |
-| Đạt | #26 merged. #27 open. | #27: merge `main`, re-run the browser specs. Then brief 006 (UI revamp). | Nobody. | Live guest sign-in (#27). Real video player. Clips 4 and 5 (ea 14, 15). |
+| Đạt | #26 merged. #27 open. | #27: merge `main`, re-run the browser specs. Then brief 006 (UI revamp). | Nobody. | Live guest sign-in (#27). Real video player. Clips 1 to 5 (ea 11, 14, 15): Đạt records all five, clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Bảo labels them; the recorder never labels. |
 | Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) merged 14 Nov; review after the fact requested. | Unknown; no reply. | ea 11 (protocol, labels for clips 1 to 3), ea 13 (first evaluation). No accuracy numbers until these run. |
 
 ## 4. Critical path: one real run on production

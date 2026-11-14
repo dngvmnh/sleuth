@@ -1499,3 +1499,8 @@ Branch `fix/e2e-flaky-analysis-seal` from `main` `729ce21`. Đăng's comment on 
 Also seen: a full run with the default parallel workers (8 on this machine) failed 40 of 73, mostly test timeouts on the one dev server. The specs are written for `--workers=1`, and `playwright.config.ts` only sets that in CI. That is a config question, not part of this fix.
 
 Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under the condition that broke it before.
+## 2026-11-14: final production check script (Đăng)
+
+- New `scripts/final-prod-check.ps1` for Thu 3 Dec. It runs `prod-smoke.ts` (parts A and B), then `prod-e2e.ts` in team-account mode with the evidence clip, building it if missing. It shows the worker dispatch word, with the queue-check instructions if the word is not `sent`. A `finally` block clears every environment variable it set. It ends with the test project ids, the select-first SQL and the Storage folders. The Project URL and publishable key come from parameters or a prompt, never from `.env.local`. The team password uses `Read-Host -AsSecureString` and the BSTR is freed. `-SmokeOnly` skips the e2e.
+- `scripts/final-prod-check.test.ts`: 7 static checks of the script (parameters, no `.env.local`, URL shape, secure password, every variable cleared, queue-check advice, cleanup output). CI has no Windows PowerShell, so the tests read the script.
+- Run on 14 Nov with `-SmokeOnly` against the live site: ALL CHECKS PASSED, 14 in part A and 18 in part B. The public URL and publishable key were read from the live page's JS and never printed. Test project `prj-0mwg38n3s0001-2988bc56` (`zz-test-fuwzmg`) is left for Đăng to delete, with its 4 KB Storage file. The team-account part was not run; it needs Đăng at the keyboard.
