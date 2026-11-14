@@ -219,7 +219,10 @@ export function analyse(input: EngineInput): EngineOutput {
     findings.push(
       finding(input, "ghost", c.id, {
         checklistItemId: c.id,
-        ...explainGhost({ lineExists: checklistHasLine.has(c.id) }),
+        ...explainGhost({
+          lineExists: checklistHasLine.has(c.id),
+          ...(input.speechOnly ? { speechOnly: true } : {}),
+        }),
       }),
     );
   }

@@ -53,6 +53,12 @@ const EnvSchema = z.object({
   WORKER_POLL_MS: z.coerce.number().int().positive().default(2000),
   WORKER_HEARTBEAT_MS: z.coerce.number().int().positive().default(10000),
   WORKER_STALE_SECONDS: z.coerce.number().int().positive().default(60),
+  /**
+   * A `--once` run takes no new job after this long (12 minutes). One worst-case job can need
+   * about 6 minutes of Deepgram calls and 16 of Gemini calls with retries, and the scheduled
+   * workflow stops at 20 minutes, so a late start would be cut off and lose an attempt.
+   */
+  WORKER_ONCE_BUDGET_MS: z.coerce.number().int().positive().default(720_000),
   /** Anonymous-project purge (ADR 0008): how often, and after how many days. */
   RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
   ANONYMOUS_RETENTION_DAYS: z.coerce.number().int().positive().default(7),

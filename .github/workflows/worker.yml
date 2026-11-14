@@ -7,8 +7,10 @@
 # Decision D-4: visitors' videos go to the transcription provider only, never as frames to
 # Gemini. The worker enforces it: with VIDEO_ANALYSIS_PROVIDER=gemini, frames go out only for
 # owners listed in VIDEO_ANALYSIS_OWNER_IDS (a repository variable; our own team accounts only).
-# Unset or empty means every job is speech only. The schedule is still OFF until Đăng turns it on:
-# remove the "#" before "schedule" and "cron" below.
+# Unset or empty means every job is speech only. The schedule runs every 10 minutes (ADR 0009), and
+# the web app also starts this workflow when a job is queued (ADR 0009 amendment, 14 Nov).
+# A run takes no new job after WORKER_ONCE_BUDGET_MS (12 minutes), so a job is not cut off by the
+# 20-minute timeout.
 name: worker
 
 on:

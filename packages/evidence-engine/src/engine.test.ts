@@ -124,6 +124,19 @@ describe("speech-only analysis (decision D-4)", () => {
     expect(out.evidence.every((e) => e.status !== "confirmed")).toBe(true);
   });
 
+  it("does not claim a frame search failed when no frame was checked", () => {
+    const ghost = analyse(input).findings.find((f) => f.type === "ghost");
+    expect(ghost?.notFound).toBe(
+      "No frames were checked, so nothing on screen could be found for this item.",
+    );
+    expect(ghost?.found.length).toBeGreaterThan(0);
+    expect(ghost?.limits.startsWith(SPEECH_ONLY_NOTE)).toBe(true);
+    const normal = analyse({ ...input, speechOnly: false }).findings.find(
+      (f) => f.type === "ghost",
+    );
+    expect(normal?.notFound).toBe("No frame near a matching spoken line shows it.");
+  });
+
   it("says on every finding and candidate that it was checked by speech only", () => {
     const out = analyse(input);
     for (const f of out.findings) expect(f.limits.startsWith(SPEECH_ONLY_NOTE)).toBe(true);

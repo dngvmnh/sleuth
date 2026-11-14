@@ -117,11 +117,12 @@ For the person who did **not** record the clip. Do this before anyone runs `pnpm
 1. Open `tests/evaluation/clips/<name>/clip.json`. Read the numbered script and the checklist once (2 minutes).
 2. Watch the whole video once, without stopping, with sound (the clip is at most 2 minutes).
 3. Watch it again. Keep `clip.json` open and, for each script line, ask: was it said (in any wording)? For each checklist item: was it shown on screen? Write down line and item numbers as you go (6 minutes).
-4. Write `labels.json` next to `clip.json`. Use the five kinds in the table above. One entry per problem. Count from 1. Leave out anything you are unsure about; an empty list is fine (8 minutes).
+4. Write `labels.json` next to `clip.json`. Use the four finding types in the table above, plus `unscripted` and `reordered`. One entry per problem. Count from 1. Leave out anything you are unsure about; an empty list is fine (8 minutes).
 5. Add `labelledBy` (your name) and `labelledOn` (today). Commit only `labels.json`, in its own commit, before anyone runs the evaluation.
-6. Run `pnpm eval -- --providers real --clips tests/evaluation/clips` yourself and read the disagreements. Do not edit the labels after you have seen the output, even if you think a label was wrong. Write what you think in the PR instead (4 minutes).
+6. Do not run `pnpm eval -- --providers real` per clip. The real run happens once, on all five labelled clips (evidence-analysis 13, #67), because the Deepgram credit is used once. After that run, do not edit the labels, even if you think a label was wrong. Write what you think in the results write-up instead.
 
 The number printed at the end, and the clip count beside it, go into `docs/evidence-confidence.md` with `pnpm eval -- --write-doc`. Nobody types those numbers by hand.
+
 ## Clips
 
 | Clip | Case | Recorded by | Voice | Labelled by | State |
