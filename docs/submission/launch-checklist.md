@@ -19,7 +19,7 @@
 | 13 | Blog post (`blog.md`) and social posts (`social.md`) | After submit, by Sat 5 Dec | Open | Open |
 | 14 | Submit (internal deadline) | Fri 4 Dec 18:00 | Đăng | Open |
 | 15 | Official deadline | Sat 5 Dec 06:00 | — | — |
-| 16 | Retake the screenshots on production at 1440 and 375 px: the dashboard hero, the findings cabinet, the claims map with the Lantern open, and "The final seal" both draft and sealed. Then swap the links in `README.md`, `devpost.md` and `blog.md` (issue #81) | Before item 12 | Đăng | Open. Only local fixture screenshots exist (14 Nov); no sealed report has been captured |
+| 16 | Retake the screenshots on production at 1440 and 375 px: the dashboard hero, the findings cabinet, the claims map with the Lantern open, and "The final seal" both draft and sealed. Then swap the links in `README.md`, `devpost.md` and `blog.md` (issue #81) | Before item 12 | Đăng | Done 14 Nov: 14 production screenshots in `docs/submission/screenshots/production/`, including a sealed report from the seal rehearsal; links swapped |
 | 17 | Paste the accuracy table from issue #67 into `README.md`, `devpost.md` and `blog.md`, exactly as `pnpm eval` printed it (each file has a marked placeholder) | Tue 1 Dec | Phạm Quốc Bảo posts it; Đăng pastes it | Open |
 | 18 | Night wind check on production: off on a first visit, starts only on a click, goes quiet while the demo video plays | Before item 7 | Đạt | Open |
 
