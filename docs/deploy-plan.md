@@ -215,6 +215,29 @@ Nothing you type is echoed, logged or written to a file. `scripts/final-prod-che
 
 Run on 14 Nov with `-SmokeOnly`: ALL CHECKS PASSED (14 checks in part A, 18 in part B). It made one test project, listed at the end for deletion.
 
+### 5e. Seal rehearsal (a sealed report to capture, issue #81)
+
+`scripts/seal-rehearsal.ts` makes one project named `zz-seal-<random>` as the team account, analyses the evidence clip (`scripts/make-evidence-clip.ps1`), reviews every candidate through the review API, and applies the Final Seal. It prints the project id, the report URL, and the seal id or the blockers. How to set the four variables is at the top of the script. Run `--dry-run` first: it prints the plan and sends nothing.
+
+```powershell
+pnpm tsx scripts/seal-rehearsal.ts <evidence clip.mp4> --dry-run
+pnpm tsx scripts/seal-rehearsal.ts <evidence clip.mp4>
+```
+
+Then capture the sealed report: `pnpm tsx scripts/prod-screenshots.ts --project <printed id>`.
+
+**Delete it afterwards** (the API has no delete route):
+
+1. Supabase dashboard, `sleuth-prod`, SQL Editor. List first, then delete by the printed id. Only `zz-seal-` rows may appear:
+
+   ```sql
+   select id, name, owner_id, created_at from projects where name like 'zz-seal-%' and not is_demo;
+   delete from projects where id = '<printed project id>' and name like 'zz-seal-%' and not is_demo;
+   ```
+
+   Its seal, evidence, findings, reshoots, decisions and jobs go with it (every child table has `on delete cascade`).
+2. Storage, Buckets, `video-assets`: delete the folder named with the project id. SQL cannot delete Storage objects.
+
 ### 6. Row-level security review (migrations 0000 to 0002)
 
 All 14 tables in `public` have RLS on: `asset_versions`, `audit_events`, `checklist_items`, `evidence_candidates`, `findings`, `frame_observations`, `processing_jobs`, `projects`, `reshoot_tasks`, `review_decisions`, `script_segments`, `script_versions`, `seals`, `transcript_segments`.
