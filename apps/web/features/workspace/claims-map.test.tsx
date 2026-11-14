@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ChecklistItem, EvidenceCandidate, ScriptSegment } from "@sleuth/contracts";
-import { buildRooms, ClaimsMap, roomLabel, roomStateOf, sizeOf, type Room } from "./claims-map";
+import { buildRooms, ClaimsMap, roomStateOf, sizeOf } from "./claims-map";
 
 const seg = (id: string, index: number, text: string) => ({ id, index, text }) as ScriptSegment;
 const item = (id: string, position: number, label: string) => ({ id, position, label }) as ChecklistItem;
@@ -51,12 +51,18 @@ describe("buildRooms", () => {
     expect(first).toMatchObject({ kind: "item", state: "none", segmentId: null });
   });
 
-  it("labels rooms in full", () => {
+  it("names each room with its visible words, in order, plus screen-reader-only punctuation", () => {
     const rooms = buildRooms(segments, states, checklist, []);
-    expect(roomLabel(rooms[0] as Room)).toBe('Line 1, Covered: "First."');
-    expect(roomLabel(rooms[2] as Room)).toBe('Checklist Item 1, No proof yet: "Show login"');
-  });
-});
+    render(<ClaimsMap rooms={rooms} selectedSegmentId={null} onSelectLine={() => undefined} onAnnounce={() => undefined} linesCovered={1} linesTotal={2} />);
+    const line = screen.getByRole("button", { name: /^Line 1/ });
+    const item = screen.getByRole("button", { name: /^Checklist Item 1/ });
+    const words = (s: string | null | undefined) => (s ?? "").replace(/[^A-Za-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+    // No aria-label: the name is the text, so it always holds the visible words.
+    expect(line).not.toHaveAttribute("aria-label");
+    expect(item).not.toHaveAttribute("aria-label");
+    expect(words(line.textContent)).toBe("Line 1 Covered First");
+    expect(words(item.textContent)).toBe("Checklist Item 1 No proof yet Show login");
+  });});
 
 describe("ClaimsMap", () => {
   const rooms = buildRooms(
@@ -86,12 +92,12 @@ describe("ClaimsMap", () => {
   it("gives each state its own border style and icon, and a legend for all four", () => {
     renderMap();
     const style = (name: RegExp) => screen.getByRole("button", { name }).className;
-    expect(style(/^Line 1, covered/i)).toContain("border-solid");
-    expect(style(/^Line 2, candidate waiting/i)).toContain("border-dashed");
-    expect(style(/^Line 3, no proof yet/i)).toContain("border-dotted");
-    expect(style(/^Line 4, stale after edit/i)).toContain("border-double");
+    expect(style(/^Line 1\s*,\s*covered/i)).toContain("border-solid");
+    expect(style(/^Line 2\s*,\s*candidate waiting/i)).toContain("border-dashed");
+    expect(style(/^Line 3\s*,\s*no proof yet/i)).toContain("border-dotted");
+    expect(style(/^Line 4\s*,\s*stale after edit/i)).toContain("border-double");
     const icons = ["Line 1", "Line 2", "Line 3", "Line 4"].map(
-      (l) => screen.getByRole("button", { name: new RegExp(`^${l},`, "i") }).querySelector("svg")?.innerHTML,
+      (l) => screen.getByRole("button", { name: new RegExp(`^${l}\\s*,`, "i") }).querySelector("svg")?.innerHTML,
     );
     expect(new Set(icons).size).toBe(4);
     const legend = screen.getByRole("list", { name: "Room states" });
@@ -111,10 +117,10 @@ describe("ClaimsMap", () => {
 
   it("marks the selected line, and a click opens a line or explains why it cannot", async () => {
     const { onSelectLine, onAnnounce } = renderMap();
-    expect(screen.getByRole("button", { name: /^Line 2,/i })).toHaveAttribute("aria-pressed", "true");
-    await userEvent.click(screen.getByRole("button", { name: /^Line 3,/i }));
+    expect(screen.getByRole("button", { name: /^Line 2\s*,\s*/i })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: /^Line 3\s*,\s*/i }));
     expect(onSelectLine).toHaveBeenCalledWith("s3");
-    await userEvent.click(screen.getByRole("button", { name: /^Checklist item 1,/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Checklist item 1\s*,\s*/i }));
     expect(onAnnounce).toHaveBeenCalledWith("Checklist item 1 has no evidence yet, so there is no line to open.");
   });
 });

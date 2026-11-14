@@ -133,15 +133,6 @@ export function buildRooms(
   return [...lines, ...items];
 }
 
-/**
- * The full name a room button reads out, e.g. `Line 3, Covered: "Upload a demo video"`. It holds the
- * button's visible words in the same order and case (WCAG 2.5.3, label in name), plus "Checklist".
- */
-export function roomLabel(room: Room): string {
-  const what = room.kind === "line" ? `Line ${room.number}` : `Checklist Item ${room.number}`;
-  return `${what}, ${ROOM_TEXT[room.state].name}: "${room.text}"`;
-}
-
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 function RoomButton({
@@ -157,7 +148,6 @@ function RoomButton({
   return (
     <button
       type="button"
-      aria-label={roomLabel(room)}
       aria-pressed={selected}
       onClick={onClick}
       data-room-state={room.state}
@@ -167,10 +157,21 @@ function RoomButton({
     >
       <span className="flex items-center gap-1.5 text-xs font-semibold">
         <RoomIcon size={14} />
-        {room.kind === "line" ? `Line ${room.number}` : `Item ${room.number}`}
-        {/* The dot is drawn by CSS, so the visible words match the button's name. */}
-        <span className="font-normal before:mr-1.5 before:content-['·']">{ROOM_TEXT[room.state].name}</span>
-      </span>
+        {/*
+          The visible words are the button's name (WCAG 2.5.3, label in name). The punctuation and
+          the word "Checklist" are for screen readers only, and the dot is hidden from them.
+        */}
+        <span>
+          {room.kind === "item" ? <span className="sr-only">Checklist </span> : null}
+          {room.kind === "line" ? `Line ${room.number}` : `Item ${room.number}`}
+          <span className="sr-only">, </span>
+        </span>{" "}
+        <span className="font-normal">
+          <span aria-hidden="true" className="mr-1.5">·</span>
+          {ROOM_TEXT[room.state].name}
+          <span className="sr-only">: </span>
+        </span>
+      </span>{" "}
       <span className="line-clamp-2 text-xs text-foreground">{room.text}</span>
     </button>
   );

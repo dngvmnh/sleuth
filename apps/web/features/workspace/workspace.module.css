@@ -16,7 +16,6 @@
   pointer-events: none;
   box-shadow: 0 0 10px rgb(var(--sleuth-fog-a) / 0.35);
   opacity: 0;
-  will-change: opacity;
   animation: room-wait 4s ease-in-out infinite;
 }
 

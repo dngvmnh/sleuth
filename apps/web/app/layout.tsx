@@ -13,6 +13,8 @@ const display = localFont({
   ],
   variable: "--sleuth-font-display-file",
   display: "swap",
+  // Size the fallback serif to match, so headings do not move when the font arrives (layout shift).
+  adjustFontFallback: "Times New Roman",
   fallback: ["Iowan Old Style", "Palatino Linotype", "Georgia", "serif"],
 });
 

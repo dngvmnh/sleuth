@@ -33,7 +33,7 @@ function ClueCard({ demoId, clue }: { demoId: string; clue: DemoClue }) {
     <Link
       href={clueHref(demoId, clue)}
       data-testid="clue-card"
-      className="panel panel-lift relative z-10 -mt-4 block max-w-xs bg-surface p-4 sm:-mt-10"
+      className="panel panel-lift relative block max-w-xs bg-surface p-4"
     >
       <PanelCorners />
       <span className="eyebrow">A clue from the demo</span>
@@ -134,7 +134,7 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
             <HeroArt className="w-full max-w-xl justify-self-center" />
             {/* Below the house, overlapping only the foot of the hill, so the door stays clear. */}
             {/* The clue card's place is kept while the demo loads, so the hero does not grow later. */}
-            <div className="min-h-32">
+            <div className="relative z-10 -mt-4 min-h-36 sm:-mt-10">
               {snapshot.clue && snapshot.demoId ? <ClueCard demoId={snapshot.demoId} clue={snapshot.clue} /> : null}
             </div>
           </div>
