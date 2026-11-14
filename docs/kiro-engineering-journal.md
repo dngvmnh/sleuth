@@ -1369,6 +1369,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
 - Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.
 
+## 2026-11-14: WP0, board and human checklist (Đăng)
+
+- Merged #39 (clip kits), #41 (brief 006), #42 (script tests in CI) and #40 (board) after main sync and green CI. #27 is handled in WP2.
+- decisions-needed.md: D-11 decided, freeze moved to 29 Nov (D-19), worker trigger decided (D-20). cleanup.md lists 5 Storage folders to delete by hand. New human-actions.md.
 ## 2026-11-14: WP1, the worker runs by itself (Đăng, ADR 0009)
 
 - `.github/workflows/worker.yml`: `schedule` on, every 10 minutes. `concurrency` kept (no overlap). `ffmpeg` is installed only when the runner lacks it.
