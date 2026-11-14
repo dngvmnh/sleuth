@@ -1,4 +1,4 @@
-﻿# Worker on a free GitHub Actions schedule (deploy plan, decision D-5).
+# Worker on a free GitHub Actions schedule (deploy plan, decision D-5).
 #
 # It takes queued analysis jobs from the production database, runs them, and also purges old
 # anonymous projects once per run (ADR 0008). The keys are repository secrets; see
@@ -13,8 +13,8 @@ name: worker
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: "*/5 * * * *"
+  schedule:
+    - cron: "*/10 * * * *"
 
 # One run at a time: a new run waits instead of fighting for the same jobs.
 concurrency:
@@ -40,7 +40,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg)
 
       - run: pnpm install --frozen-lockfile --filter "@sleuth/worker..."
 

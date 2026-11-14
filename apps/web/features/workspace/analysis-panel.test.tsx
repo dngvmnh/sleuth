@@ -71,7 +71,7 @@ describe("AnalysisPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run analysis" }));
     await flush();
     expect(screen.getByTestId("job-processing")).toHaveTextContent(
-      "Analysis queued. Waiting for a worker to pick it up. Attempt 0 of 3.",
+      "Queued. Analysis starts within about 10 to 15 minutes. Attempt 0 of 3.",
     );
     expect(fetchJob).not.toHaveBeenCalled();
 
@@ -121,7 +121,7 @@ describe("AnalysisPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     await flush();
     expect(startAnalysis).toHaveBeenCalledTimes(2);
-    expect(screen.getByTestId("job-processing")).toHaveTextContent("Analysis queued.");
+    expect(screen.getByTestId("job-processing")).toHaveTextContent("Queued. Analysis starts within about 10 to 15 minutes.");
     await advance(2000);
     expect(fetchJob).toHaveBeenLastCalledWith("j2");
     expect(screen.getByTestId("job-done")).toBeInTheDocument();
