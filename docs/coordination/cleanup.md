@@ -89,3 +89,29 @@ Click path: Supabase dashboard, `sleuth-dev`, Storage, Buckets, `video-assets`. 
 ### 2c. Bucket setting found on the way
 
 Đạt's run showed the dev bucket accepted a `text/plain` upload. Set the allowed MIME types on dev too: Storage, Buckets, `video-assets`, Edit bucket, allowed MIME types `video/mp4, video/quicktime, video/webm, video/x-matroska`, limit 50 MB. The API refuses other types already; this is the second wall, as on production.
+
+## 3. Repair the demo's findings (bug found 14 Nov)
+
+An analysis in any project overwrote the public demo's finding with the same id (`fd-cursed-frame-seg-1` and the other line findings), because segment ids restart at `seg-1` in every project. The fix is in `packages/db/src/supabase/rows.ts` (finding ids now carry the project id). Rows already damaged must be put back once, on each project. On sleuth-dev it was done on 14 Nov. On sleuth-prod: Supabase dashboard, `sleuth-prod`, SQL Editor.
+
+Check first. A damaged row shows a run id other than `run-golden-1`:
+
+```sql
+select id, analysis_run_id, evidence_id from findings where project_id = 'proofpay-demo' order by id;
+```
+
+Then restore (safe to run twice; it touches only the demo's four rows):
+
+```sql
+-- Restore the demo's findings to the golden fixture (fixtures/golden/proofpay-demo/expected-findings.json).
+-- Touches only rows of project proofpay-demo. Safe to run twice.
+begin;
+update findings set type = $t$cursed_frame$t$, plain_label = $t$Needs human check$t$, checklist_item_id = $t$ck-1$t$, script_segment_id = $t$seg-1$t$, evidence_id = $t$ev-seg-1-av-1$t$, found = $t$1 frame near the spoken line shares words with it.$t$, not_found = $t$Not every key word of the line was seen on screen.$t$, limits = $t$Matching compares words only. Watch the clip to confirm it shows the step.$t$, status = $t$open$t$, analysis_run_id = $t$run-golden-1$t$ where id = 'fd-cursed-frame-seg-1' and project_id = 'proofpay-demo';
+update findings set type = $t$phantom_dialogue$t$, plain_label = $t$Script line not spoken$t$, checklist_item_id = $t$ck-4$t$, script_segment_id = $t$seg-4$t$, evidence_id = null, found = $t$The script line exists.$t$, not_found = $t$No spoken sentence in the transcript covers enough of its words.$t$, limits = $t$Speech to text can miss words, and the presenter may have said it differently. Listen to the clip.$t$, status = $t$open$t$, analysis_run_id = $t$run-golden-1$t$ where id = 'fd-phantom-dialogue-seg-4' and project_id = 'proofpay-demo';
+update findings set type = $t$needs_outside_proof$t$, plain_label = $t$Footage cannot prove this$t$, checklist_item_id = $t$ck-5$t$, script_segment_id = $t$seg-5$t$, evidence_id = null, found = $t$The script makes a claim about security, guarantees or compliance.$t$, not_found = $t$Footage cannot show this. No visual check was attempted.$t$, limits = $t$Needs a document, certificate or other proof from outside the video.$t$, status = $t$open$t$, analysis_run_id = $t$run-golden-1$t$ where id = 'fd-needs-outside-proof-seg-5' and project_id = 'proofpay-demo';
+update findings set type = $t$ghost$t$, plain_label = $t$No visual evidence$t$, checklist_item_id = $t$ck-4$t$, script_segment_id = null, evidence_id = null, found = $t$A script line points at this item.$t$, not_found = $t$No frame near a matching spoken line shows it.$t$, limits = $t$Frames are sampled, so a quick action between samples can be missed. Scrub the video to check.$t$, status = $t$open$t$, analysis_run_id = $t$run-golden-1$t$ where id = 'fd-ghost-ck-4' and project_id = 'proofpay-demo';
+commit;
+
+```
+
+Afterwards every row shows `run-golden-1`, and `fd-cursed-frame-seg-1` points at `ev-seg-1-av-1`.

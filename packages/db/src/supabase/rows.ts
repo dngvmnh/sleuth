@@ -25,14 +25,31 @@ export const findingsOfProject = async (q: Q, projectId: string): Promise<Findin
       .orderBy(asc(t.findings.id))
   ).map(findingOf);
 
-/** Insert findings; a finding with an id that already exists is replaced. */
+/**
+ * The stored id of a finding the engine produced for `projectId`. The engine keys findings by
+ * script segment (`fd-cursed-frame-seg-1`), and segment ids restart at `seg-1` in every project,
+ * while `findings.id` is unique across all projects. Without a project part, one project's
+ * analysis overwrote another project's finding with the same id, the public demo's included.
+ * The form `<projectId>:<id>` is the one `cloneWithPrefix` gives a copy of the demo, so a
+ * re-analysis of a copy updates its copied findings instead of adding a second set.
+ */
+export function findingIdIn(projectId: string, id: string): string {
+  return id.startsWith(`${projectId}:`) ? id : `${projectId}:${id}`;
+}
+
+/**
+ * Insert findings; a finding with an id that already exists in the same project is replaced.
+ * A row of another project with the same id is never touched: then the insert fails loudly
+ * instead of moving data between projects.
+ */
 export async function upsertFindings(q: Q, findings: Finding[]) {
   if (findings.length === 0) return;
-  await q
+  const written = await q
     .insert(t.findings)
     .values(findings)
     .onConflictDoUpdate({
       target: t.findings.id,
+      setWhere: sql`${t.findings.projectId} = excluded.project_id`,
       set: {
         type: sql`excluded.type`,
         plainLabel: sql`excluded.plain_label`,
@@ -45,17 +62,31 @@ export async function upsertFindings(q: Q, findings: Finding[]) {
         status: sql`excluded.status`,
         analysisRunId: sql`excluded.analysis_run_id`,
       },
-    });
+    })
+    .returning({ id: t.findings.id });
+  assertAllWritten("findings", findings.length, written.length);
 }
 
-/** Insert evidence; a candidate with an id that already exists is replaced. */
+/** A conflict with another project's row writes nothing; say so instead of losing data quietly. */
+function assertAllWritten(table: string, expected: number, written: number): void {
+  if (written !== expected) {
+    throw new Error(`${table}: ${expected - written} row id(s) belong to another project`);
+  }
+}
+
+/**
+ * Insert evidence; a candidate with an id that already exists in the same project is replaced.
+ * Evidence ids include the video version id, so they are unique already; the project check is a
+ * second wall.
+ */
 export async function upsertEvidence(q: Q, evidence: EvidenceCandidate[]) {
   if (evidence.length === 0) return;
-  await q
+  const written = await q
     .insert(t.evidenceCandidates)
     .values(evidence)
     .onConflictDoUpdate({
       target: t.evidenceCandidates.id,
+      setWhere: sql`${t.evidenceCandidates.projectId} = excluded.project_id`,
       set: {
         checklistItemId: sql`excluded.checklist_item_id`,
         scriptSegmentId: sql`excluded.script_segment_id`,
@@ -72,7 +103,9 @@ export async function upsertEvidence(q: Q, evidence: EvidenceCandidate[]) {
         source: sql`excluded.source`,
         analysisRunId: sql`excluded.analysis_run_id`,
       },
-    });
+    })
+    .returning({ id: t.evidenceCandidates.id });
+  assertAllWritten("evidence", evidence.length, written.length);
 }
 
 /**
@@ -96,7 +129,7 @@ export async function mergeAnalysisResult(
     .map((e) => ({ ...e, projectId }));
   const findings = produced.findings
     .filter((f) => (planned ? f.scriptSegmentId !== null && planned.has(f.scriptSegmentId) : true))
-    .map((f) => ({ ...f, projectId }));
+    .map((f) => ({ ...f, id: findingIdIn(projectId, f.id), projectId }));
 
   const existing = await evidenceOfProject(q, projectId);
   const freshSegments = new Set(evidence.map((e) => e.scriptSegmentId));
