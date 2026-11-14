@@ -308,3 +308,18 @@ describe("reviewer kind (header identity chip)", () => {
     expect(await createFixtureGuestAuth().reviewerKind?.()).toBe("guest");
   });
 });
+
+describe("current user id (signer label)", () => {
+  it("reads the local session id only, and null without a session or on failure", async () => {
+    const f = fakePort();
+    const auth = createGuestAuth(() => f.port);
+    expect(await auth.currentUserId?.()).toBeNull();
+    f.setSession({ ...SESSION, user: { id: "u-7" } });
+    expect(await auth.currentUserId?.()).toBe("u-7");
+    expect(f.spies.signInAnonymously).not.toHaveBeenCalled();
+    const broken = fakePort({ getSession: async () => Promise.reject(new TypeError("offline")) });
+    expect(await createGuestAuth(() => broken.port).currentUserId?.()).toBeNull();
+    expect(await createGuestAuth(null).currentUserId?.()).toBeNull();
+    expect(await createFixtureGuestAuth().currentUserId?.()).toBe("fixture-user");
+  });
+});

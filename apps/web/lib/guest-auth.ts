@@ -61,6 +61,11 @@ export interface GuestAuth {
    * in and never throws (any problem reads as "visitor"). Optional for hand-made test doubles.
    */
   reviewerKind?(): Promise<ReviewerKind>;
+  /**
+   * The signed-in user's id, read from the local session only (never signs in, never throws;
+   * null when there is no session). Used to say "Signed off by you" instead of an id.
+   */
+  currentUserId?(): Promise<string | null>;
 }
 
 interface ErrorShape {
@@ -123,6 +128,8 @@ export function createFixtureGuestAuth(): GuestAuth {
     ensureSession: async () => undefined,
     prepareRequest: async () => undefined,
     reviewerKind: async () => "guest",
+    // The fixture API acts as this user when the browser sends no x-fixture-user header.
+    currentUserId: async () => "fixture-user",
   };
 }
 
@@ -206,6 +213,17 @@ export function createGuestAuth(getPort: (() => GuestAuthPort) | null): GuestAut
         return user?.is_anonymous === false ? "team" : "guest";
       } catch {
         return "visitor";
+      }
+    },
+    async currentUserId(): Promise<string | null> {
+      if (!getPort) return null;
+      try {
+        const { data, error } = await auth().getSession();
+        if (error || !data.session) return null;
+        const id = (data.session as { user?: { id?: unknown } }).user?.id;
+        return typeof id === "string" && id !== "" ? id : null;
+      } catch {
+        return null;
       }
     },
   };

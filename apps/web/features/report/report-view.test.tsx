@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { COVERAGE_STATES, FINDING_LABELS, type CoverageSummary, type ReshootTask, type Seal } from "@sleuth/contracts";
@@ -8,6 +8,7 @@ import { detail, finding, json } from "../workspace/test-fixtures";
 import { CoverageTable } from "./coverage-table";
 import { ReportBody, ReportView } from "./report-view";
 import type { ReportData } from "./use-report";
+import { UUID_PATTERN } from "./signer";
 
 const checklist = [
   { id: "c1", projectId: "p1", label: "Create an invoice", position: 0 },
@@ -79,7 +80,9 @@ describe("ReportBody", () => {
     render(<ReportBody data={data({ seal: SEAL })} />);
     const banner = screen.getByTestId("seal-banner");
     expect(banner).toHaveTextContent("Sealed");
-    expect(banner).toHaveTextContent("Signed off by user-1 at 2026-02-03 04:05 UTC.");
+    // Someone else signed (the test viewer is the fixture user), so the banner names no id.
+    expect(banner).toHaveTextContent(/Signed off by (a reviewer|the project owner) at 2026-02-03 04:05 UTC\./);
+    expect(banner).not.toHaveTextContent("user-1" + " at");
     expect(banner).toHaveTextContent("Sign-off note: Checked by hand.");
     expect(screen.queryByText("Draft: not signed off")).not.toBeInTheDocument();
   });
@@ -309,5 +312,37 @@ describe("ReportView states", () => {
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByTestId("seal-banner")).toHaveTextContent("Draft: not signed off");
     expect(screen.getAllByTestId("coverage-row")).toHaveLength(5);
+  });
+});
+
+describe("ReportBody signer (issue #96)", () => {
+  const UUID = "24c9177b-c629-4203-b740-f603ebe0646c";
+  const owned = (ownerId: string | null) => ({ ...detail, project: { ...detail.project, ownerId } });
+
+  it("says Signed off by you when the viewer signed, and keeps the id only under Audit id", async () => {
+    // Without a provider the viewer is the fixture user.
+    render(<ReportBody data={data({ project: { ...owned("fixture-user"), checklist }, seal: { ...SEAL, sealedBy: "fixture-user" } })} />);
+    const banner = screen.getByTestId("seal-banner");
+    await waitFor(() => expect(banner).toHaveTextContent("Signed off by you at 2026-02-03 04:05 UTC."));
+    const audit = screen.getByTestId("seal-audit-id");
+    expect(audit.tagName).toBe("DETAILS");
+    expect(audit).not.toHaveAttribute("open");
+    expect(audit).toHaveTextContent("Audit idfixture-user");
+  });
+
+  it("says the project owner when the owner signed and someone else looks", async () => {
+    render(<ReportBody data={data({ project: { ...owned(UUID), checklist }, seal: { ...SEAL, sealedBy: UUID } })} />);
+    const detailLine = await screen.findByText(/^Signed off by the project owner at 2026-02-03 04:05 UTC\.$/);
+    expect(detailLine.textContent).not.toMatch(UUID_PATTERN);
+  });
+
+  it("says a reviewer when it cannot tell, and never prints the id as text", async () => {
+    render(<ReportBody data={data({ project: { ...owned(null), checklist }, seal: { ...SEAL, sealedBy: UUID } })} />);
+    const detailLine = await screen.findByText(/^Signed off by a reviewer at/);
+    expect(detailLine.textContent).not.toMatch(UUID_PATTERN);
+    // Outside the closed Audit id, nothing in the banner holds the id.
+    const banner = screen.getByTestId("seal-banner").cloneNode(true) as HTMLElement;
+    banner.querySelector("[data-testid=seal-audit-id]")?.remove();
+    expect(banner.textContent).not.toMatch(UUID_PATTERN);
   });
 });
