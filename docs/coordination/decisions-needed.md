@@ -1,13 +1,12 @@
 # Decisions needed
 
-Updated Saturday 14 November 2026, noon, by Đăng. Team rule: free options only for hosting and AI.
+Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options only for hosting and AI.
 
 ## Open
 
 | ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
 | D-10 | Who records clips 1 to 3 (ea 11). | Đăng | Wed 18 Nov | **Đăng's recommendation:** Đăng records clips 1 to 3 by Wed 18 Nov (API and database demos, the same style as clip 5's `demo.ps1`). Bảo writes the protocol and labels them by watching, before any run. Đạt keeps clips 4 and 5 (ea 14, 15). The recorder and the labeller are different people, which keeps the labels honest. |
-| D-11 | What visitors may do at launch. | Đăng | Mon 16 Nov | "Try your own video" is speech-only: Deepgram transcript, no frames to Gemini (D-4 data rule). Our own clips use Gemini through an allow-list of owner ids (`VIDEO_ANALYSIS_OWNER_IDS`, PR #34). |
 
 ## Decided
 
@@ -28,6 +27,9 @@ Updated Saturday 14 November 2026, noon, by Đăng. Team rule: free options only
 | D-16 | Art | Original SVG and CSS only. No stock or generated images unless the rights are recorded. Decided by Đăng, 14 Nov. | Item 5 |
 | D-17 | Brand colour | Forest black, cream text and amber action, with a spectral teal for AI candidates (theme `hollow`). The current violet set stays as the fallback theme (`midnight`). Decided by Đăng, 14 Nov. | `apps/web/styles/tokens.css` |
 | D-18 | Copy | Plain QA copy. No gamified words. Every spooky label keeps its plain label. Decided by Đăng, 14 Nov. | Đạt's screens |
+| D-11 | What visitors may do at launch | "Try your own video" is speech-only: Deepgram transcript, no frames to Gemini (D-4 data rule), as recommended. Our own clips use Gemini through an allow-list of owner ids (`VIDEO_ANALYSIS_OWNER_IDS`, PR #34). Decided 14 Nov. | PR #34 |
+| D-19 | Feature freeze date | Sun 29 Nov 23:59 SGT (it was earlier). After it, only fixes. Internal submission stays Fri 4 Dec 18:00; official deadline Sat 5 Dec 06:00. Decided 14 Nov. | Handover 14 Nov |
+| D-20 | What starts the worker | A GitHub Actions `schedule` every 10 minutes, no overlap, `--once`. Visitors see "Queued. Analysis starts within about 10 to 15 minutes." Limits are in the ADR. Decided 14 Nov. | ADR 0009, PR #43 |
 
 ## Facts recorded 13 November (reported by Đăng, verified outside Kiro, not re-checked here)
 
