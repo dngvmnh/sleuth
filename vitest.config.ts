@@ -20,6 +20,9 @@ export default defineConfig({
             // Component tests (.test.tsx) are handled by the web/jsdom project below.
             "apps/web/**/*.test.ts",
             "tests/**/*.test.ts",
+            // Unit tests for the scripts (keep-alive, prod-e2e). They import the script's helpers;
+            // the scripts run only when called directly, so no test touches the network.
+            "scripts/*.test.ts",
           ],
           exclude: ["**/node_modules/**", "tests/e2e/**"],
         },
