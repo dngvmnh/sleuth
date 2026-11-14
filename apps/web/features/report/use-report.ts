@@ -10,7 +10,8 @@ import type {
   Seal,
   SealBlocker,
 } from "@sleuth/contracts";
-import { ApiClientError, createApiClient, sealBlockersOf, type ApiClient } from "@/lib/api-client";
+import { useApiClient } from "@/components/guest-auth-provider";
+import { ApiClientError, sealBlockersOf, type ApiClient } from "@/lib/api-client";
 
 export type ReportStatus = "loading" | "error" | "not_found" | "done";
 
@@ -91,7 +92,8 @@ function messageOf(error: unknown): string {
  * old project's data is never shown while a new id loads.
  */
 export function useReport(projectId: string, client?: ApiClient): ReportState {
-  const api = useMemo(() => client ?? createApiClient(), [client]);
+  const sharedClient = useApiClient();
+  const api = useMemo(() => client ?? sharedClient, [client, sharedClient]);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Loaded>({
     projectId,

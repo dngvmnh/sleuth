@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { GuestSessionNote, useGuestAuth } from "@/components/guest-auth-provider";
 import { Button } from "@/components/ui/button";
+import { guestAuthMessage, type GuestAuth } from "@/lib/guest-auth";
 import { ChecklistEditor } from "../checklist/checklist-editor";
 import { ScriptEditor } from "../script/script-editor";
 import { UploadFlow } from "../upload/upload-flow";
@@ -24,25 +26,46 @@ function goTo(path: string) {
 export function EditorsPanel({
   state,
   navigate = goTo,
+  auth,
 }: {
   state: ProjectState;
   navigate?: (path: string) => void;
+  /** Tests only; pages use the shared guest sign-in from `GuestAuthProvider`. */
+  auth?: GuestAuth;
 }) {
+  const sharedAuth = useGuestAuth();
+  const guest = auth ?? sharedAuth;
   const project = state.detail?.project;
   const isDemo = project?.isDemo ?? true;
-  const [copying, setCopying] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "signing_in" | "copying">("idle");
   const [copyError, setCopyError] = useState<string | undefined>(undefined);
+  // A ref blocks a second click in the same tick, before React re-renders.
+  const inFlight = useRef(false);
+  const copying = phase !== "idle";
 
   const copy = async () => {
-    if (copying) return;
-    setCopying(true);
+    if (inFlight.current) return;
+    inFlight.current = true;
     setCopyError(undefined);
+    // Sign in first (a no-op in fixture mode). If it fails, no copy request is sent.
+    if (guest.mode === "supabase") setPhase("signing_in");
+    try {
+      await guest.ensureSession();
+    } catch (e: unknown) {
+      setCopyError(guestAuthMessage(e) ?? messageOf(e));
+      setPhase("idle");
+      inFlight.current = false;
+      return;
+    }
+    setPhase("copying");
     try {
       const id = await state.makeCopy(`Copy of ${project?.name ?? "demo"}`.slice(0, 120));
+      // Stay locked while the browser leaves for the copy.
       navigate(`/projects/${encodeURIComponent(id)}`);
     } catch (e: unknown) {
       setCopyError(messageOf(e));
-      setCopying(false);
+      setPhase("idle");
+      inFlight.current = false;
     }
   };
 
@@ -52,9 +75,14 @@ export function EditorsPanel({
         <div className="rounded-md border border-warn bg-surface p-4 text-sm" role="note">
           <p className="font-medium text-foreground">The demo is read-only.</p>
           <p className="mt-1 text-muted">Make an editable copy to change the script or the checklist.</p>
-          <Button className="mt-3" size="sm" disabled={copying} onClick={() => void copy()}>
-            {copying ? "Making a copy..." : "Make an editable copy"}
+          <Button className="mt-3" size="sm" disabled={copying} aria-busy={copying} onClick={() => void copy()}>
+            {phase === "signing_in"
+              ? "Starting a guest session..."
+              : phase === "copying"
+                ? "Making a copy..."
+                : "Make an editable copy"}
           </Button>
+          <GuestSessionNote className="mt-2" auth={guest} />
           {copyError ? (
             <p role="alert" className="mt-2 text-danger">
               {copyError}
