@@ -1413,3 +1413,9 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 ## 2026-11-14: WP4 part 3, the dashboard (Đăng, brief 006 item 4)
 
 - Eyebrow, display heading with an italic gold line, project cards in two columns, and an icon on each of the five finding cards. The h1 is still exactly 'SLEUTH' (the browser specs look for it).
+
+## 2026-11-14: WP5, evaluation ready for clips (Đăng)
+
+- `pnpm eval -- --write-doc` puts clips run, labelled, found, right, precision, recall and the false-warning rate into a marked block of `docs/evidence-confidence.md`, replacing the block each time. Null, not 0%, when nothing was found or labelled. 5 new tests; `tests/evaluation`: 54 passed.
+- Ran it now: mock providers, 1 clip (the hand-written `example`), 100% on everything. The doc says in plain words that this is plumbing, not accuracy. No real clip is recorded or labelled yet, so there is no real number to publish. I did not make one up and did not label the generated WP3 clip, because a label written by the tool's author is not a test.
+- `docs/evaluation-protocol.md`: a 20-minute labelling procedure, the clip table matches D-10 (clips 1 to 3 recorded by Đăng, clips 4 and 5 by Đạt, labelled by Bảo; the labeller of 4 and 5 is a proposal).
