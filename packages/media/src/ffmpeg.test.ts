@@ -106,7 +106,11 @@ describe("extractFrames input checks", () => {
   });
 });
 
-describe.skipIf(!hasFfmpeg)("FFmpeg on a generated clip", () => {
+// These tests start real FFmpeg processes. In a full parallel `pnpm test` on Windows the child
+// processes can be starved past the 5 s default (issue #80), so only these tests get more time.
+const FFMPEG_TEST_TIMEOUT_MS = 30_000;
+
+describe.skipIf(!hasFfmpeg)("FFmpeg on a generated clip", { timeout: FFMPEG_TEST_TIMEOUT_MS }, () => {
   let workDir = "";
   let clip = "";
   let silentClip = "";
@@ -115,7 +119,7 @@ describe.skipIf(!hasFfmpeg)("FFmpeg on a generated clip", () => {
     workDir = await mkdtemp(join(tmpdir(), "sleuth-ffmpeg-test-"));
     clip = makeClip(workDir, true);
     silentClip = makeClip(workDir, false);
-  });
+  }, FFMPEG_TEST_TIMEOUT_MS);
 
   afterAll(async () => {
     await rm(workDir, { recursive: true, force: true });
