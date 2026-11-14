@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatePanel } from "@/components/state-panel";
+import { GuestSessionNote } from "@/components/guest-auth-provider";
 import type { ApiClient } from "@/lib/api-client";
-import { formatLastChange, useDashboard, type OpenCount } from "./use-dashboard";
+import type { GuestAuth } from "@/lib/guest-auth";
+import { formatLastChange, useDashboard, type CreatePhase, type OpenCount } from "./use-dashboard";
+
+const CREATE_LABEL: Record<CreatePhase, string> = {
+  idle: "Create a project",
+  signing_in: "Starting a guest session...",
+  creating: "Creating...",
+};
 
 function openCountText(count: OpenCount | undefined): string {
   if (!count || count.state === "loading") return "Counting open findings...";
@@ -18,17 +26,18 @@ function openCountText(count: OpenCount | undefined): string {
  * "Last change" from `project.updatedAt`.
  * Open findings come from listFindings; a failed load shows no number.
  */
-export function ProjectList({ client }: { client?: ApiClient }) {
+export function ProjectList({ client, auth }: { client?: ApiClient; auth?: GuestAuth }) {
   const {
     status,
     projects,
     openCounts,
     errorMessage,
     creating,
+    createPhase,
     createError,
     reload,
     createProject,
-  } = useDashboard(client);
+  } = useDashboard(client, auth);
 
   return (
     <div>
@@ -81,14 +90,15 @@ export function ProjectList({ client }: { client?: ApiClient }) {
               disabled={creating}
               aria-busy={creating}
             >
-              {creating ? "Creating..." : "Create a project"}
+              {CREATE_LABEL[createPhase]}
             </Button>
+            <GuestSessionNote className="mt-2" auth={auth} />
           </div>
         ) : null}
       </StatePanel>
       {createError ? (
         <p role="alert" className="mt-3 text-sm text-danger">
-          Could not create the project: {createError}
+          {createError}
         </p>
       ) : null}
     </div>
