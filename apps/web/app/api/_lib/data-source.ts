@@ -49,7 +49,10 @@ export function getStore(): ProjectStore {
       const url = process.env.DATABASE_URL?.trim();
       if (!url) throw notConfigured("DATABASE_URL");
       globalForStore.__sleuthSupabaseStore = createSupabaseStore({
-        db: createDb(url).db,
+        // Each Vercel instance holds at most 2 connections and frees them after 10 idle seconds.
+        // With the default (5, never idle out), three warm instances filled the session pooler's
+        // 15 slots on 14 Nov 2026 and every write returned 500 (EMAXCONNSESSION).
+        db: createDb(url, { max: 2, idleTimeoutSeconds: 10 }).db,
         storage: storageFromEnv() ?? undefined,
         ...limits(),
       });
