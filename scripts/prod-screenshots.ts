@@ -94,7 +94,7 @@ async function main(): Promise<void> {
       await settle(page);
       await shoot(page, "workspace-claims-map", vp.name, saved);
 
-      await map.getByRole("button", { name: /^Line 3,/ }).click();
+      await map.getByRole("button", { name: /^Line 3\s*,/i }).click();
       await page.locator("#lantern-heading").filter({ hasText: "line 3" }).waitFor({ timeout: WAIT });
       await page.evaluate(() =>
         document.querySelector("[data-testid=lantern-panel]")?.scrollIntoView({ block: "start" }),
