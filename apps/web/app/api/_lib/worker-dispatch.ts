@@ -8,7 +8,8 @@
  * fixture mode, nothing is sent.
  *
  * It never throws and never logs the token, the URL with a token, or GitHub's reply text. Logs say
- * only `worker_dispatch` and a short result word.
+ * only `worker_dispatch` and a short result word. The analysis route also returns that word in the
+ * `x-sleuth-worker-dispatch` response header, so a check can see it without reading any log.
  */
 
 export type DispatchResult =
@@ -44,8 +45,9 @@ export async function requestWorkerRun(options: DispatchOptions = {}): Promise<D
     ((event: string, fields: Record<string, string | number>) =>
       console.log(JSON.stringify({ event, ...fields })));
   const done = (result: DispatchResult, extra: Record<string, string | number> = {}) => {
-    if (result !== "skipped_fixture" && result !== "skipped_no_token")
-      log("worker_dispatch", { result, ...extra });
+    // Every result in Supabase mode is logged, so a missing token shows up as skipped_no_token
+    // in the Vercel runtime logs instead of as silence. Fixture mode never dispatches.
+    if (result !== "skipped_fixture") log("worker_dispatch", { result, ...extra });
     return result;
   };
 

@@ -126,7 +126,7 @@ async function api(
   path: string,
   token: string,
   body?: unknown,
-): Promise<{ status: number; json: Json; text: string }> {
+): Promise<{ status: number; json: Json; text: string; headers: Headers }> {
   const res = await fetch(`${SITE}/api/v1${path}`, {
     method,
     headers: {
@@ -142,7 +142,7 @@ async function api(
   } catch {
     json = null;
   }
-  return { status: res.status, json, text };
+  return { status: res.status, json, text, headers: res.headers };
 }
 
 /** The clip's length in ms, read with ffprobe (installed with FFmpeg). */
@@ -250,6 +250,12 @@ async function main(): Promise<void> {
   const jobId: string | undefined = start.json?.job?.id;
   if (!check("5a analysis queued", start.status === 202 && !!jobId, String(start.status))) return;
   console.log(`      job id: ${jobId}`);
+  // The server says whether it started the worker (ADR 0009 amendment). "sent" means a
+  // workflow_dispatch run of worker.yml should appear within about a minute: do not start one.
+  const dispatch = start.headers.get("x-sleuth-worker-dispatch");
+  console.log(
+    `      worker dispatch: ${dispatch ?? "no header (this deploy is older than the dispatch check)"}`,
+  );
   console.log(
     `      Now run the read-only queue check, then start the worker. Waiting up to ${WAIT_MIN} minutes.`,
   );
