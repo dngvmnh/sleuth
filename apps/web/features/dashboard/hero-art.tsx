@@ -70,15 +70,12 @@ export function HeroArt({ className = "" }: { className?: string }) {
     bat.current.style.animationDelay = `${batFirstDelaySeconds()}s`;
   }, []);
 
+  // Two layers: the still picture (with its blur filters), and a separate small layer for the
+  // bat. Only the bat layer changes while it flies, so the filtered picture is painted once
+  // (Lighthouse, 14 Nov: animating inside the filtered SVG kept the main thread busy on mobile).
   return (
-    <svg
-      viewBox="0 0 480 400"
-      className={className}
-      aria-hidden="true"
-      focusable="false"
-      data-testid="hero-art"
-      preserveAspectRatio="xMidYMax meet"
-    >
+    <div className={`relative ${className}`} aria-hidden="true" data-testid="hero-art">
+    <svg viewBox="0 0 480 400" className="h-auto w-full" focusable="false" preserveAspectRatio="xMidYMax meet">
       <defs>
         {/* Masks are black and white by definition; they carry no theme colour. */}
         <mask id={`${id}-moon`}>
@@ -143,8 +140,8 @@ export function HeroArt({ className = "" }: { className?: string }) {
         <rect x="186" y="214" width="16" height="22" className="fill-background" />
       </g>
       {/* The lit windows: the tower and the right ground-floor window. */}
-      <rect x="288" y="132" width="10" height="14" className={`fill-primary ${styles.window}`} />
-      <rect x="290" y="214" width="16" height="22" className={`fill-primary/90 ${styles.window}`} />
+      <rect x="288" y="132" width="10" height="14" className="fill-primary" />
+      <rect x="290" y="214" width="16" height="22" className="fill-primary/90" />
       <path d="M298 214V236M290 225H306" className="stroke-surface" strokeWidth={1.5} />
 
       {/* Rose window: a film reel, five holes round a hub. */}
@@ -162,7 +159,7 @@ export function HeroArt({ className = "" }: { className?: string }) {
       </g>
 
       {/* Mist at the foot of the hill. */}
-      <g className={styles.groundMist} filter={`url(#${id}-mist)`} data-layer="mist">
+      <g filter={`url(#${id}-mist)`} data-layer="mist">
         <ellipse cx="150" cy="306" rx="170" ry="10" className="fill-foreground/10" />
         <ellipse cx="350" cy="318" rx="180" ry="12" className="fill-spectral/10" />
       </g>
@@ -177,10 +174,13 @@ export function HeroArt({ className = "" }: { className?: string }) {
         <path d="M0 392C40 380 80 384 120 390S200 386 230 392H0ZM262 392C300 384 360 382 400 388S460 382 480 386V392Z" className="fill-background" />
       </g>
 
-      {/* The bat, crossing the moon. */}
+    </svg>
+    {/* The bat, crossing the moon, on its own layer with the same coordinates. */}
+    <svg viewBox="0 0 480 400" className="absolute inset-0 h-full w-full" focusable="false" preserveAspectRatio="xMidYMax meet">
       <g ref={bat} className={`fill-background ${styles.bat}`} data-layer="bat">
         <path d="M0 0C5-8 11-9 15-4 16-8 19-8 20-4 24-9 30-8 35 0 29-3 25 0 22 4 20 1 15 1 12 4 10 0 6-3 0 0Z" />
       </g>
     </svg>
+    </div>
   );
 }

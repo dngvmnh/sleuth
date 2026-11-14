@@ -53,8 +53,8 @@ describe("buildRooms", () => {
 
   it("labels rooms in full", () => {
     const rooms = buildRooms(segments, states, checklist, []);
-    expect(roomLabel(rooms[0] as Room)).toBe('Line 1, covered: "First."');
-    expect(roomLabel(rooms[2] as Room)).toBe('Checklist item 1, no proof yet: "Show login"');
+    expect(roomLabel(rooms[0] as Room)).toBe('Line 1, Covered: "First."');
+    expect(roomLabel(rooms[2] as Room)).toBe('Checklist Item 1, No proof yet: "Show login"');
   });
 });
 
@@ -86,12 +86,12 @@ describe("ClaimsMap", () => {
   it("gives each state its own border style and icon, and a legend for all four", () => {
     renderMap();
     const style = (name: RegExp) => screen.getByRole("button", { name }).className;
-    expect(style(/^Line 1, covered/)).toContain("border-solid");
-    expect(style(/^Line 2, candidate waiting/)).toContain("border-dashed");
-    expect(style(/^Line 3, no proof yet/)).toContain("border-dotted");
-    expect(style(/^Line 4, stale after edit/)).toContain("border-double");
+    expect(style(/^Line 1, covered/i)).toContain("border-solid");
+    expect(style(/^Line 2, candidate waiting/i)).toContain("border-dashed");
+    expect(style(/^Line 3, no proof yet/i)).toContain("border-dotted");
+    expect(style(/^Line 4, stale after edit/i)).toContain("border-double");
     const icons = ["Line 1", "Line 2", "Line 3", "Line 4"].map(
-      (l) => screen.getByRole("button", { name: new RegExp(`^${l},`) }).querySelector("svg")?.innerHTML,
+      (l) => screen.getByRole("button", { name: new RegExp(`^${l},`, "i") }).querySelector("svg")?.innerHTML,
     );
     expect(new Set(icons).size).toBe(4);
     const legend = screen.getByRole("list", { name: "Room states" });
@@ -111,10 +111,10 @@ describe("ClaimsMap", () => {
 
   it("marks the selected line, and a click opens a line or explains why it cannot", async () => {
     const { onSelectLine, onAnnounce } = renderMap();
-    expect(screen.getByRole("button", { name: /^Line 2,/ })).toHaveAttribute("aria-pressed", "true");
-    await userEvent.click(screen.getByRole("button", { name: /^Line 3,/ }));
+    expect(screen.getByRole("button", { name: /^Line 2,/i })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: /^Line 3,/i }));
     expect(onSelectLine).toHaveBeenCalledWith("s3");
-    await userEvent.click(screen.getByRole("button", { name: /^Checklist item 1,/ }));
+    await userEvent.click(screen.getByRole("button", { name: /^Checklist item 1,/i }));
     expect(onAnnounce).toHaveBeenCalledWith("Checklist item 1 has no evidence yet, so there is no line to open.");
   });
 });

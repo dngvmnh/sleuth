@@ -133,10 +133,13 @@ export function buildRooms(
   return [...lines, ...items];
 }
 
-/** The full name a room button reads out, e.g. `Line 3, covered: "Upload a demo video"`. */
+/**
+ * The full name a room button reads out, e.g. `Line 3, Covered: "Upload a demo video"`. It holds the
+ * button's visible words in the same order and case (WCAG 2.5.3, label in name), plus "Checklist".
+ */
 export function roomLabel(room: Room): string {
-  const what = room.kind === "line" ? `Line ${room.number}` : `Checklist item ${room.number}`;
-  return `${what}, ${ROOM_TEXT[room.state].name.toLowerCase()}: "${room.text}"`;
+  const what = room.kind === "line" ? `Line ${room.number}` : `Checklist Item ${room.number}`;
+  return `${what}, ${ROOM_TEXT[room.state].name}: "${room.text}"`;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -158,14 +161,15 @@ function RoomButton({
       aria-pressed={selected}
       onClick={onClick}
       data-room-state={room.state}
-      className={`${SIZE_CLASS[sizeOf(room.text)]} flex min-h-20 flex-col items-start gap-1 rounded-[2px] bg-background/60 p-2 text-left ${ROOM_STYLE[room.state]} ${room.state === "waiting" ? (styles.waiting ?? "") : ""} ${
+      className={`${SIZE_CLASS[sizeOf(room.text)]} flex min-h-20 flex-col items-start gap-1 relative rounded-[2px] bg-background/60 p-2 text-left ${ROOM_STYLE[room.state]} ${room.state === "waiting" ? (styles.waiting ?? "") : ""} ${
         selected ? "bg-raised outline outline-2 outline-offset-2 outline-primary" : "hover:bg-raised"
       }`}
     >
       <span className="flex items-center gap-1.5 text-xs font-semibold">
         <RoomIcon size={14} />
         {room.kind === "line" ? `Line ${room.number}` : `Item ${room.number}`}
-        <span className="font-normal">· {ROOM_TEXT[room.state].name}</span>
+        {/* The dot is drawn by CSS, so the visible words match the button's name. */}
+        <span className="font-normal before:mr-1.5 before:content-['·']">{ROOM_TEXT[room.state].name}</span>
       </span>
       <span className="line-clamp-2 text-xs text-foreground">{room.text}</span>
     </button>

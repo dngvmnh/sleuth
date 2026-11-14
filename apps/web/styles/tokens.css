@@ -70,6 +70,7 @@
     radial-gradient(60rem 30rem at 15% 10%, rgb(var(--sleuth-fog-a) / 0.12), transparent 70%),
     radial-gradient(50rem 28rem at 85% 90%, rgb(var(--sleuth-fog-b) / 0.06), transparent 70%);
   animation: sleuth-drift 40s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .sleuth-glow {

@@ -30,7 +30,8 @@ export default async function WorkspaceLayout({ children }: { children: ReactNod
 
         <div className="flex min-h-screen flex-col">
           <SiteHeader />
-          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+          {/* At least one screen tall, so the footer never jumps when the page's data arrives (layout shift). */}
+          <main id="main-content" tabIndex={-1} className="min-h-svh flex-1 outline-none">
             {children}
           </main>
           <SiteFooter />

@@ -3,23 +3,35 @@
  * globals.css stays untouched.
  */
 
-/* A room with a candidate waiting breathes a soft glow: 4 s, small, never a flash. */
-.waiting {
+/*
+ * A room with a candidate waiting breathes a soft glow: 4 s, small, never a flash.
+ * The glow is a separate layer that only fades (opacity), so the browser does not repaint the
+ * room on every frame (Lighthouse, 14 Nov: animating box-shadow cost main-thread time on mobile).
+ */
+.waiting::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgb(var(--sleuth-fog-a) / 0.35);
+  opacity: 0;
+  will-change: opacity;
   animation: room-wait 4s ease-in-out infinite;
 }
 
 @keyframes room-wait {
   0%,
   100% {
-    box-shadow: 0 0 0 rgb(var(--sleuth-fog-a) / 0);
+    opacity: 0;
   }
   50% {
-    box-shadow: 0 0 10px rgb(var(--sleuth-fog-a) / 0.35);
+    opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .waiting {
+  .waiting::after {
     animation: none;
   }
 }

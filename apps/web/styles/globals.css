@@ -225,6 +225,8 @@ body {
   pointer-events: none;
 }
 .sleuth-mist-strip {
+  /* Its own layer: the blur is drawn once and only moved, not repainted each frame. */
+  will-change: transform;
   position: absolute;
   left: -50%;
   width: 200%;
