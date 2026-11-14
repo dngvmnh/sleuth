@@ -22,7 +22,7 @@ Dates (SGT): feature freeze Wed 2 Dec 23:59 (18 days). UI freeze Sun 29 Nov (D-1
 | change-impact | 10/10 | none |
 | final-seal | 10/10 | none |
 | review-workspace | 14/14 | none |
-| evidence-analysis | 12/16 | 11, 13, 14, 15 (Đạt; 11 and 13 moved from Bảo on 14 Nov) |
+| evidence-analysis | 12/16 | 11, 13, 14, 15 dropped 14 Nov (D-21, no evaluation before submission) |
 
 Total 56 of 60.
 
@@ -31,8 +31,8 @@ Total 56 of 60.
 | Person | Done since 13 Nov | Now | Blocked by | Blocking |
 |---|---|---|---|---|
 | Đăng | #29 to #38 merged (all his). Guest-flow check 14 of 14 on sleuth-dev against #27's code. prod-e2e rehearsal on dev in guest mode: 9 PASS, 1 SKIP; speech-only findings 2 of 2. Keep-alive green. | Live production checks (his shell); recording kit for clips 1 to 3; brief 006 for Đạt. | #27 deploy, for the guest-flow check only. | Đạt's revamp is unblocked (theme on `main`). |
-| Đạt | #26 merged. #27 open. | #27: merge `main`, re-run the browser specs. Then brief 006 (UI revamp). | Nobody. | Live guest sign-in (#27). Real video player. Clips 1 to 5 (ea 11, 14, 15): Đạt records all five, clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Đạt labels them too and runs ea 11 and 13 (D-10, changed 14 Nov). |
-| Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) merged 14 Nov; review after the fact requested. | Unknown; no reply. | Nothing on the evaluation since 14 Nov (ea 11 and 13 moved to Đạt). |
+| Đạt | #26 merged. #27 open. | #27: merge `main`, re-run the browser specs. Then brief 006 (UI revamp). | Nobody. | Live guest sign-in (#27). Real video player. Clips 1 to 5 (ea 11, 14, 15): Đạt records all five, clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Clips 1 to 4 recorded 14 Nov; clip 5, labels and evaluation dropped (D-21). Next: UI review (#64, #84) and the demo video (#63). |
+| Bảo | Last push 12 Nov 00:39 UTC (#25). | #34 (his area) merged 14 Nov; review after the fact requested. | Unknown; no reply. | Nothing on the evaluation (dropped, D-21). |
 
 ## 4. Critical path: one real run on production
 
@@ -56,7 +56,7 @@ Test data: all test projects from these runs were deleted. Six Storage folders r
 ## 5. Top five risks
 
 1. A real job ran on production only in speech-only mode. No evidence, no resolved finding and no sealed project on production yet. 18 days to freeze.
-2. Bảo has been silent since 12 Nov. ea 11 and 13 moved to Đạt on 14 Nov. No accuracy numbers exist.
+2. Bảo has been silent since 12 Nov. The evaluation is dropped before submission (D-21); accuracy ships as "not measured".
 3. The UI revamp lands two weeks before freeze. `midnight` stays a one-line rollback.
 4. Local database tests fail when run all at once: our own parallel test files open more connections than the sleuth-dev session pooler allows (peak 23 backends on 14 Nov). CI uses its own database and stays the gate.
 5. Free-tier limits: Supabase Free pauses after 7 quiet days (keep-alive covers prod only); Gemini 3.8 Flash failed on the free tier; the Deepgram credit is one-time.
@@ -69,5 +69,5 @@ Test data: all test projects from these runs were deleted. Six Storage folders r
 ## 7. Briefs, reviews, decisions
 
 - Briefs: 003 done. 004: code done (#30, #31, #32, #34, #38); live runs pending. 005: #33 merged. 002b: #34 merged. 006: UI revamp for Đạt.
-- Decisions: see `decisions-needed.md`. Open: D-10, D-11. Decided: D-12 (14 Nov), D-13 to D-18.
+- Decisions: see `decisions-needed.md`. Open: D-11. Decided: D-12 (14 Nov), D-13 to D-18.
 - Cleanup: `docs/coordination/cleanup.md`.

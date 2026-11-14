@@ -6,7 +6,6 @@ Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options o
 
 | ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
-| D-10 | Who records and who labels the evaluation clips (ea 11, 14, 15). | Đăng | Changed 14 Nov | **Changed on 14 Nov (issue #58):** Đạt (@phatdat220707) records clips 1 to 5: clips 1 to 3 by Wed 18 Nov (kits in `tests/evaluation/clips/clip-1` to `clip-3`), clips 4 and 5 by Tue 24 Nov. **Changed again on 14 Nov:** Đạt also labels all five, updates the protocol and runs the first evaluation (ea 11, 13; issues #66, #67). The recorder now labels; the bias this adds is a stated limit in `docs/evaluation-protocol.md`. Before: Đăng recorded clips 1 to 3, then Phạm Quốc Bảo was to label them. |
 
 ## Decided
 
@@ -30,6 +29,8 @@ Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options o
 | D-11 | What visitors may do at launch | "Try your own video" is speech-only: Deepgram transcript, no frames to Gemini (D-4 data rule), as recommended. Our own clips use Gemini through an allow-list of owner ids (`VIDEO_ANALYSIS_OWNER_IDS`, PR #34). Decided 14 Nov. | PR #34 |
 | D-19 | Feature freeze date | Sun 29 Nov 23:59 SGT (it was earlier). After it, only fixes. Internal submission stays Fri 4 Dec 18:00; official deadline Sat 5 Dec 06:00. Decided 14 Nov. | Handover 14 Nov |
 | D-20 | What starts the worker | A GitHub Actions `schedule` every 10 minutes, no overlap, `--once`. Visitors see "Queued. Analysis starts within about 10 to 15 minutes." Limits are in the ADR. Decided 14 Nov. | ADR 0009, PR #43 |
+| D-10 | Who records and who labels the evaluation clips | Đạt recorded clips 1 to 4 (14 Nov). Superseded by D-21: no labels, no evaluation before submission. | #58, #66 |
+| D-21 | Run an accuracy evaluation before submission? | No. Decided by Đăng, 14 Nov. Clip 5 is dropped, clips 1 to 4 stay unlabelled drafts, and evidence-analysis 11, 13, 14 and 15 are dropped. SLEUTH ships with accuracy "not measured", said plainly everywhere. Đạt moves to UI review and the demo video. The harness (`pnpm eval`) stays for later. | #66, #67 |
 
 ## Facts recorded 13 November (reported by Đăng, verified outside Kiro, not re-checked here)
 

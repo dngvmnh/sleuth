@@ -1,5 +1,7 @@
 # Evaluation protocol
 
+> **Status, 14 November 2026 (decision D-21):** no evaluation runs before submission. Clip 5 is dropped, clips 1 to 4 are recorded drafts that nobody labels, and SLEUTH ships with accuracy "not measured". This page and `pnpm eval` stay for a later run; nothing below is a to-do now.
+
 SLEUTH is only as good as the numbers we can show. This page says how the clips in `tests/evaluation/clips/` are recorded and labelled, and how `pnpm eval` scores them. Only numbers that `pnpm eval` prints may be quoted, with the number of clips and the provider names beside them (evidence-analysis requirement 7.4).
 
 ## The rules
@@ -14,7 +16,7 @@ SLEUTH is only as good as the numbers we can show. This page says how the clips 
 
 ### Limit: the person who labels also recorded the clips
 
-Đạt (@phatdat220707) records all five clips and also labels them (decision D-10, changed on 14 November). He knows what he meant to leave out or add, so his labels may match the planned problems more closely than a fresh viewer's would, and may miss problems he did not plan. To reduce this he labels only from a full watch of the finished video, at least an hour after recording, and commits `labels.json` before anyone runs `pnpm eval`. Every place that quotes `pnpm eval` numbers says that the recorder labelled the clips, beside the numbers.
+This applies only if the evaluation is picked up later (D-21): Đạt (@phatdat220707) recorded clips 1 to 4, and under decision D-10 he would also label them. He knows what he meant to leave out or add, so his labels may match the planned problems more closely than a fresh viewer's would, and may miss problems he did not plan. To reduce this he labels only from a full watch of the finished video, at least an hour after recording, and commits `labels.json` before anyone runs `pnpm eval`. Every place that quotes `pnpm eval` numbers says that the recorder labelled the clips, beside the numbers.
 
 ### Limit: a synthetic voice makes the results optimistic
 
@@ -131,11 +133,10 @@ The number printed at the end, and the clip count beside it, go into `docs/evide
 
 | Clip | Case | Recorded by | Voice | Labelled by | State |
 |---|---|---|---|---|---|
-| `example` | Hand-written text only; tests the harness | nobody (no video) | none (no audio) | hand-written, not watched | Done. Not counted as one of the five clips. |
-| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (90 s), checked against the kit in #58; to label |
-| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (74 s), checked in #58; to label |
-| `clip-3` | One security claim | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (85 s), checked in #58; to label |
-| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | not recorded yet | Đạt (@phatdat220707) | To record by 24 Nov (task 14) |
-| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | not recorded yet | Đạt (@phatdat220707) | To record by 24 Nov (task 15), kit in `clips/clip-5` |
+| `example` | Hand-written text only; tests the harness | nobody (no video) | none (no audio) | hand-written, not watched | Done. Not counted as a recorded clip. |
+| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (90 s), checked in #58; not labelled (D-21) |
+| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (74 s), checked in #58; not labelled (D-21) |
+| `clip-3` | One security claim | Đạt (@phatdat220707) | synthetic (Microsoft Zira) | Đạt (@phatdat220707) | Recorded 14 Nov (85 s), checked in #58; not labelled (D-21) |
+| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | synthetic (draft states "AI voice") | nobody | Draft recorded 14 Nov (85 s), no kit folder; not labelled (D-21) |
 
-Đạt (@phatdat220707) records and labels all five clips (decision D-10, changed on 14 November; #66). The labeller is not independent of the recorder; see "Limit: the person who labels also recorded the clips". Each clip is labelled before anyone runs `pnpm eval` on it, and Đạt also runs the first evaluation (#67).
+No clip is labelled and no evaluation has run (decision D-21, 14 November). Clip 5 was dropped. If the evaluation is picked up after submission, whoever labels must follow the rules above, and the limits above apply.
