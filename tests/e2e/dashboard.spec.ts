@@ -94,3 +94,13 @@ test("the list follows the API order and shows Last change from updatedAt", asyn
     expect(row.text).toMatch(/open finding|Open findings unavailable|Counting open findings/);
   }
 });
+
+test("the hero clue card opens its line in the demo workspace", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto("/");
+  const clue = page.getByTestId("clue-card");
+  await expect(clue).toHaveAttribute("href", /^\/projects\/proofpay-demo\?line=/);
+  await clue.click();
+  await expect(page).toHaveURL(/\/projects\/proofpay-demo\?line=/);
+  await expect(page.locator("section[aria-labelledby='lantern-heading']")).toContainText(/Evidence for line \d/);
+});

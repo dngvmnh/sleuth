@@ -116,7 +116,7 @@ interface Selection {
  * The loaded workspace. One player (the real video when there is a playback URL, else the simulated clock) feeds the timeline playhead, the
  * sentence highlight and the Lantern, so they can never disagree about the time.
  */
-function WorkspaceView({ state }: { state: ProjectState }) {
+function WorkspaceView({ state, initialLine }: { state: ProjectState; initialLine?: string }) {
   const simulated = useSimulatedPlayer(clockDurationMs(state));
   // A real video, when the server hands out a playback URL. Otherwise the simulated clock.
   const playbackUrl = usePlaybackUrl(state.fetchPlaybackUrl, state.detail?.assetVersion?.id);
@@ -128,7 +128,13 @@ function WorkspaceView({ state }: { state: ProjectState }) {
   const { player } = clock;
   const sentences = useRef<SentenceListHandle>(null);
   const partEndMs = useRef<number | null>(null);
-  const [selection, setSelection] = useState<Selection>({ segmentId: null, evidenceId: null });
+  // A link such as the dashboard's clue card can open the workspace on one line (?line=<segment id>).
+  const [selection, setSelection] = useState<Selection>(() => {
+    const all = state.detail?.scriptVersion?.segments ?? [];
+    const segment = all.find((s) => s.id === initialLine);
+    if (!segment) return { segmentId: null, evidenceId: null };
+    return { segmentId: segment.id, evidenceId: primaryMarkerFor(buildMarkers(all, state.evidence), segment.id)?.id ?? null };
+  });
   const [announcement, setAnnouncement] = useState("");
 
   const segments = useMemo(
@@ -137,6 +143,16 @@ function WorkspaceView({ state }: { state: ProjectState }) {
   );
   const states = useMemo(() => deriveSegmentStates(segments, state.evidence), [segments, state.evidence]);
   const markers = useMemo(() => buildMarkers(segments, state.evidence), [segments, state.evidence]);
+
+  // Opened on a line: move the clock to its evidence once.
+  const openedOn = useRef(selection.evidenceId);
+  useEffect(() => {
+    const marker = markers.find((m) => m.id === openedOn.current);
+    openedOn.current = null;
+    if (marker) player.seek(marker.startMs);
+    // Only on the first render of this view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // "Play this part" stops at the end of the part; any other pause, seek or end cancels it.
   useEffect(
@@ -297,7 +313,16 @@ function WorkspaceView({ state }: { state: ProjectState }) {
   );
 }
 
-export function Workspace({ projectId, client }: { projectId: string; client?: ApiClient }) {
+export function Workspace({
+  projectId,
+  client,
+  initialLine,
+}: {
+  projectId: string;
+  client?: ApiClient;
+  /** Segment id to open on, from ?line=. Unknown ids are ignored. */
+  initialLine?: string;
+}) {
   const state = useProject(projectId, client);
 
   if (state.status === "loading") {
@@ -338,5 +363,5 @@ export function Workspace({ projectId, client }: { projectId: string; client?: A
   }
 
   // The key gives a different clock length a fresh player.
-  return <WorkspaceView key={`${projectId}:${clockDurationMs(state)}`} state={state} />;
+  return <WorkspaceView key={`${projectId}:${clockDurationMs(state)}`} state={state} initialLine={initialLine} />;
 }
