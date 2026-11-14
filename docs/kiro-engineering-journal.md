@@ -1369,6 +1369,12 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
 - Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.
 
+## 2026-11-14: WP3, our own evidence clip (Đăng)
+
+- Why the check clip made no evidence: the engine makes a candidate only when a frame shares a key word with the line (or the line needs outside proof). A speech-only run has no frames, so nothing matched. Steps 7 and 8 need frames, so they need the team account and Gemini.
+- New: `scripts/make-evidence-clip.ps1` (ffmpeg slides plus Windows text-to-speech, 10.3 s, own footage), `scripts/evidence-clip.json` (the script and checklist prod-e2e uses, plus the on-screen text). Slide 1 shows one key word only, so its evidence is medium and raises a Cursed Frame that step 7 can resolve.
+- `scripts/evidence-clip.test.ts`: 4 tests run the clip's expected speech and slide text through the real engine: 3 candidates, a Cursed Frame tied to evidence, no Ghost for item 1, and the same script as prod-e2e. 4 of 4 passed.
+- Checked the clip by looking at a frame (text readable) and ffmpeg volumedetect (speech present). Not checked: what Deepgram or Gemini return for it. That is the human step in human-actions.md.
 ## 2026-11-14: WP0, board and human checklist (Đăng)
 
 - Merged #39 (clip kits), #41 (brief 006), #42 (script tests in CI) and #40 (board) after main sync and green CI. #27 is handled in WP2.
@@ -1387,3 +1393,9 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - With a URL the workspace shows the real `<video>` and hides the simulated clock; the timeline, sentence list and Lantern read the same player. With `null` (the demo, fixture mode, a failed request) it keeps the simulated clock. The panel now says 'No playable video file' and no longer claims fixture mode on the live site.
 - Not done: captions (we have a transcript, not a WebVTT file). Not run against a real signed URL.
 - Found by the full browser run: PR #43 changed the queued text and missed `tests/e2e/analysis.spec.ts`. The browser specs do not run in CI. Fixed here: 3 of 3 passed. The full chromium run: 71 passed, then this one fixed.
+## 2026-11-14 afternoon: first real job on production, guest mode (results reported by Đăng)
+
+- `scripts/prod-smoke.ts` parts A and B against the live site: ALL CHECKS PASSED. Test project `zz-test-prpfcc` deleted.
+- `scripts/prod-e2e.ts` in guest mode, 04:14 to 04:17 UTC, `main` at `bcba5e0`. The queue check showed only our job. Worker runs 43555627213 and 43555808634 both succeeded (`speechOnly=1`, 2 transcript segments, 0 evidence, 3 findings). The script passed steps 1 to 6, 8, 9 and 10: job succeeded after 1 attempt, 2 Ghost findings, speech-only findings 2 of 2, seal 409 `uncovered_items`, `report.csv` 30 rows. Step 7 was SKIP because speech only gives no candidate to review. Step 8 is weak, because the edited line had no evidence. Both `zz-test-e2e-*` projects were deleted.
+- So the first real job is proven on production in speech-only mode, and no frame reached Gemini. Steps 7 and 8 still need the team-account run with a clip that produces evidence (#45).
+- `board.md` section 4 and `cleanup.md` are updated: six Storage folders are left to delete by hand.

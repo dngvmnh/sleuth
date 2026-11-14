@@ -36,8 +36,10 @@ Click path: Supabase dashboard, `sleuth-prod`, Storage, Buckets, `video-assets`.
 - `prj-0mweuyda80001-70352397`
 - `prj-0mwfvix7w0001-47e2cd39`
 - `prj-0mwfw7s890001-e7c1b662`
+- `prj-0mwfwzva70001-de91a8b1`
 - the folder of the extra brief-003 project, if it has one (its name is the project id from the `select` above)
-- later: the folder of each project id printed by `scripts/guest-flow-check.ts` or `scripts/prod-e2e.ts`
+$1
+State on 14 Nov afternoon (reported by Đăng): every `zz-test-*` row from the smoke test and the two prod-e2e runs is deleted, including `zz-test-prpfcc` and both `zz-test-e2e-*` projects. Only the six Storage folders above remain.
 
 To see which folders have no project any more, compare the folder names with this list:
 

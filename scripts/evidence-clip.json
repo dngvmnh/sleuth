@@ -1,0 +1,10 @@
+{
+  "note": "Our own test clip for scripts/prod-e2e.ts. The script and checklist are the ones prod-e2e.ts uses. Slide 1 shows only one key word of its line on purpose, so its evidence is medium and the engine raises a Cursed Frame finding that step 7 can resolve. Slide 2 shows two key words, so its evidence is high.",
+  "script": ["Open the project.", "Click Export report.", "The report downloads as a CSV file."],
+  "checklist": ["Export the report", "Show the CSV download"],
+  "slides": [
+    { "speech": "Open the project.", "onScreen": ["Project dashboard"], "nominalSeconds": 3 },
+    { "speech": "Click Export report.", "onScreen": ["Export report"], "nominalSeconds": 3 },
+    { "speech": "The report downloads as a CSV file.", "onScreen": ["Report downloaded", "CSV file"], "nominalSeconds": 4 }
+  ]
+}
