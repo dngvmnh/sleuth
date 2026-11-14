@@ -6,9 +6,11 @@ import { segmentScript } from "@sleuth/domain";
 import { runPipeline, type PipelineResult } from "@sleuth/evidence-engine";
 import { createMockTranscriptionProvider, type VideoAnalysisProvider } from "@sleuth/media";
 import {
+  formatEvidenceConfidenceSection,
   formatReport,
   scoreClip,
   summarise,
+  withEvaluationSection,
   type ClipScore,
   type ProducedAnalysis,
   type ProducedFinding,
@@ -269,7 +271,9 @@ function option(args: readonly string[], name: string): string | undefined {
 }
 
 /**
- * `pnpm eval [-- --providers mock|real] [--clips <dir>] [--results <dir>]`.
+ * `pnpm eval [-- --providers mock|real] [--clips <dir>] [--results <dir>] [--write-doc [--doc <file>]]`.
+ * `--write-doc` puts the totals (clips, precision, recall, false-warning rate) into the marked block of
+ * `docs/evidence-confidence.md`.
  *
  * With `--providers real` the keys come from the environment, or from `.env.local` when `env` is
  * the process environment. Output holds counts, line numbers and provider names only: no key,
@@ -327,6 +331,17 @@ export async function main(
     ),
   );
   console.log(`\nResults written to ${file}`);
+  if (args.includes("--write-doc")) {
+    const docPath = resolve(option(args, "--doc") ?? join(HERE, "..", "..", "docs", "evidence-confidence.md"));
+    const section = formatEvidenceConfidenceSection({
+      providers: result.providers,
+      clipsRun: result.clipsRun,
+      scores: result.scores,
+      ranOn: new Date().toISOString().slice(0, 10),
+    });
+    writeFileSync(docPath, withEvaluationSection(readFileSync(docPath, "utf8"), section));
+    console.log(`Result written into ${docPath}`);
+  }
   return 0;
 }
 

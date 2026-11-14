@@ -45,3 +45,17 @@ A script line serves a checklist item when at least 50% of the item's key words 
 - It compares words, not meaning. A frame can share words with a line and still not show the step.
 - Speech to text can miss or change words.
 - Frames are sampled, so a quick action between two samples can be missed.
+
+<!-- eval:start -->
+## Measured result (`pnpm eval`)
+
+Run on 2026-11-14 with providers: **mock**. Clips run: **1** (example).
+
+This was a mock run: a hand-written transcript and frames went through the real matching code. It tests the plumbing and the matching rules. It says nothing about speech or vision quality, so do not quote it as accuracy.
+
+| Clips | Labelled | Found | Right | Precision | Recall | False-warning rate |
+|---|---|---|---|---|---|---|
+| 1 | 7 | 7 | 7 | 100% | 100% | 0% |
+
+Precision is right / found. Recall is right / labelled. The false-warning rate is the share of what was found that nobody labelled. With few clips these numbers move a lot; the clip count is part of the result.
+<!-- eval:end -->
