@@ -8,7 +8,7 @@ Final text, 14 November 2026. Publish it on a public site the team controls, the
 
 Demo videos lie by accident. A step gets cut in editing, a screen changes, a script line is reworded after the take. SLEUTH is our Kiroween project: a QA workspace that checks a demo video against its script and checklist, and says what it cannot prove.
 
-![The SLEUTH workspace: the claims map with the Lantern open on line 3](screenshots/workspace-lantern-open-1440.png)
+![The SLEUTH workspace: the claims map with the Lantern open on line 3](screenshots/production/workspace-lantern-line-3-desktop.png)
 
 **Candidates, not verdicts.** SLEUTH never confirms anything on its own. It proposes evidence, and a person confirms or rejects it. A check in our repository flags any new code, outside the review rules, that marks evidence as confirmed.
 
