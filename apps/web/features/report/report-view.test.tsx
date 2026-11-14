@@ -103,11 +103,38 @@ describe("ReportBody", () => {
     expect(screen.getByTestId("seal-banner").querySelector("svg")).not.toBeNull();
   });
 
+  it("shows the outlined word that matches the real seal state, and hides it from screen readers", () => {
+    const draft = render(<ReportBody data={data()} />);
+    expect(screen.getByTestId("seal-word")).toHaveTextContent("UNSEALED");
+    expect(screen.getByTestId("seal-word")).toHaveAttribute("aria-hidden", "true");
+    draft.unmount();
+    const sealed = render(<ReportBody data={data({ seal: SEAL })} />);
+    expect(screen.getByTestId("seal-word")).toHaveTextContent("SEALED");
+    expect(screen.getByTestId("seal-word")).not.toHaveTextContent("UNSEALED");
+    sealed.unmount();
+    render(<ReportBody data={data({ seal: { ...SEAL, status: "broken", brokenAt: SEAL.sealedAt, brokenReason: "x" } })} />);
+    expect(screen.getByTestId("seal-word")).toHaveTextContent("UNSEALED");
+  });
+
+  it("writes the project name inside the one h1, after the real heading words", () => {
+    render(<ReportBody data={data()} />);
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveTextContent("The final seal.");
+    expect(h1).toHaveTextContent("Test project");
+  });
+
+  it("numbers the ledger rows with two digits and keeps the plain count text", () => {
+    render(<ReportBody data={data()} />);
+    const rows = screen.getAllByTestId("coverage-row");
+    expect(rows[0]).toHaveTextContent(/^01/);
+    expect(screen.getByTestId("coverage-proven")).toHaveTextContent(/\d+ of \d+ checklist items? proven/);
+  });
+
   it("lays out the sections in the order of requirement 4.1", () => {
     render(<ReportBody data={data()} />);
     const headings = screen.getAllByRole("heading").map((h) => h.textContent);
     expect(headings).toEqual([
-      "Test project",
+      "The final seal.Test project",
       "Coverage",
       "Findings",
       "Reshoots",

@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { CoverageSummary, Seal, SealBlocker } from "@sleuth/contracts";
@@ -227,4 +227,18 @@ describe("ExportButtons", () => {
     await userEvent.click(screen.getByRole("button", { name: "Print" }));
     expect(print).toHaveBeenCalledTimes(1);
   });
-});
+
+  it("shows each blocker as a locked door with a lock, a plain reason and a fix link", () => {
+    show({ blockers: ["undecided_candidates", "stale_evidence", "job_running"] });
+    const list = screen.getByRole("list", { name: "What blocks the Final Seal" });
+    const doors = within(list).getAllByRole("listitem");
+    expect(doors).toHaveLength(3);
+    for (const door of doors) {
+      expect(door).toHaveTextContent("Locked door");
+      expect(door.querySelector("svg")).not.toBeNull();
+    }
+    expect(doors[0]).toHaveTextContent(BLOCKER_TEXT.undecided_candidates);
+    expect(within(doors[0] as HTMLElement).getByRole("link", { name: "Open the workspace" })).toBeInTheDocument();
+    // Waiting needs no link.
+    expect(within(doors[2] as HTMLElement).queryByRole("link")).toBeNull();
+  });});

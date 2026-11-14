@@ -10,14 +10,33 @@ import { OutsideProofList } from "./outside-proof-list";
 import { ReshootList } from "./reshoot-list";
 import { ExportButtons } from "./export-buttons";
 import { CloseIcon, FileIcon, WaxSealIcon } from "@/components/icons";
+import { PanelCorners } from "@/components/ornaments";
 import { HONESTY_NOTES, sealBanner } from "./labels";
 import { SealPanel } from "./seal-panel";
+import styles from "./report.module.css";
 import { useReport, type ReportData, type SealResult } from "./use-report";
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+function Section({
+  id,
+  title,
+  eyebrow,
+  children,
+}: {
+  id: string;
+  title: string;
+  /** Decorative label above the heading; the heading carries the meaning. */
+  eyebrow?: string;
+  children: ReactNode;
+}) {
   return (
-    <section aria-labelledby={id} className="rounded-md border border-line bg-surface p-4">
-      <h2 id={id} className="font-display text-xl text-foreground">
+    <section aria-labelledby={id} className="panel p-5">
+      <PanelCorners />
+      {eyebrow ? (
+        <p className="eyebrow mb-2" aria-hidden="true">
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2 id={id} className="font-display text-2xl text-foreground">
         {title}
       </h2>
       <div className="mt-3">{children}</div>
@@ -33,9 +52,9 @@ function BannerIcon({ status }: { status: "draft" | "sealed" | "broken" }) {
 }
 
 const BANNER_CLASS = {
-  draft: "border-warn",
-  sealed: "border-gold",
-  broken: "border-danger border-dashed",
+  draft: styles.statusDraft,
+  sealed: styles.statusSealed,
+  broken: styles.statusBroken,
 } as const;
 
 function lineText(data: ReportData, segmentId: string | null): string | undefined {
@@ -78,9 +97,9 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
         role="status"
         data-testid="seal-banner"
         data-status={banner.status}
-        className={`rounded-md border-2 bg-surface p-4 ${BANNER_CLASS[banner.status]}`}
+        className={`panel border-2 p-4 ${BANNER_CLASS[banner.status]}`}
       >
-        <p className="flex items-center gap-2 font-display text-xl text-foreground">
+        <p className="flex items-center gap-2 font-display text-2xl text-foreground">
           <span className={banner.status === "sealed" ? "text-gold" : banner.status === "broken" ? "text-danger" : "text-warn"}>
             <BannerIcon status={banner.status} />
           </span>
@@ -91,21 +110,33 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
       </div>
 
       {/* 4.1 order: project name, seal status, coverage, findings, open reshoots, outside proof, limits. */}
-      <header>
-        <p className="text-sm">
-          <Link
-            className="text-primary-strong underline-offset-4 hover:underline"
-            href={`/projects/${encodeURIComponent(data.project.project.id)}`}
-          >
-            Back to the workspace
-          </Link>
+      <header className={styles.hero}>
+        {/* The outlined word follows the real seal: SEALED only while an active seal holds. */}
+        <p className={`outline-word ${styles.heroWord}`} aria-hidden="true" data-testid="seal-word">
+          {banner.status === "sealed" ? "SEALED" : "UNSEALED"}
         </p>
-        <h1 className="mt-2 font-display text-3xl tracking-tight">{data.project.project.name}</h1>
-        <p className="mt-1 text-sm text-muted">Final Seal report</p>
+        <div className={styles.heroBody}>
+          <p className="text-sm">
+            <Link
+              className="text-primary-strong underline-offset-4 hover:underline"
+              href={`/projects/${encodeURIComponent(data.project.project.id)}`}
+            >
+              Back to the workspace
+            </Link>
+          </p>
+          <p className="eyebrow mt-4" aria-hidden="true">
+            Chapter III · The verdict
+          </p>
+          <h1 className="mt-2 font-display text-4xl tracking-tight text-foreground sm:text-5xl">
+            The final <em className="italic text-primary">seal</em>.
+            <span className="mt-1 block text-xl text-muted sm:text-2xl">{data.project.project.name}</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted">Final Seal report</p>
+        </div>
       </header>
 
       {/* 3. Coverage summary and per-item states */}
-      <Section id="report-coverage" title="Coverage">
+      <Section id="report-coverage" title="Coverage" eyebrow="The ledger">
         <CoverageTable
           coverage={data.coverage}
           checklist={data.project.checklist}
@@ -122,7 +153,7 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
       </Section>
 
       {/* 4. Findings with spooky and plain labels */}
-      <Section id="report-findings" title="Findings">
+      <Section id="report-findings" title="Findings" eyebrow="The cabinet">
         {data.findings.length === 0 ? (
           <p className="text-sm text-muted">No findings. That does not mean every item is proven; see the coverage above.</p>
         ) : (
@@ -130,7 +161,7 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
             {data.findings.map((f) => {
               const about = [itemText(data, f.checklistItemId), lineText(data, f.scriptSegmentId)].filter(Boolean);
               return (
-                <li key={f.id} className="rounded-md border border-line p-3 text-sm" data-testid="report-finding">
+                <li key={f.id} className="panel-inset p-3 text-sm" data-testid="report-finding">
                   <div className="flex flex-wrap items-center gap-2">
                     <FindingBadge type={f.type} />
                     <span className="text-xs text-muted">{f.status === "open" ? "Open" : "Resolved"}</span>
@@ -158,7 +189,7 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
       </Section>
 
       {/* 5. Reshoots: open first, then done. The owner can mark one done. */}
-      <Section id="report-reshoots" title="Reshoots">
+      <Section id="report-reshoots" title="Reshoots" eyebrow="Back to the set">
         <ReshootList
           reshoots={data.reshoots}
           checklist={data.project.checklist}
@@ -171,12 +202,12 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
       </Section>
 
       {/* 6. Outside-proof list */}
-      <Section id="report-outside-proof" title="Needs outside proof (footage cannot prove this)">
+      <Section id="report-outside-proof" title="Needs outside proof (footage cannot prove this)" eyebrow="Beyond the frame">
         <OutsideProofList items={data.coverage.outsideProof} segments={data.project.scriptVersion?.segments ?? []} />
       </Section>
 
       {/* 7. Limits of the checks */}
-      <Section id="report-limits" title="Limits of these checks">
+      <Section id="report-limits" title="Limits of these checks" eyebrow="The small print">
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
           {HONESTY_NOTES.map((n) => (
             <li key={n}>{n}</li>

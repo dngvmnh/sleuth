@@ -1515,6 +1515,14 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Brief text changed where it was not true: Escape in the timeline goes back to the script (it does not close the Lantern), and a guest session stays in this browser until its data is cleared (it does not end when the browser closes). The eyebrow is 12 px, not 11 px, to keep the 12 px minimum.
 - Checks: lint 0 problems, typecheck clean, unit tests 1131 passed and 70 skipped, build ok, Playwright chromium 73 passed, ghost-scan clean.
 
+## 2026-11-14: brief 007 step 4, the final seal (Đăng session, frontend-builder rules)
+
+- Report page: eyebrow `Chapter III · The verdict`, H1 `The final seal.` with the project name inside the same h1, and an outlined word (`SEALED` only while an active seal holds, else `UNSEALED`; `aria-hidden`, hidden in print). Sections are `.panel` with corner marks and an eyebrow; each h2 keeps its old text.
+- Blockers are locked doors: lock icon, plain reason, a fix hint and the existing 'Open the workspace' link. The seal panel has a 56 px wax seal (gold when sealed, muted otherwise); the stamp animation is still `SealConfirmation`.
+- The coverage table is a ledger: alternating faint rows, two-digit serif numerals, a big proven count. Test ids and the plain count sentence are unchanged.
+- New shared classes: none in globals. Page-only classes are in `features/report/report.module.css`. No token added.
+- Tests: 4 new unit tests (outlined word per state, h1 text, ledger numbers, locked doors). Gates: lint, typecheck, build, ghost-scan clean; test:property 115, check:contracts 14; chromium e2e 73 passed including a11y. `pnpm test`: 1133 passed, 2 failed, both 5-second timeouts in worker ffmpeg tests that pass when run alone (64 passed); I changed nothing there.
+- Print: checked in print media at 1100 px: body white, text dark, outlined word and footer hidden. Not sent to a physical printer. Not tried: a sealed report on screen (covered by the unit test only).
 ## 2026-11-14: dashboard "The screening room" (brief 007 step 2, Đăng)
 
 - Kiro features used: steering (`.kiro/steering/frontend.md`), the brief as the task spec, the `ghost-scan` hook, and a Kiro frontend session in its own git worktree. Built on step 1 (#74), which is not merged yet.

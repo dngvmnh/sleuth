@@ -1,0 +1,155 @@
+/* Styles for the report page only (brief 007 step 4). Token variables only, no raw colours.
+   Print: the global print block swaps the tokens to light values, so these follow it. */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem 0 0.5rem;
+}
+
+/* The outlined word sits behind the heading. It is `.outline-word` (global) plus this placement. */
+.heroWord {
+  position: absolute;
+  right: -0.5rem;
+  top: -0.25rem;
+  z-index: 0;
+  font-size: clamp(4rem, 17vw, 10rem);
+  opacity: 0.4;
+}
+
+.heroBody {
+  position: relative;
+  z-index: 1;
+}
+
+/* A banner whose border style tells the state without colour. */
+.statusSealed {
+  border-color: var(--sleuth-gold);
+}
+.statusBroken {
+  border-color: var(--sleuth-danger);
+  border-style: dashed;
+}
+.statusDraft {
+  border-color: var(--sleuth-warn);
+}
+
+/* Locked doors: one per blocker. */
+.doors {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.door {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  align-items: start;
+  padding: 0.75rem;
+  border: 1px solid var(--sleuth-border-strong);
+  border-left-width: 4px;
+  border-left-color: var(--sleuth-warn);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--sleuth-bg) 55%, transparent);
+}
+.doorIcon {
+  grid-row: span 2;
+  color: var(--sleuth-warn);
+  margin-top: 0.125rem;
+}
+.doorTag {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sleuth-text-muted);
+}
+
+/* The big seal in the panel. */
+.sealHead {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.sealMark {
+  flex: none;
+  color: var(--sleuth-gold);
+}
+.sealMarkMuted {
+  color: var(--sleuth-text-muted);
+}
+
+/* The ledger: alternating faint rows, display-serif numerals. */
+.ledgerTotal {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.bigNumeral {
+  font-family: var(--sleuth-font-display);
+  font-size: 3.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sleuth-text);
+}
+.ledger {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.ledger thead th {
+  padding: 0.5rem 0.75rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sleuth-text-muted);
+  border-bottom: 2px solid var(--sleuth-border-strong);
+}
+.ledger tbody tr {
+  border-bottom: 1px solid var(--sleuth-border);
+  vertical-align: top;
+}
+.ledger tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--sleuth-surface-raised) 45%, transparent);
+}
+.ledger td {
+  padding: 0.625rem 0.75rem;
+}
+.ledgerNo {
+  font-family: var(--sleuth-font-display);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sleuth-gold);
+}
+.ledgerCount {
+  font-family: var(--sleuth-font-display);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sleuth-text);
+}
+
+@media (max-width: 480px) {
+  .heroWord {
+    font-size: 4rem;
+  }
+  .bigNumeral {
+    font-size: 3rem;
+  }
+}
+
+@media print {
+  .heroWord {
+    display: none;
+  }
+  .ledger tbody tr:nth-child(even) {
+    background: transparent;
+  }
+}

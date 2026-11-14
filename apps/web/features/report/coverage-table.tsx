@@ -1,5 +1,6 @@
 import type { ChecklistItem, CoverageState, CoverageSummary } from "@sleuth/contracts";
 import { COVERAGE_LABELS, COVERAGE_ORDER } from "./labels";
+import styles from "./report.module.css";
 import { RequestReshoot } from "./request-reshoot";
 
 const STATE_CLASS: Record<CoverageState, string> = {
@@ -87,10 +88,15 @@ export function CoverageTable({
 
   return (
     <div>
-      <p className="text-sm text-foreground" data-testid="coverage-proven">
-        {coverage.totals.proven} of {coverage.items.length} checklist{" "}
-        {coverage.items.length === 1 ? "item" : "items"} proven ({coverage.provenPercent}%).
-      </p>
+      <div className={styles.ledgerTotal}>
+        <span className={styles.bigNumeral} aria-hidden="true">
+          {String(coverage.totals.proven).padStart(2, "0")}
+        </span>
+        <p className="text-sm text-foreground" data-testid="coverage-proven">
+          {coverage.totals.proven} of {coverage.items.length} checklist{" "}
+          {coverage.items.length === 1 ? "item" : "items"} proven ({coverage.provenPercent}%).
+        </p>
+      </div>
       <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm" aria-label="Coverage totals">
         {COVERAGE_ORDER.map((state) => (
           <li key={state} className="inline-flex items-center gap-1.5">
@@ -108,30 +114,22 @@ export function CoverageTable({
         </p>
       ) : (
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+          <table className={styles.ledger}>
             <caption className="sr-only">Coverage of each checklist item</caption>
             <thead>
-              <tr className="border-b border-line text-muted">
-                <th scope="col" className="py-2 pr-3 font-medium">
-                  #
-                </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
-                  Checklist item
-                </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
-                  State
-                </th>
-                <th scope="col" className="py-2 font-medium">
-                  Evidence
-                </th>
+              <tr>
+                <th scope="col">No.</th>
+                <th scope="col">Checklist item</th>
+                <th scope="col">State</th>
+                <th scope="col">Evidence</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={row.checklistItemId} className="border-b border-line align-top" data-testid="coverage-row">
-                  <td className="py-2 pr-3 text-muted">{i + 1}</td>
-                  <td className="py-2 pr-3">{label.get(row.checklistItemId)?.label ?? row.checklistItemId}</td>
-                  <td className="py-2 pr-3">
+                <tr key={row.checklistItemId} data-testid="coverage-row">
+                  <td className={styles.ledgerNo}>{String(i + 1).padStart(2, "0")}</td>
+                  <td>{label.get(row.checklistItemId)?.label ?? row.checklistItemId}</td>
+                  <td>
                     <CoverageStateLabel state={row.state} />
                     {actions && row.state === "uncovered" ? (
                       <RequestReshoot
@@ -145,8 +143,9 @@ export function CoverageTable({
                       />
                     ) : null}
                   </td>
-                  <td className="py-2 text-muted">
-                    {row.evidenceIds.length} {row.evidenceIds.length === 1 ? "candidate" : "candidates"}
+                  <td className="text-muted">
+                    <span className={styles.ledgerCount}>{row.evidenceIds.length}</span>{" "}
+                    {row.evidenceIds.length === 1 ? "candidate" : "candidates"}
                   </td>
                 </tr>
               ))}
