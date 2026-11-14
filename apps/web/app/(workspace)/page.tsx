@@ -30,7 +30,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="legend-heading" className="mt-10">
+      <section id="findings-guide" aria-labelledby="legend-heading" className="mt-10 scroll-mt-6">
         <h2 id="legend-heading" className="font-display text-2xl">
           What the findings mean
         </h2>

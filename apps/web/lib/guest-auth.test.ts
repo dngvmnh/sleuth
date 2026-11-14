@@ -287,3 +287,24 @@ describe("browser guest auth and the server config", () => {
     ).toEqual({ mode: "supabase", url: "https://x", anonKey: "k" });
   });
 });
+
+describe("reviewer kind (header identity chip)", () => {
+  it("reads the local session only and never signs in", async () => {
+    const f = fakePort();
+    const auth = createGuestAuth(() => f.port);
+    expect(await auth.reviewerKind?.()).toBe("visitor");
+    f.setSession({ ...SESSION, user: { id: "u1", is_anonymous: true } });
+    expect(await auth.reviewerKind?.()).toBe("guest");
+    f.setSession({ ...SESSION, user: { id: "u2", is_anonymous: false } });
+    expect(await auth.reviewerKind?.()).toBe("team");
+    expect(f.spies.signInAnonymously).not.toHaveBeenCalled();
+    expect(f.spies.getUser).not.toHaveBeenCalled();
+  });
+
+  it("reads any failure as a visitor", async () => {
+    const f = fakePort({ getSession: async () => Promise.reject(new TypeError("offline")) });
+    expect(await createGuestAuth(() => f.port).reviewerKind?.()).toBe("visitor");
+    expect(await createGuestAuth(null).reviewerKind?.()).toBe("visitor");
+    expect(await createFixtureGuestAuth().reviewerKind?.()).toBe("guest");
+  });
+});

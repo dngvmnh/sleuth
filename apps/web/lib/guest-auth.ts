@@ -14,6 +14,9 @@
 
 export type GuestAuthMode = "fixture" | "supabase";
 
+/** Who is using this browser, for the header: no session yet, a guest, or a team account. */
+export type ReviewerKind = "visitor" | "guest" | "team";
+
 export type GuestAuthErrorCode = "not_configured" | "anonymous_disabled" | "network" | "failed";
 
 /** Plain messages for people. Each says that nothing was created and how to go on. */
@@ -53,6 +56,11 @@ export interface GuestAuth {
    * Never signs anyone in and never throws.
    */
   prepareRequest(): Promise<void>;
+  /**
+   * Who holds the session in this browser. Reads the local session only: never signs anyone
+   * in and never throws (any problem reads as "visitor"). Optional for hand-made test doubles.
+   */
+  reviewerKind?(): Promise<ReviewerKind>;
 }
 
 interface ErrorShape {
@@ -114,6 +122,7 @@ export function createFixtureGuestAuth(): GuestAuth {
     mode: "fixture",
     ensureSession: async () => undefined,
     prepareRequest: async () => undefined,
+    reviewerKind: async () => "guest",
   };
 }
 
@@ -186,6 +195,17 @@ export function createGuestAuth(getPort: (() => GuestAuthPort) | null): GuestAut
         await auth().getSession();
       } catch {
         // The request goes ahead; the server treats an unusable session as a visitor.
+      }
+    },
+    async reviewerKind(): Promise<ReviewerKind> {
+      if (!getPort) return "visitor";
+      try {
+        const { data, error } = await auth().getSession();
+        if (error || !data.session) return "visitor";
+        const user = (data.session as { user?: { is_anonymous?: unknown } }).user;
+        return user?.is_anonymous === false ? "team" : "guest";
+      } catch {
+        return "visitor";
       }
     },
   };
