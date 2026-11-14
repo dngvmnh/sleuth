@@ -1373,3 +1373,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 
 - Merged #39 (clip kits), #41 (brief 006), #42 (script tests in CI) and #40 (board) after main sync and green CI. #27 is handled in WP2.
 - decisions-needed.md: D-11 decided, freeze moved to 29 Nov (D-19), worker trigger decided (D-20). cleanup.md lists 5 Storage folders to delete by hand. New human-actions.md.
+## 2026-11-14: WP1, the worker runs by itself (Đăng, ADR 0009)
+
+- `.github/workflows/worker.yml`: `schedule` on, every 10 minutes. `concurrency` kept (no overlap). `ffmpeg` is installed only when the runner lacks it.
+- `analysis-panel.tsx`: a queued job now says "Queued. Analysis starts within about 10 to 15 minutes." The state shown is the real polled state.
+- `apps/worker/src/schedule.test.ts`: 4 tests. The schedule and concurrency group exist, the run is `--once`, and an empty queue returns after one claim.
+- ADR `docs/decisions/0009-worker-schedule.md` records the limits: GitHub may delay a scheduled run, and it pauses schedules after 60 days of no repository activity.
+- Kiro features used: the handover as a spec, steering rules, and the worker-area rules. Checks run: lint, typecheck, test (979 passed, 70 skipped because they need Postgres), test:property (114), check:contracts (14), build, ghost-scan. Nothing failed. The first edit of the workflow failed to match because the comment text differed from what I remembered, so I read the file bytes before editing again.
