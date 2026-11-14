@@ -1,0 +1,33 @@
+{
+  "name": "clip-2",
+  "task": "evidence-analysis 11",
+  "formatStatus": "follows docs/evaluation-protocol.md (clip.json)",
+  "case": "one deliberately missing step: a checklist item is spoken about but never shown on screen",
+  "recordedBy": "Đăng (@dngvmnh)",
+  "labelledBy": null,
+  "recordedOn": null,
+  "durationMs": null,
+  "video": {
+    "fileName": "clip-2.mp4",
+    "inGit": false,
+    "storedAt": null,
+    "sha256": null
+  },
+  "script": [
+    "This is the SLEUTH API running on my laptop in fixture mode.",
+    "First I make an editable copy of the demo project.",
+    "Next I replace the script with two short lines.",
+    "Then I set a checklist with two items.",
+    "Now I ask for an upload link for the new video.",
+    "After that I start the analysis.",
+    "Finally I check the job status."
+  ],
+  "checklist": [
+    "Make a copy of the demo",
+    "Replace the script",
+    "Set a checklist",
+    "Get an upload link",
+    "Start the analysis",
+    "Show the job status"
+  ]
+}

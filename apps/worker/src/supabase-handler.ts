@@ -92,6 +92,11 @@ export function createSupabaseHandler(options: SupabaseHandlerOptions): JobHandl
   return async (job) => {
     const inputs = await step("load", () => options.store.loadJobInputs(job.id, options.workerId));
     if (inputs.asset.durationMs > maxMs) throw new MediaError("probe", "duration_exceeded");
+    // Decision D-4: frames leave this machine only when the provider set allows it for this owner.
+    const videoAnalysis =
+      options.providers.videoAnalysis !== null && options.providers.sendsFramesFor(inputs.owner)
+        ? options.providers.videoAnalysis
+        : null;
     const url = await step("download", () => options.store.createVideoDownloadUrl(inputs));
 
     const produced = await step("media", () =>
@@ -105,13 +110,17 @@ export function createSupabaseHandler(options: SupabaseHandlerOptions): JobHandl
 
         const audioPath = join(dir, "audio.wav");
         await media.extractAudio(videoPath, audioPath);
-        const framesDir = join(dir, "frames");
-        await mkdir(framesDir);
-        const timestamps = planFrames(durationMs, {
-          intervalMs: frameIntervalMs,
-          maxFrames: options.maxFrames,
-        });
-        const sampledFrames = await media.extractFrames(videoPath, timestamps, framesDir);
+        // Speech only: no frame folder, no frame files, nothing for a video provider to read.
+        let sampledFrames: SampledFrame[] = [];
+        if (videoAnalysis !== null) {
+          const framesDir = join(dir, "frames");
+          await mkdir(framesDir);
+          const timestamps = planFrames(durationMs, {
+            intervalMs: frameIntervalMs,
+            maxFrames: options.maxFrames,
+          });
+          sampledFrames = await media.extractFrames(videoPath, timestamps, framesDir);
+        }
 
         const result = await step("analyse", () =>
           runPipeline({
@@ -122,11 +131,11 @@ export function createSupabaseHandler(options: SupabaseHandlerOptions): JobHandl
             segments: inputs.script.segments,
             checklist: inputs.checklist,
             transcription: options.providers.transcription,
-            videoAnalysis: options.providers.videoAnalysis,
+            videoAnalysis,
             frameIntervalMs,
             maxFrames: options.maxFrames,
             audioPath,
-            sampledFrames,
+            ...(videoAnalysis !== null ? { sampledFrames } : {}),
             ...(inputs.segmentIds ? { segmentIds: inputs.segmentIds } : {}),
             existingEvidence: inputs.existingEvidence,
           }),
@@ -148,6 +157,7 @@ export function createSupabaseHandler(options: SupabaseHandlerOptions): JobHandl
       jobId: job.id,
       durationMs: produced.durationMs,
       frames: produced.frameCount,
+      speechOnly: videoAnalysis === null ? 1 : 0,
       transcriptSegments: result.transcript.length,
       evidence: result.evidence.length,
       findings: result.findings.length,

@@ -11,6 +11,10 @@
   --color-primary: var(--sleuth-primary);
   --color-primary-strong: var(--sleuth-primary-strong);
   --color-on-primary: var(--sleuth-on-primary);
+  --color-line-strong: var(--sleuth-border-strong);
+  --color-gold: var(--sleuth-gold);
+  --color-spectral: var(--sleuth-spectral);
+  --color-focus: var(--sleuth-focus);
   --color-warn: var(--sleuth-warn);
   --color-danger: var(--sleuth-danger);
   --color-ok: var(--sleuth-ok);
@@ -37,8 +41,7 @@ body {
    * as the element's text colour (dark on the primary button) and fade to the focus
    * colour. Leave outline-color out so the ring shows at full strength at once.
    */
-  transition-property:
-    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
 }
 
 /*
@@ -47,15 +50,21 @@ body {
  * Token values are swapped so every component turns light without its own print rules.
  */
 @media print {
-  :root {
+  /* `:root[data-theme]` as well, so the print values beat either theme. */
+  :root,
+  :root[data-theme] {
     --sleuth-bg: #ffffff;
     --sleuth-surface: #ffffff;
     --sleuth-surface-raised: #f2f2f2;
     --sleuth-border: #888888;
+    --sleuth-border-strong: #555555;
     --sleuth-text: #111111;
     --sleuth-text-muted: #333333;
     --sleuth-primary: #3b2a7a;
     --sleuth-primary-strong: #3b2a7a;
+    --sleuth-on-primary: #ffffff;
+    --sleuth-gold: #5c4400;
+    --sleuth-spectral: #0b5c45;
     --sleuth-warn: #6b4a00;
     --sleuth-danger: #8a1c1c;
     --sleuth-ok: #145c38;

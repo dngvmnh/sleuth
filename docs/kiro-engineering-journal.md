@@ -1161,3 +1161,210 @@ Test data made, for cleanup (the API has no delete route; use `docs/deploy-plan.
 - Two older rows, `zz-test-e2e-zkgp8m` and `zz-test-e2e-15jv2c` from 11:34 and 11:39 UTC, were not made here.
 
 The live checks ran against the dev project only, not production. No frontend bug was found, so no app code changed in this step. Nothing was committed or pushed.
+## 2026-11-11: Narrator walkthrough and the step 18 fix (Review Workspace task 14)
+
+A Narrator walkthrough was run on Windows and Edge, against the production build in fixture mode, at commit `c737231`. An agent pressed the keys. The evidence is screenshots of Narrator's Speech recap. Nobody listened by ear. The step-by-step results are in `docs/accessibility.md` ("Narrator walkthrough log").
+
+Steps 1 to 15 and 17 pass on the transcript. Two findings:
+
+- **Scan mode.** With Narrator Scan mode on, Right reads the marker's label one character at a time instead of moving to the next marker. The walkthrough now says to turn Scan mode off for the timeline (Narrator key + Space). No code change: in Scan mode the screen reader keeps the arrow keys for itself.
+- **Step 18 failed.** The disabled seal button was described as "The Final Seal is not available yet What blocks the Final Seal". The button's `aria-describedby` pointed at a wrapper around a list with `aria-label`. To build the description, the browser walks the wrapper, and on reaching the list it uses the list's label instead of its items. Fix in `seal-panel.tsx`: `aria-describedby` now lists the intro line and one `span` per blocker sentence. The links and the list label are no longer part of the description.
+
+Tests added: `seal-panel.test.tsx` checks the exact description; `seal.spec.ts` checks it in Chromium. The new unit test failed before the fix. In jsdom, the old description also included "Open the workspace".
+
+| Check (fixture mode) | Result |
+|---|---|
+| `vitest run apps/web/features/report` | 61/61 |
+| `pnpm lint` | clean |
+| `pnpm typecheck` | clean |
+| `playwright test seal, final-seal, a11y, report --workers=1` | 22/22 |
+
+Not checked: step 18 heard again after the fix; speech cut off or overlapping (steps 15 and 17); hover contrast; Windows High Contrast mode. Task 14 stays open. Nothing was committed or pushed.
+
+## 2026-11-13: step 18 re-checked with Narrator (Review Workspace task 14)
+
+Đạt checked the step 18 fix with Narrator by ear. On a copy whose seal is still blocked, Narrator read both reasons on the disabled "Apply the Final Seal" button: undecided evidence candidates, and checklist items with no usable evidence. Step 18 is now **Pass**. Source: the user heard it directly. The exact words were not captured, so it is not a verbatim transcript.
+
+Still open, so task 14 stays open:
+- Steps 15 and 17: whether speech is cut off or overlaps, checked by ear.
+- Hover contrast.
+- Windows High Contrast mode.
+- Narrator heading navigation with the heading key.
+
+Only docs changed in this entry. Nothing was committed or pushed.
+
+## 2026-11-13: hover contrast, Windows High Contrast, heading navigation (Review Workspace task 14)
+
+An agent ran these checks. Details are in `docs/accessibility.md`.
+
+- **Hover contrast: Pass, nothing changed.** 20 text elements on 18 controls were measured while hovered: dashboard, workspace copy and report copy. The text was made transparent and every pixel of its line box was read as the background. The lowest results are 6.68:1 for large text (the wordmark, needs 3:1) and 7.91:1 for normal text (needs 4.5:1). A first run screenshotted the whole control and counted borders and rounded corners as background, which gave false "1:1" results. That run was thrown away.
+- **Windows High Contrast: 2 problems found and fixed.** The Night sky theme was applied through Settings. Before the check, the theme was "None" (flags 126, `Custom.theme`). It was restored afterwards and the values were checked again.
+  - Problem 1: the chosen marker and the chosen script line looked like the rest. The theme gives every border the same colour and drops the raised background.
+  - Problem 2: the playhead and the marker range bars disappeared, because they were drawn with `background-color`.
+  - Fix in `timeline.tsx` and `sentence-list.tsx`: a double border for the chosen item in forced colours, and borders instead of backgrounds for the playhead and bars.
+  - Re-checked in the real theme.
+  - Note: Playwright Chromium follows the Windows theme only with `forcedColors: null`. Its default emulates "none", and a first run made that way was not counted.
+- **Narrator heading navigation: not verified.** The desktop tool lost its handle on Edge's web content between calls, so H and Shift+H were never sent. Narrator's speech also cannot be captured from this session. No PASS is recorded.
+
+| Check (fixture mode) | Result |
+|---|---|
+| `vitest run apps/web/features` | 256/256 |
+| `pnpm lint` | clean |
+| `pnpm typecheck` | clean |
+| `playwright test a11y, investigation, focus, workspace, review --workers=1` | 37/37 (including the new forced-colors test) |
+
+Still open, so task 14 stays open:
+- Steps 15 and 17: whether speech is cut off or overlaps, checked by ear.
+- Narrator heading navigation.
+- The other contrast themes.
+
+Step 18 stays Pass, as Đạt confirmed. Nothing was committed or pushed.
+
+## 2026-11-13: Narrator heading navigation Pass; step 15 set up for listening
+
+- **Heading navigation: Pass.** Source: Đạt, checking directly with Narrator in Scan mode. H moved to the next heading and read its name correctly. Shift+H went back and read the previous heading correctly. These results are what Đạt heard and reported, not a verbatim transcript.
+- **Step 15 set up for listening.**
+  - The production build (`ioAWs_mJzgrmDBH_KiX0a`, fixture mode) is running at 127.0.0.1:3000.
+  - An editable copy, `proj-5`, was made for Đạt to press "Run analysis" and listen.
+  - The workspace does not load an existing job when it opens, so the queued state can only be reached by pressing the button. It was not queued ahead of time.
+  - A separate sanity copy (`proj-1`) confirmed through the API that starting an analysis gives `queued` (attempts 0 of 3), and that it is still `queued` 5 s later. In fixture mode the web app has no worker.
+
+Still open, so task 14 stays open: steps 15 and 17, whether speech is cut off or overlaps, checked by ear. Only docs changed. Nothing was committed or pushed.
+
+## 2026-11-13: step 15 heard; step 17 set up (Review Workspace task 14)
+
+- **Step 15 by ear: Pass, within a stated scope.** Đạt listened directly with Narrator on the fixture copy `proj-5`. After pressing "Run analysis" and waiting about 10 s, Đạt heard the queued message read in full, once, with no repeats while it polled. Overlap with other speech was not reported, so it is not recorded as checked.
+- **Step 17 set up, not signed.** The fixture copy `proj-9` was made ready to seal through the local API, the same way `seal.spec.ts` does it.
+  - The agent confirmed evidence for lines 1 to 3. This is test setup on fixture data, not a real review.
+  - Line 5 was marked as needing outside proof.
+  - A reshoot was asked for the uncovered item `ck-4`.
+  - The coverage API then reported `blockers: []` and no seal. The report page answers 200.
+  - The seal was not applied, so Đạt can sign it and listen.
+
+Task 14 stays open until step 17 is heard. Only docs changed. Nothing was committed or pushed.
+
+## 2026-11-13: step 17 heard; Review Workspace task 14 ticked
+
+- **Step 17 by ear: Pass, within a stated scope.** After signing with the keyboard, Đạt heard both messages directly with Narrator: "Final Seal applied." and "The Final Seal was applied. The report is now signed off." These are what Đạt heard and reported, not a verbatim transcript. Their order and any overlap between them were not reported.
+  - Three fixture copies were made ready to seal and were all signed: `proj-9`, `proj-18` and `proj-27`.
+  - Đạt missed the speech on the first two and they were left as they were.
+  - Đạt has not confirmed which copy ID the heard run was on.
+- **Task 14 checked against its own criteria** (`.kiro/specs/review-workspace/tasks.md`):
+
+| Criterion | Evidence | Met |
+|---|---|---|
+| Do: axe scan of dashboard, workspace and lantern | `a11y.spec.ts`: 6 axe tests, with motion on and off. They passed after the last code change (the 37/37 run on 2026-11-13) | Yes |
+| Do: reduced-motion test | `a11y.spec.ts` "reduced motion"; `focus.spec.ts` with reduced motion | Yes |
+| Do: a Narrator or NVDA walkthrough noted with what was and was not checked | Steps 1 to 18 in `docs/accessibility.md`: Speech recap (2026-11-11) and Đạt by ear (steps 15, 17, 18 and heading navigation, 2026-11-13) | Yes |
+| Done when: axe reports no serious or critical issues | 0 serious or critical on every scanned page and state | Yes |
+| Done when: the doc lists known gaps honestly | "Known gaps" names the limits: one screen reader and one browser, the scope of the by-ear checks, contrast themes not tried, the 6 unmeasured report nodes, the 8.5 limits, the unwired video player, the open focus decision | Yes |
+
+  Task 14 is ticked. Requirement 8.5 is still only partly proven, and the doc says so. The task did not ask for full proof.
+
+Only docs and the task list changed in this entry. Nothing was committed or pushed in that session.
+
+## 2026-11-13: accessibility follow-up handed off
+
+PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow-up work goes on a new branch, `fix/accessibility-followup`, made from the newest `main` (`62e2332`):
+- the step 18 description fix;
+- the High Contrast fixes (chosen marker and line, playhead and range bars);
+- their tests;
+- `docs/accessibility.md`;
+- task 14 ticked.
+
+The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
+
+## 2026-11-13: submission groundwork (brief 005)
+
+- `docs/submission/kiro-usage.md` (DRAFT): steering, specs, hooks, agents, property tests, mutation checks and the review routine, each claim with its journal date, PR or commit. Ends with what only Dat and Phạm Quốc Bảo can add.
+- `docs/submission/dogfood-plan.md` (DRAFT): order, dates, people, files, fallback. The official rules page returned HTTP 403 to the page reader, so the video rules are not quoted; Dang reads them.
+- `.github/workflows/keep-alive.yml`: one read-only query against sleuth-prod on Mondays and Thursdays at 03:17 UTC, plus manual runs and a run on PRs that change the file. Prints only ok or an error code. `docs/deploy-plan.md` quotes the Supabase pausing rule (7 days of low activity) and GitHub's 60-day rule for scheduled workflows in a public repo.
+- `docs/submission/launch-checklist.md` (DRAFT): 15 dated items with owners; most are open.
+## 2026-11-13: speech-only worker mode (brief 002b, built by Đăng under D-13)
+
+- `VIDEO_ANALYSIS_PROVIDER=none`: no frame folder, no frame files, no Gemini client and no `VIDEO_ANALYSIS_API_KEY` read; the pipeline runs on the transcript alone. Unset or `mock` in supabase mode is still refused (`provider_not_configured`), so a missing setting never falls back to Gemini.
+- `VIDEO_ANALYSIS_PROVIDER=gemini` now sends frames only for a project owned by a real Supabase Auth account (not anonymous, and known to Auth) that is listed in `VIDEO_ANALYSIS_OWNER_IDS`. Empty list means nobody. `loadJobInputs` returns `owner: { userId, realAccount }` read from `auth.users`.
+- Engine: `speechOnly` adds "Checked by speech only ..." to every finding's limits and every explanation. The rules are unchanged: a screen claim gets no candidate from speech alone, so its item stays a Ghost; outside-proof lines still get `needs_outside_proof`; nothing is confirmed. Existing fields only, so no contract change.
+- Already done by Phạm Quốc Bảo on 11 November, not repeated: Gemini retry and fallback model, ADR 0007 amendment, no per-job dollar ceiling (free tier, no card). ADR 0007 now also states how the data rule is enforced.
+- Tests: 10 unit (speech-only.test.ts), 1 property test over owner, list and account kind (60 runs), 3 engine tests, 1 Postgres handler test (VIDEO_ANALYSIS_PROVIDER=none: zero extractFrames calls, zero new frame rows, transcript stored, findings say speech only), 3 Postgres owner tests (anonymous guest, owner unknown to Auth, confirmed email account). Mutation check: with the owner gate removed from the handler, 4 tests failed.
+- Four Postgres test files that run one query at a time now open one pool client instead of four (Free pooler cap of 15).
+- Local full run: the Postgres suites failed while another session held 13 of the 15 pooler clients on sleuth-dev (pg_stat_activity: 11 idle and 2 active Supavisor sessions, none from this machine). The CI `db` job is the gate for those suites.
+## 2026-11-13: first-real-job script (brief 004 step 3)
+
+- New `scripts/prod-e2e.ts`: one anonymous guest runs sign-in, create, a 3-line script, a 2-item checklist, upload of our own clip through the signed URL, analysis (it waits for a worker run started by hand), evidence and finding counts, one review, an edit of one sentence (it picks a line that has evidence), the Final Seal and `report.csv`. Prints PASS, FAIL or SKIP with counts and ids only. A skipped step is reported as not proven. The header holds the read-only queue check for the SQL editor.
+- The clip is our own: `scripts/make-check-clip.ps1` regenerated it (6.5 s, 62918 bytes); the 10 November file was gone.
+- Rehearsal on sleuth-dev (local web in Supabase mode, one local `pnpm worker -- --once` with Deepgram and gemini-3.6-flash, our clip only): run 1, all 10 steps PASS (evidence 1; findings cursed_frame 1, ghost 1, phantom_dialogue 1; review resolved the cursed_frame; seal blocked by uncovered_items; CSV 32 rows). Run 2, steps 1-6 and 8-10 PASS, step 7 SKIP (the only finding was a Ghost, which has no evidence to review); step 8 staled the 1 evidence item on the edited line and nothing else. Results vary between runs because the providers do.
+- The dev worker run also claimed and failed one older queued dev job (it retried, then failed). Not investigated; dev only.
+- Not run on production: that needs Dang's shell and the queue check.
+## 2026-11-13: guest sign-in check (brief 004 step 1)
+
+- New `scripts/guest-flow-check.ts`: drives Chromium through the real guest flow and prints PASS or FAIL only, plus the one project id it makes. It takes our own clip (`scripts/make-check-clip.ps1`, 6.5 s) so the browser reads a real length; no stub.
+- Run against a local dev server on the PR #27 branch (separate worktree, `SLEUTH_DATA_MODE=supabase`, sleuth-dev values loaded in that process only): 14 of 14 PASS. Signed out, create shows "Starting a guest session..." then a project; reload keeps it; a second browser does not see it and gets "Project not found"; a text file is refused with no server call; our clip got 201 and was saved to storage.
+- Two first runs failed because of the script, not the app: Next.js keeps an empty role=alert route announcer, and the demo has two links. Both fixed.
+- Not covered by the script: review 005 item 4 (anonymous sign-ins switched off); it needs a dashboard toggle.
+- Leftovers in sleuth-dev: guest projects from these runs; the 7-day anonymous purge removes them.
+## 2026-11-13: playback URL for the owner's player (brief 004 step 2, contract change)
+
+- New `GET /projects/{id}/assets/{assetVersionId}/playback-url` (`getPlaybackUrl`) returns `{ url, expiresAt }` or both null. Null means no playable video: the demo, fixture mode, or a version whose file never reached storage.
+- Access follows the read rule: a private project's URL goes to its owner only; another user and a visitor get 404 `not_found`, the same as every other route. An asset of another project or an unknown id is 404.
+- Lifetime 600 s (`PLAYBACK_URL_SECONDS`): a browser fetches byte ranges from the same URL while playing and seeking, so it must outlast a review of a 3-minute clip; still short-lived. The worker's download stays at 300 s. The storage client's `createSignedDownloadUrl` takes an optional lifetime, so no other caller changes.
+- Tests: 4 contract tests on both stores (one is a property test over owner, other user and visitor against the demo and a private project), 2 route tests, 1 real-storage test on sleuth-dev (no URL before the file lands; after it lands, a URL on the Supabase host with no key, expiring within 600 s, that returns the bytes; 404 for others).
+- Gate: lint, typecheck clean; 81 test files and 966 tests passed (none skipped); 113 property tests; `openapi.yaml matches the contracts`; build; ghost scan clean. Golden fixtures unchanged.
+## 2026-11-13: smoke test expects 201, deploy plan synced with the production check
+
+- `scripts/prod-smoke.ts` now expects 201 from createUploadUrl (the contract says 201).
+- `docs/deploy-plan.md`: bucket step lists all four video types and a verify line; new section 5b records the 13 November production check as reported by Dang (root cause: no bucket in sleuth-prod; 32 of 32 checks passed; run in Dang's shell, not re-run here); cleanup lists the two Storage folders to delete by hand.
+- Gate on this branch: see the PR. Part B was not run and no production values were set.
+- Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
+
+## 2026-11-14: keep-alive ping uses the worker's driver (PR #33)
+
+- The `ping` job failed in seconds with only `error 2` (psql could not connect; its text was hidden). New `scripts/keep-alive.ts` runs the same read-only query through `createDb` from `@sleuth/db` (postgres.js, `prepare: false`, one connection, 20 s limit), the worker's own driver and options. It prints `ok` or `error <category>` (auth, host, timeout, tls, config, other), chosen from the error code or name only.
+- Local check of the categories: sleuth-dev URL `ok`; wrong password `error auth`; unknown pooler user `error other`; unknown host `error host`; unroutable address `error timeout`; not a URL `error host`; no variable `error config`.
+- The workflow now sets up pnpm and Node 22 and installs like CI, then runs the script. Trigger, schedule, permissions, concurrency group and repository guard are unchanged.
+## 2026-11-14: theme foundations for the revamp (Đăng, decisions D-14 to D-18)
+
+- `tokens.css`: theme `hollow` is the default on `:root` (forest black, cream text, amber action, spectral teal, gold), and `:root[data-theme="midnight"]` keeps the first look. `layout.tsx` sets `data-theme="hollow"`; rollback is one line. New tokens: `border-strong`, `gold`, `spectral`, and fog colours per theme. They are mapped in `@theme inline` as `line-strong`, `gold`, `spectral` and `focus`. The print block now also beats `:root[data-theme]`.
+- Font: Instrument Serif regular and italic, latin subset, self-hosted with `next/font/local`, SIL OFL 1.1 (licence file beside the fonts). 2 files, 43160 bytes. The system sans is kept. No new dependency.
+- Icons: 17 original inline SVG components in `components/icons/` (the five finding types, lantern, film reel, wax seal, play, pause, lock, check, arrow, chevron, close, upload, file). They are decorative by default and get `role=img` with a title. `FINDING_ICONS` maps each finding type.
+- Contrast test (`theme-foundations.test.tsx`): 11 pairs per theme, all pass. Hollow ratios: text 14.15, muted 8.16, primary 8.26, on-primary 8.76, warn 9.75, danger 7.67, ok 10.74, spectral 10.86, gold 8.93, strong border 3.66, focus on bg 10.45. Midnight: 15.17, 8.71, 6.71, 7.16, 10.21, 8.03, 10.93, 10.93, 10.64, 4.14, 10.88. None of the proposed values had to change. The same file checks the font budget, the licence, the no-raw-hex rule in components, features and pages, and renders every icon: 63 tests.
+- Gate: lint, typecheck and build clean. `tests/e2e/a11y.spec.ts` on Chromium in fixture mode: 10 of 10 passed under hollow. `pnpm test`: 1039 passed, 7 failed, all in `store.write.test.ts`, which this branch does not touch. Supavisor refused new clients (XX000 FATAL) on the shared dev database. That file alone passed 9 of 9. CI `db` runs its own database.
+## 2026-11-14: decisions, board and daily update (Đăng)
+
+- `decisions-needed.md`: D-13 decided (PR #34). D-14 to D-18 (UI revamp) decided with Đăng's recommendations. D-10 open with the recommendation that Đăng records clips 1 to 3 by Wed 18 Nov and Bảo labels them. D-12 stays open until #33 merges and its `ping` is green.
+- `board.md`: rewritten from `origin/main` `395f490`. Spec ticks 56 of 60. The critical path table now marks steps 1, 2, 4, 5 proven on sleuth-dev only, with the run dates; nothing new is proven on production.
+- `updates/2026-11-14-dang.md`: per person, plus the note for Đạt on the demo's no-video panel (it says fixture mode on a Supabase site; the playback URL from #31 is on `main`).
+- Leak check on 14 Nov: `scripts/prod-e2e.ts` and `scripts/guest-flow-check.ts` were run against sleuth-dev with all output captured (42 and 15 lines) and searched for every key and connection string in `.env.local`, `token=`, `/storage/v1/object`, `eyJ`, `postgres://` and the clip's spoken words: 0 found. prod-e2e: 9 PASS, 1 SKIP (step 7: the only finding was a Ghost). guest-flow: 14 of 14 PASS.
+## 2026-11-14: cleanup list for test data (Đăng)
+
+- New `docs/coordination/cleanup.md`: select-first SQL and Storage click paths for both projects. Production: `zz-test-%` rows, the two 4 KB files in folders `prj-0mwetmijy0001-78237676` and `prj-0mweu1pmk0001-c9e4ae11`, and how to remove the one project each live run of PR #30 or #32 prints. Development: Đạt's 11 `zz-test-*` projects from 13 November, 4 `zz-test-e2e-*` rehearsal projects and the anonymous "Copy of ProofPay demo" projects from PR #30 runs. `docs/deploy-plan.md` section 7 now points to it.
+- Found on the way (Đạt's PR #27 journal): the dev bucket accepted a `text/plain` upload, so its MIME list is not set. Added the click path.
+
+## 2026-11-14: prod-e2e team-account mode and speech-only count (Đăng)
+
+- `scripts/prod-e2e.ts`: if `PROD_E2E_EMAIL` and `PROD_E2E_PASSWORD` are both set, it signs in with the Supabase password grant and prints only "signed in as the team account". One of the two alone fails step 1 with a message that names no value. After step 6 it prints "speech-only findings: n of total". The header now shows how to run both modes, with the queue SQL. The script runs only when called directly, so its helpers can be imported.
+- `scripts/prod-e2e.test.ts`: 4 tests for option parsing and the count, with no network. The vitest projects do not include `scripts/`, so it runs with `pnpm tsx --test scripts/prod-e2e.test.ts`: 4 of 4 passed. It is not part of `pnpm test`.
+- Rehearsal on sleuth-dev as a guest, with a local worker on production settings (gemini, empty owner list): worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output. In guest mode step 7 is always SKIP and step 8 has no evidence; those two need the team account.
+- `docs/deploy-plan.md`: new section 5c, "First real job".
+
+## 2026-11-14 noon: board refresh and the dev database connection check (Đăng)
+
+- Board, decisions and the 14 Nov update now match `main` `bcba5e0`: #29 to #38 merged, CI green, 56 of 60 spec ticks, D-12 decided (keep-alive green on `main`). The earlier guess about an old password in the `DATABASE_URL` secret is removed; the cause of the old `psql` error is unknown and the secret works. Only the browser guest-flow check waits for #27.
+- Dev database check (read-only, sleuth-dev, counts only): `max_connections` 60, 3 reserved. At rest: 16 backends, 7 of them client backends (Supavisor 1 active and 1 auth query, PostgREST 1, Storage API 1, postgres_exporter 1, 2 with no name). No Vercel preview or dev server held connections. During one local run of the database test files, Supavisor backends rose from 1 to 23 within 16 s and `store.write.test.ts` failed with XX000 FATAL. So the refusals come from our own test files running in parallel through the session pooler, not from another holder. The same file alone passes 9 of 9. CI runs its own database, so it stays the gate. A local fix, if wanted: run the database files with `--no-file-parallelism`.
+
+## 2026-11-14: script tests run in CI (Đăng)
+
+- `vitest.config.ts` (shared file): the node project now includes `scripts/*.test.ts`. This is the smallest change: `pnpm test` already runs in the CI `check` job, so no workflow edit is needed, and the tests run locally with the same command.
+- `scripts/prod-e2e.test.ts` is rewritten from `node:test` to vitest (4 tests, same checks).
+- New `scripts/keep-alive.test.ts`: 21 tests for `categoryOf`. 18 codes map to auth, host, timeout, tls, config or other; a TypeError gives config; unknown input gives other. A wrapped `cause` is read one level down, the outer code wins, and a cause that points at itself does not loop. A property test (200 runs) shows the message text never changes the category and the printed line is always one fixed word. Mutation check: with the cause lookup removed, 1 test failed.
+- `vitest run scripts`: 2 files, 25 tests passed.
+## 2026-11-14: brief 006, UI revamp for Đạt (Đăng)
+
+- `docs/coordination/briefs/006-ui-revamp-for-dat.md`: one PR per screen, in this order: #27 first, then the flaky clock test, tokens in components (strong border on the outline button and inputs, finding icon in `FindingBadge`), dashboard, workspace (coverage bar says "covered", tabs), report (draft, sealed and broken banners; print stays white), and `not-found.tsx` and `error.tsx`. Also the no-video panel copy and the real player on the playback URL. UI freeze Sun 29 Nov. Clips 4 and 5 stay his.
+## 2026-11-14: recording kits for clips 1 to 3 (Đăng, decision D-10 recommendation)
+
+- `tests/evaluation/clips/clip-1` to `clip-3`: `RECORDING.md` (one page, 8 or 7 lines to read, 60 to 120 s, English), `demo.ps1` (the on-screen API steps in fixture mode), `finalise.ps1` (fills length, date, hash, link), a draft `clip.json` (recorded fields empty, `labelledBy` null) and `clip.test.ts`.
+- Cases: clip-1 is a plain run where a visitor reads the public demo (6 steps, one per checklist item). clip-2 leaves the upload step out on purpose: the line is spoken and the checklist item stays, but `demo.ps1` has no upload call. clip-3 has one security claim, line 5, "All stored videos are encrypted at rest.", with nothing on screen to back it.
+- Tests per clip: the harness schema, the script splitting into its own lines, the lines matching `RECORDING.md`, recorded fields all empty or all filled, no `labels.json` before the recording, recorder and labeller being different people, and no secret in `demo.ps1`. Plus one case check each: clip-1 has no outside-proof line and one step per item; clip-2 has no `upload-url` call; clip-3 has exactly line 5 flagged by `needsOutsideProof`. `tests/evaluation`: 5 files, 49 tests passed.
+- `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
+- Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.

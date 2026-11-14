@@ -1,0 +1,45 @@
+# Keeps the free sleuth-prod Supabase project from pausing (it pauses after low activity over
+# 7 days; see docs/deploy-plan.md "Keep-alive"). One cheap read-only query, twice a week.
+# scripts/keep-alive.ts uses the worker's own driver and options (postgres.js through
+# @sleuth/db, prepare: false, one connection, 20 s limit). It prints "ok" or
+# "error <category>" (auth, host, timeout, tls, config, other) and nothing else: no host,
+# user, URL or error text. DATABASE_URL is the production session pooler URL (the worker
+# uses the same secret).
+name: keep-alive
+
+on:
+  schedule:
+    # Mondays and Thursdays at 03:17 UTC. Not on the hour, because the start of every hour is
+    # when scheduled runs are most often late.
+    - cron: "17 3 * * 1,4"
+  workflow_dispatch:
+  # Runs once on a pull request that changes this file, so a change is proven before merge.
+  pull_request:
+    paths:
+      - .github/workflows/keep-alive.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    # Only the team's repository; never a fork.
+    if: github.repository == 'dngvmnh/sleuth'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: One read-only query against sleuth-prod
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm --silent tsx scripts/keep-alive.ts

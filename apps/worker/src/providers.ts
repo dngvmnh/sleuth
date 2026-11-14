@@ -1,3 +1,4 @@
+import type { JobOwner } from "@sleuth/db";
 import { loadGoldenFixture } from "@sleuth/db/fixture";
 import {
   createDeepgramTranscription,
@@ -10,7 +11,13 @@ import type { WorkerConfig } from "./config";
 
 export interface ProviderSet {
   transcription: TranscriptionProvider;
-  videoAnalysis: VideoAnalysisProvider;
+  /** Null with `VIDEO_ANALYSIS_PROVIDER=none`: speech only, and no video-analysis client exists. */
+  videoAnalysis: VideoAnalysisProvider | null;
+  /**
+   * Whether this job's frames may be cut and sent to `videoAnalysis` (decision D-4). False means
+   * the job runs speech only. Asked once per job, from the project's owner.
+   */
+  sendsFramesFor(owner: JobOwner): boolean;
 }
 
 /**
@@ -18,7 +25,9 @@ export interface ProviderSet {
  * the job's project and video version and given ids that are unique to that video, so a retry
  * writes the same rows. They ignore the audio and the pictures. For local testing only.
  */
-function createFixtureBackedMocks(): ProviderSet {
+function createFixtureBackedMocks(): Pick<ProviderSet, "transcription"> & {
+  videoAnalysis: VideoAnalysisProvider;
+} {
   const fx = loadGoldenFixture();
   return {
     transcription: {
@@ -63,11 +72,21 @@ export type ProviderConfig = Pick<
       | "TRANSCRIPTION_MODEL"
       | "VIDEO_ANALYSIS_MODEL"
       | "VIDEO_ANALYSIS_FALLBACK_MODEL"
+      | "VIDEO_ANALYSIS_OWNER_IDS"
     >
   >;
 
 const TRANSCRIPTION_NAMES = ["mock", "deepgram"] as const;
-const VIDEO_ANALYSIS_NAMES = ["mock", "gemini"] as const;
+const VIDEO_ANALYSIS_NAMES = ["mock", "gemini", "none"] as const;
+
+/**
+ * The rule for `gemini`: frames go out only for a project owned by a real (not anonymous) account
+ * on the team's list. Everyone else, every visitor included, is speech only.
+ */
+export function geminiFramesAllowed(owner: JobOwner, ownerIds: readonly string[]): boolean {
+  if (owner.userId === null || !owner.realAccount) return false;
+  return ownerIds.includes(owner.userId.toLowerCase());
+}
 
 /**
  * Picks the providers named in the config. Throws a `provider_not_configured: ...` error, which
@@ -100,6 +119,7 @@ export function createProviders(
   if (transcriptionName === "deepgram" && !config.TRANSCRIPTION_API_KEY) {
     throw new Error("provider_not_configured: TRANSCRIPTION_API_KEY is not set.");
   }
+  // `none` never reads the video-analysis key, so it cannot be refused for a missing one.
   if (videoName === "gemini" && !config.VIDEO_ANALYSIS_API_KEY) {
     throw new Error("provider_not_configured: VIDEO_ANALYSIS_API_KEY is not set.");
   }
@@ -112,18 +132,31 @@ export function createProviders(
           ...(config.TRANSCRIPTION_MODEL ? { model: config.TRANSCRIPTION_MODEL } : {}),
           ...(onUsage ? { onUsage } : {}),
         })
-      : (mocks as ProviderSet).transcription;
-  const videoAnalysis: VideoAnalysisProvider =
-    videoName === "gemini"
-      ? createGeminiVideoAnalysis({
-          apiKey: config.VIDEO_ANALYSIS_API_KEY ?? "",
-          model: config.VIDEO_ANALYSIS_MODEL ?? "gemini-3.8-flash",
-          ...(config.VIDEO_ANALYSIS_FALLBACK_MODEL
-            ? { fallbackModel: config.VIDEO_ANALYSIS_FALLBACK_MODEL }
-            : {}),
-          maxFrames: config.MAX_FRAMES_PER_VIDEO,
-          ...(onUsage ? { onUsage } : {}),
-        })
-      : (mocks as ProviderSet).videoAnalysis;
-  return { transcription, videoAnalysis };
+      : (mocks as NonNullable<typeof mocks>).transcription;
+
+  if (videoName === "none") {
+    return { transcription, videoAnalysis: null, sendsFramesFor: () => false };
+  }
+  if (videoName === "gemini") {
+    const ownerIds = config.VIDEO_ANALYSIS_OWNER_IDS ?? [];
+    return {
+      transcription,
+      videoAnalysis: createGeminiVideoAnalysis({
+        apiKey: config.VIDEO_ANALYSIS_API_KEY ?? "",
+        model: config.VIDEO_ANALYSIS_MODEL ?? "gemini-3.8-flash",
+        ...(config.VIDEO_ANALYSIS_FALLBACK_MODEL
+          ? { fallbackModel: config.VIDEO_ANALYSIS_FALLBACK_MODEL }
+          : {}),
+        maxFrames: config.MAX_FRAMES_PER_VIDEO,
+        ...(onUsage ? { onUsage } : {}),
+      }),
+      sendsFramesFor: (owner) => geminiFramesAllowed(owner, ownerIds),
+    };
+  }
+  // The mock reads nothing and sends nothing anywhere, so every owner may use it.
+  return {
+    transcription,
+    videoAnalysis: (mocks as NonNullable<typeof mocks>).videoAnalysis,
+    sendsFramesFor: () => true,
+  };
 }

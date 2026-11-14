@@ -23,7 +23,11 @@ export interface PipelineOptions {
   segments: readonly ScriptSegment[];
   checklist: readonly ChecklistItem[];
   transcription: TranscriptionProvider;
-  videoAnalysis: VideoAnalysisProvider;
+  /**
+   * Null means speech only (decision D-4): no frame is planned, cut or sent anywhere, and the
+   * engine runs on the transcript alone (`EngineInput.speechOnly`).
+   */
+  videoAnalysis: VideoAnalysisProvider | null;
   frameIntervalMs: number;
   maxFrames: number;
   /** Path of the extracted audio, for providers that read a file. Mocks ignore it. */
@@ -57,18 +61,22 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     durationMs,
     ...(options.audioPath ? { audioPath: options.audioPath } : {}),
   });
-  const frames: SampledFrame[] = options.sampledFrames
-    ? [...options.sampledFrames]
-    : planFrames(durationMs, {
-        intervalMs: options.frameIntervalMs,
-        maxFrames: options.maxFrames,
-      }).map((timestampMs) => ({ timestampMs }));
-  const rawObservations = await options.videoAnalysis.analyse({
-    projectId,
-    assetVersionId,
-    durationMs,
-    frames,
-  });
+  const speechOnly = options.videoAnalysis === null;
+  let rawObservations: FrameObservation[] = [];
+  if (options.videoAnalysis !== null) {
+    const frames: SampledFrame[] = options.sampledFrames
+      ? [...options.sampledFrames]
+      : planFrames(durationMs, {
+          intervalMs: options.frameIntervalMs,
+          maxFrames: options.maxFrames,
+        }).map((timestampMs) => ({ timestampMs }));
+    rawObservations = await options.videoAnalysis.analyse({
+      projectId,
+      assetVersionId,
+      durationMs,
+      frames,
+    });
+  }
   const transcript = validateTranscript(rawTranscript, durationMs);
   const observations = validateObservations(rawObservations, durationMs);
 
@@ -83,6 +91,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     observations: observations.valid,
     ...(options.segmentIds ? { segmentIds: options.segmentIds } : {}),
     ...(options.existingEvidence ? { existingEvidence: options.existingEvidence } : {}),
+    ...(speechOnly ? { speechOnly: true } : {}),
   });
   return {
     ...out,

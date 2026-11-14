@@ -50,6 +50,13 @@ test("blockers keep the seal button disabled with a reason for each", async ({ p
 
   await page.goto(`/projects/${id}/report`);
   await expect(panel(page).getByRole("button", { name: "Apply the Final Seal" })).toBeDisabled();
+  // Step 18 of docs/accessibility.md: the button is described by the blocker sentences themselves.
+  await expect(panel(page).getByRole("button", { name: "Apply the Final Seal" })).toHaveAccessibleDescription(
+    /^The Final Seal is not available yet: \S.*\.$/,
+  );
+  await expect(panel(page).getByRole("button", { name: "Apply the Final Seal" })).not.toHaveAccessibleDescription(
+    /What blocks the Final Seal|Open the workspace/,
+  );
   const list = panel(page).getByRole("list", { name: "What blocks the Final Seal" });
   await expect(list.locator("li")).toHaveCount(api.blockers.length);
   const shown = await list.locator("li").evaluateAll((lis) => lis.map((li) => li.getAttribute("data-blocker")));

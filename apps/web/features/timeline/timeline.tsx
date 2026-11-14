@@ -131,7 +131,8 @@ export function Timeline({ markers, durationMs, currentMs, selectedId, onSelect,
               <div key={marker.id}>
                 <div
                   aria-hidden="true"
-                  className={`absolute h-1 rounded-sm bg-current opacity-60 ${STATE_TEXT_CLASS[marker.state]} ${
+                  // A border, not a background: contrast themes drop author backgrounds.
+                  className={`absolute h-0 rounded-sm border-t-4 border-current opacity-60 ${STATE_TEXT_CLASS[marker.state]} ${
                     marker.state === "stale" ? "opacity-40" : ""
                   }`}
                   style={{ left: `${left}%`, width: `${width}%`, top: `${72 + (index % 2) * 8}px` }}
@@ -149,7 +150,13 @@ export function Timeline({ markers, durationMs, currentMs, selectedId, onSelect,
                   onFocus={() => setActiveIndex(index)}
                   className={`absolute flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-md border ${
                     STATE_TEXT_CLASS[marker.state]
-                  } ${selected ? "border-current bg-raised" : "border-transparent"}`}
+                  } ${
+                    // In a contrast theme every marker gets the same system border, so the chosen
+                    // one also gets a double border (shape, not colour).
+                    selected
+                      ? "border-current bg-raised forced-colors:border-[3px] forced-colors:border-double"
+                      : "border-transparent"
+                  }`}
                   style={{ left: `${left}%`, top: `${4 + (index % 2) * 34}px` }}
                 >
                   <MarkerShape state={marker.state} />
@@ -160,7 +167,7 @@ export function Timeline({ markers, durationMs, currentMs, selectedId, onSelect,
           <div
             aria-hidden="true"
             data-testid="playhead"
-            className="absolute bottom-0 top-0 w-px bg-foreground opacity-70"
+            className="absolute bottom-0 top-0 w-0 border-l border-foreground opacity-70"
             style={{ left: `${msToPercent(currentMs, durationMs)}%` }}
           />
         </div>

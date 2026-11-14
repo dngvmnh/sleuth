@@ -58,6 +58,16 @@ export const UploadUrlResponseSchema = z.object({
   expiresAt: IsoDateSchema,
 });
 
+/**
+ * A short-lived signed URL the owner's browser can play the video from. `url: null` means there is
+ * no playable video: the demo (its path is a placeholder), fixture mode (no storage), or a version
+ * whose file never reached storage. Both fields are null together.
+ */
+export const PlaybackUrlResponseSchema = z.union([
+  z.object({ url: z.string().url(), expiresAt: IsoDateSchema }),
+  z.object({ url: z.null(), expiresAt: z.null() }),
+]);
+
 export const CreateScriptRequestSchema = z.object({ text: z.string().trim().min(1).max(20000) });
 export const CreateScriptResponseSchema = z.object({
   scriptVersion: ScriptVersionSchema,
@@ -175,6 +185,15 @@ export const ENDPOINTS = [
     request: UploadUrlRequestSchema,
     response: UploadUrlResponseSchema,
     successStatus: 201,
+  },
+  {
+    id: "getPlaybackUrl",
+    method: "GET",
+    path: "/projects/{id}/assets/{assetVersionId}/playback-url",
+    summary:
+      "Owner only: a short-lived signed URL to play this video version; url is null when there is no playable video",
+    response: PlaybackUrlResponseSchema,
+    successStatus: 200,
   },
   {
     id: "createScript",
@@ -303,6 +322,7 @@ export type EndpointId = (typeof ENDPOINTS)[number]["id"];
 
 export type CreateProjectRequest = z.infer<typeof CreateProjectRequestSchema>;
 export type UploadUrlRequest = z.infer<typeof UploadUrlRequestSchema>;
+export type PlaybackUrlResponse = z.infer<typeof PlaybackUrlResponseSchema>;
 export type CreateScriptResponse = z.infer<typeof CreateScriptResponseSchema>;
 export type StartAnalysisRequest = z.infer<typeof StartAnalysisRequestSchema>;
 export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
