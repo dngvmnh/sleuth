@@ -168,7 +168,7 @@ export function SealPanel({ projectId, seal, blockers, canManage, onSeal }: Seal
                 maxLength={NOTE_MAX}
                 rows={3}
                 onChange={(e) => setNote(e.currentTarget.value)}
-                className="mt-1 w-full rounded-md border border-line bg-background p-2 text-sm text-foreground"
+                className="mt-1 w-full rounded-md border border-line-strong bg-background p-2 text-sm text-foreground"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button disabled={sending} aria-busy={sending} onClick={() => void send()}>

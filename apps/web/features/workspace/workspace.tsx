@@ -14,6 +14,9 @@ import type { ApiClient } from "@/lib/api-client";
 import { ExorcismActions } from "../lantern/actions";
 import { Lantern } from "../lantern/lantern";
 import { NoVideoPanel } from "../player/no-video-panel";
+import { PlaybackVideo } from "../player/playback-video";
+import { usePlaybackUrl } from "../player/use-playback-url";
+import { useVideoPlayer } from "../player/use-video-player";
 import { SimulatedClock } from "../player/simulated-clock";
 import { useSimulatedPlayer } from "../player/use-simulated-player";
 import { SentenceList, type SentenceListHandle } from "../script/sentence-list";
@@ -110,11 +113,18 @@ interface Selection {
 }
 
 /**
- * The loaded workspace. One player (the simulated clock) feeds the timeline playhead, the
+ * The loaded workspace. One player (the real video when there is a playback URL, else the simulated clock) feeds the timeline playhead, the
  * sentence highlight and the Lantern, so they can never disagree about the time.
  */
 function WorkspaceView({ state }: { state: ProjectState }) {
-  const clock = useSimulatedPlayer(clockDurationMs(state));
+  const simulated = useSimulatedPlayer(clockDurationMs(state));
+  // A real video, when the server hands out a playback URL. Otherwise the simulated clock.
+  const playbackUrl = usePlaybackUrl(state.fetchPlaybackUrl, state.detail?.assetVersion?.id);
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
+  const real = useVideoPlayer(playbackUrl ? videoElement : null);
+  const clock = real
+    ? { ...real, durationMs: real.durationMs > 0 ? real.durationMs : simulated.durationMs }
+    : simulated;
   const { player } = clock;
   const sentences = useRef<SentenceListHandle>(null);
   const partEndMs = useRef<number | null>(null);
@@ -232,8 +242,14 @@ function WorkspaceView({ state }: { state: ProjectState }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <section aria-label="Player">
-            <NoVideoPanel />
-            <SimulatedClock clock={clock} />
+            {playbackUrl ? (
+              <PlaybackVideo url={playbackUrl} onElement={setVideoElement} />
+            ) : (
+              <>
+                <NoVideoPanel />
+                <SimulatedClock clock={simulated} />
+              </>
+            )}
           </section>
           <Timeline
             markers={markers}

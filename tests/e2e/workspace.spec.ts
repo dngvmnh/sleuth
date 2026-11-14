@@ -15,7 +15,7 @@ test("the demo workspace shows every script line, the regions and the no-video p
     // Scoped to the script list: the script editor textarea holds the same text.
     await expect(page.locator("section[aria-labelledby='script-heading']").getByText(line)).toBeVisible();
   }
-  await expect(page.getByRole("heading", { name: "No video in fixture mode" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No playable video file" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Timeline" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Evidence Lantern" })).toBeVisible();
   await expect(page.locator("video")).toHaveCount(0);

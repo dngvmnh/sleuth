@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CLOCK_STEP_MS } from "../player/use-simulated-player";
 import {
@@ -255,7 +255,7 @@ describe("Workspace flow: one clock for player, timeline, script and Lantern", (
   it("moves the playhead and the slider together because they share one clock", async () => {
     await load();
     fireEvent.change(screen.getByRole("slider", { name: "Clock position" }), { target: { value: "10000" } });
-    expect(clockText()).toBe("10.0 s of 20.0 s");
-    expect(screen.getByTestId("playhead")).toHaveStyle({ left: "50%" });
+    await waitFor(() => expect(clockText()).toBe("10.0 s of 20.0 s"));
+    await waitFor(() => expect(screen.getByTestId("playhead")).toHaveStyle({ left: "50%" }));
   });
 });
