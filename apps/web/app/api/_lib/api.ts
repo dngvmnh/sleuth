@@ -35,6 +35,8 @@ export interface Ctx<K extends EndpointId> {
   actor: Actor;
   store: ProjectStore;
   body: BodyOf<K>;
+  /** Extra response headers a route may set. Never put a secret in them. */
+  headers: Headers;
 }
 
 function errorBody(code: string, message: string, details?: unknown): ErrorResponse {
@@ -96,17 +98,16 @@ export function endpoint<K extends EndpointId>(id: K, run: (ctx: Ctx<K>) => Prom
         }
         body = parsed.data;
       }
-      const result = await run({ req, params, actor, store, body: body as BodyOf<K> });
+      const headers = new Headers();
+      const result = await run({ req, params, actor, store, body: body as BodyOf<K>, headers });
       if (spec.contentType) {
-        const headers: Record<string, string> = {
-          "content-type": `${spec.contentType}; charset=utf-8`,
-        };
+        headers.set("content-type", `${spec.contentType}; charset=utf-8`);
         if (spec.contentType === "text/csv") {
-          headers["content-disposition"] = 'attachment; filename="sleuth-report.csv"';
+          headers.set("content-disposition", 'attachment; filename="sleuth-report.csv"');
         }
         return new Response(result as string, { status: 200, headers });
       }
-      return Response.json(spec.response?.parse(result), { status: spec.successStatus });
+      return Response.json(spec.response?.parse(result), { status: spec.successStatus, headers });
     } catch (err) {
       return toErrorResponse(err);
     }

@@ -58,6 +58,13 @@ describe("requestWorkerRun", () => {
     expect(s.fetchImpl).not.toHaveBeenCalled();
   });
 
+  it("logs a missing token in Supabase mode, so it shows in the runtime logs", async () => {
+    const s = setup();
+    await requestWorkerRun(s.opts({ SLEUTH_DATA_MODE: "supabase" }));
+    await requestWorkerRun(s.opts({ WORKER_DISPATCH_TOKEN: TOKEN }));
+    expect(s.logs).toEqual([{ event: "worker_dispatch", fields: { result: "skipped_no_token" } }]);
+  });
+
   it("starts at most once a minute per server", async () => {
     const s = setup();
     expect(await requestWorkerRun(s.opts())).toBe("sent");

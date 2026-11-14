@@ -188,6 +188,7 @@ describe("API routes in fixture mode", () => {
       await createScript(json("POST", { text: "One line here." }, who), ctx({ id }));
       const res = await startAnalysis(json("POST", {}, who), ctx({ id }));
       expect(res.status).toBe(202);
+      expect(res.headers.get("x-sleuth-worker-dispatch")).toBe("skipped_fixture");
       expect(spy).not.toHaveBeenCalled();
     } finally {
       spy.mockRestore();

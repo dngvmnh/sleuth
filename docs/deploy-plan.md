@@ -109,6 +109,29 @@ How to make `WORKER_DISPATCH_TOKEN`:
 5. Deployments, the latest Production deployment, Redeploy, so the new variable is read.
 Undo: delete the variable in Vercel and the token on GitHub. The 10-minute schedule still runs the worker.
 
+How to see whether the start worked (no secret is shown anywhere):
+- `scripts/prod-e2e.ts` prints `worker dispatch: <word>` right after "analysis queued". It comes from the `x-sleuth-worker-dispatch` response header of `POST /projects/{id}/analysis`. If it prints "no header", the live deployment is older than this check.
+- Vercel, the project, Logs (runtime logs), search `worker_dispatch`. Each line is `{"event":"worker_dispatch","result":"<word>"}`, plus `"status"` on a refusal. Hobby keeps runtime logs for a short time, so look right after the run.
+
+| Word | Meaning | What to check |
+|---|---|---|
+| `sent` | GitHub accepted it (204) | A `workflow_dispatch` run of `worker.yml` appears within about a minute |
+| `skipped_no_token` | The deployment has no `WORKER_DISPATCH_TOKEN` | Checks 4 and 5 below |
+| `skipped_recent` | The same server started a run less than 60 s ago | Nothing; that run takes every queued job |
+| `refused` with status 401 | Token wrong, revoked or expired | Check 1 |
+| `refused` with status 403 | Token lacks "Actions: Read and write" | Check 3 |
+| `refused` with status 404 | Token cannot see `dngvmnh/sleuth` | Check 2 |
+| `refused` with status 422 | GitHub refused the ref or the workflow | `worker.yml` on `main` must keep `workflow_dispatch` |
+| `failed` | Network error or no answer in 3 s | Run it again |
+| `not_queued` | The job was already running or finished | Nothing |
+
+Checks for the token:
+1. GitHub, Settings, Developer settings, Fine-grained tokens, `sleuth-worker-dispatch`: status active, expiry in the future. If unsure, Regenerate token and paste the new value in Vercel.
+2. Same page, Repository access: "Only select repositories" with `dngvmnh/sleuth`. Resource owner `dngvmnh`.
+3. Same page, Repository permissions: Actions "Read and write". Metadata "Read-only" is added by GitHub. Nothing else is needed.
+4. Vercel, the project, Settings, Environment Variables: the key is exactly `WORKER_DISPATCH_TOKEN`, and **Production** is ticked.
+5. Vercel, Deployments: the current Production deployment was created **after** the variable was saved. A variable reaches only new deployments. If not, open the latest Production deployment, then the menu, then Redeploy.
+
 Deploy, then open the public demo signed out. It must load without a login.
 
 ### 4. Smoke test after each deploy

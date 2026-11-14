@@ -1455,3 +1455,11 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Repair: `docs/coordination/cleanup.md` section 3 has a select-first SQL that puts the demo's four findings back to the golden fixture. Run on sleuth-dev on 14 Nov: all four rows show `run-golden-1` again, and they still did after the database suites ran. Production waits for Đăng's SQL Editor run.
 - prod-e2e step 7 needs no change. Spec and engine already raise a Cursed Frame for medium candidate evidence; the bug hid it. With the fix, the evidence clip's medium line gives step 7 its finding.
 - Database suites run one file at a time on sleuth-dev: worker.test 6, supabase-handler.db 5, store.test 35, store.write 9, store.change-impact 3, all passed.
+
+## 2026-11-14: team-account run passed; the worker start made visible (Đăng)
+
+- Team-account prod-e2e on production, about 06:45 UTC, `main` `0ecc350` (reported by Đăng): ALL STEPS PASSED. Step 6: 3 candidates, Cursed Frame 1 and Ghost 1, speech-only 0 of 2. Step 7: review 200 and the Cursed Frame resolved. Step 8: 1 line modified, its 1 evidence item stale, nothing else changed. Step 9: 409 with undecided_candidates, stale_evidence and uncovered_items. Step 10: report.csv 32 rows. The demo's 4 findings were repaired before the run and still show `run-golden-1` after it, so #56 holds on production.
+- Open: no automatic `workflow_dispatch` appeared within about 80 s of "analysis queued". The worker was started by hand (run 43567961588). The `*/10` cron has still not fired.
+- Why it was invisible: `requestWorkerRun` did not log `skipped_no_token`. A deployment without the variable, for example one not redeployed, therefore printed nothing.
+- Change: every result in Supabase mode is logged as `worker_dispatch`. `POST /projects/{id}/analysis` returns the result word in the `x-sleuth-worker-dispatch` header, through a new `headers` field on the route context in `api.ts`. `scripts/prod-e2e.ts` prints `worker dispatch: <word>`. `docs/deploy-plan.md` maps each word to a token check, and lists 5 checks for the token. No contract change: the body is unchanged.
+- Tests: the route test checks the header (`skipped_fixture` in fixture mode), and a new dispatch test checks that `skipped_no_token` is logged. `apps/web/app/api/_lib`: 53 passed.
