@@ -71,7 +71,3 @@ Over 200 random histories of edits, cosmetic edits, removals, uploads, re-analys
 - Both: which Kiro features they found most and least useful, and one thing they would do differently.
 
 The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.
-
-The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.
-
-The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.

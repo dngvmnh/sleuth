@@ -16,7 +16,7 @@ Shell rule: run every command in PowerShell on native Windows, from a clean work
 
 ### Open
 
-- [ ] **The worker does not start by itself yet.** The `*/10` cron has never fired, and the queue-time start (`x-sleuth-worker-dispatch`, ADR 0009 amendment) answers `refused`. Read the status beside `refused` in Vercel, Logs, search `worker_dispatch`, then go through the token checks in `docs/deploy-plan.md`: 401 means the token is wrong or expired, 403 means Actions is not "Read and write", 404 means the token cannot see `dngvmnh/sleuth`. Until it works, start the worker by hand (GitHub, Actions, `worker`, Run workflow) after the read-only queue check.
+- [x] **The worker starts by itself.** Fixed 14 Nov after the token was corrected: a guest run answered `worker dispatch: sent`, GitHub started a `workflow_dispatch` run at once, and the job succeeded about 50 seconds later. If a later run answers anything other than `sent`, go through the token checks in `docs/deploy-plan.md` (401 wrong or expired token, 403 Actions not "Read and write", 404 token cannot see `dngvmnh/sleuth`).
 
 ### Later
 
