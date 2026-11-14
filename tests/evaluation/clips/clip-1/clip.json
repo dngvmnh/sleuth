@@ -1,0 +1,34 @@
+{
+  "name": "clip-1",
+  "task": "evidence-analysis 11",
+  "formatStatus": "follows docs/evaluation-protocol.md (clip.json)",
+  "case": "plain demo of one screen: a visitor reads the public demo, with nothing missing",
+  "recordedBy": "Đăng (@dngvmnh)",
+  "labelledBy": null,
+  "recordedOn": null,
+  "durationMs": null,
+  "video": {
+    "fileName": "clip-1.mp4",
+    "inGit": false,
+    "storedAt": null,
+    "sha256": null
+  },
+  "script": [
+    "This is the SLEUTH API running on my laptop in fixture mode.",
+    "First I list the projects a visitor can see.",
+    "The only project is the public ProofPay demo.",
+    "Next I open the demo and read its script and checklist.",
+    "Then I list the evidence the analysis found for each line.",
+    "Now I list the findings that still need a person.",
+    "The coverage summary shows which checklist items are covered.",
+    "Finally I download the report as a CSV file."
+  ],
+  "checklist": [
+    "List the projects",
+    "Open the demo project",
+    "List the evidence",
+    "List the findings",
+    "Show the coverage summary",
+    "Download the CSV report"
+  ]
+}
