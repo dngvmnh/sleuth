@@ -1,30 +1,34 @@
-# DRAFT: demo video plan
+# Demo video: shot list and narration (2:50)
 
-> DRAFT. The flow below needs parts that are not built yet (review workspace UI, real providers, worker handler). Each scene says what it needs. Do not record a scene until its parts are real. No mock output may be shown as if it were real analysis.
+Final plan, 14 November 2026. It follows `dogfood-plan.md`: we run SLEUTH on our own demo and show the real result. The official video rules were not readable (the page returned HTTP 403), so Đăng checks the length and language rule before recording. If the limit is shorter than 3:00, cut scene 8 first.
 
-Target length: check the official limit in the rules before recording (TODO). Plan for about 3 minutes.
-
-## The idea
-We use SLEUTH on its own demo. We record a short demo of a real app with a script and checklist, deliberately leave one checklist step out, say one line that is not in the script, then let SLEUTH find both. A person confirms the findings and applies the Final Seal. Then we edit one sentence and show only that evidence go stale.
-
-## Recording we analyse
-Our own screen recording, our own voice. No third-party footage. Use one of the evaluation clips (evidence-analysis 11, 14, 15) or record a new one with the same rules: 60 to 120 seconds, MP4 H.264 and AAC.
+Rules: our own screen, our own voice, no third-party footage or music. Show only output SLEUTH produced on that run. No secrets, keys or emails on screen. The video must go on YouTube as public.
 
 ## Scenes
 
-| # | Time | On screen | Narration (draft) | Needs |
-|---|---|---|---|---|
-| 1 | 0:00-0:15 | Title, the five finding types | "Demo videos drift from what they claim. SLEUTH checks." | Nothing new |
-| 2 | 0:15-0:40 | Public demo project, signed out | "No login needed to look around." | Review workspace UI (review-workspace 3, 6) |
-| 3 | 0:40-1:10 | Try your own video: upload our clip, paste script and checklist, start analysis | "Every match is a candidate, never a verdict." | Upload flow (rw 12), worker handler (ea 12), real providers (ea 10) |
-| 4 | 1:10-1:50 | Timeline and Evidence Lantern: a Ghost for the missing step, the unscripted line listed | "It found the step we skipped and the line we added." | Timeline and Lantern (rw 7-9), alignment and matching (ea 5, 6) |
-| 5 | 1:50-2:20 | A person confirms or rejects each candidate; a reshoot note | "Only a person signs off." | Exorcism actions (rw 10) |
-| 6 | 2:20-2:40 | Final Seal with coverage, then the HTML report | "The seal names who signed, and which video and script." | Final Seal UI (final-seal 6-9) |
-| 7 | 2:40-3:00 | Edit one sentence: one Poltergeist, the seal breaks; a cosmetic edit changes nothing | "Change one line, re-check one line." | Script editor (rw 11) |
-| 8 | 3:00 | How we used Kiro: specs, steering, hooks, agents | "Built spec by spec with Kiro." | Screen capture of the repo |
+Legend for the last column: LIVE = must be recorded on production (https://sleuth-eight.vercel.app). PUBLIC DEMO = the signed-out demo project on production. REPO = a screen of the repository.
 
-## Rules for the video
-- Show only output that SLEUTH really produced on that run.
-- If a part is still mocked on recording day, say so on screen or cut the scene.
-- No secrets, keys, email or chat on screen.
-- Record in one sitting per scene; keep the raw files outside Git.
+| # | Time | On screen | Narration | Source |
+|---|---|---|---|---|
+| 1 | 0:00-0:15 | Crime scene: our own demo video playing, a script and a checklist beside it | "Demo videos drift from what they claim. A step is cut, a line is changed. Nobody notices." | Our own recording |
+| 2 | 0:15-0:35 | Dashboard, signed out; open the public demo | "No login needed to look around. Every finding has a spooky name and a plain name." | PUBLIC DEMO |
+| 3 | 0:35-1:05 | Ghost Detection: sign in as a guest, upload our clip, paste the script and checklist, run the analysis | "Every match is a candidate, never a verdict. This runs on a free schedule, so it can take a few minutes." | LIVE |
+| 4 | 1:05-1:35 | Timeline and Evidence Lantern: a Ghost for the skipped step; click a script line and the clock moves; click a marker and the sentence lights up | "It found the step we skipped and the sentence we added." | LIVE, after the worker finished |
+| 5 | 1:35-2:05 | Exorcism: a person confirms or rejects each candidate; a reshoot note | "Only a person decides." | LIVE |
+| 6 | 2:05-2:25 | Poltergeist: make an editable copy, change one sentence, show only that sentence go stale | "Change one line, re-check one line. A cosmetic edit changes nothing." | LIVE (on a copy) |
+| 7 | 2:25-2:45 | Final Seal: coverage, blockers, the wax-seal moment, the report with real numbers | "The seal names who signed, and which video and script versions." | LIVE |
+| 8 | 2:45-2:50 | Kiro: specs, steering, hooks, agents in the repository | "Built spec by spec with Kiro." | REPO |
+
+## What must be live production
+
+Scenes 3 to 7 are one real run on production, recorded in a single sitting. The public demo (scene 2) shows no video file (it says "No playable video file") and has no Poltergeist example, which is why scene 6 uses a copy.
+
+## If the real run misbehaves
+
+Use the public demo project and say on screen: "This is the demo project. Our live run on this video did not finish in time." Never edit a result or show mock output as real analysis.
+
+## Before recording
+
+1. The team-account run in `docs/coordination/human-actions.md` passed steps 7 and 8.
+2. The worker has run by itself at least once from the schedule (GitHub, Actions, `worker`).
+3. Our own clip has a script and checklist written first, one step left out on purpose and one line added.

@@ -1,6 +1,6 @@
-# DRAFT: dogfood plan for our own demo video
+# Dogfood plan for our own demo video
 
-> DRAFT. Team-plan principle 6: we run SLEUTH on our own submission video and show the real Final Seal report in that video. We never fake a result.
+> Team-plan principle 6: we run SLEUTH on our own submission video and show the real Final Seal report in that video. We never fake a result.
 
 ## Official video requirements: NOT READ YET
 
@@ -22,7 +22,7 @@ The rules page ([kiroween.devpost.com/rules](https://kiroween.devpost.com/rules)
 | Sun 29 Nov | Production stable and rehearsed end to end (`scripts/prod-e2e.ts` passes) | Đăng |
 | Mon 30 Nov | Record | OPEN: who records, who narrates |
 | Tue 1 Dec | Analyse the recording on production; review; seal | Đăng |
-| Wed 2 Dec 23:59 | Feature freeze | All |
+| Sun 29 Nov 23:59 | Feature freeze (decision D-19). After it, only fixes. | All |
 | Thu 3 Dec | Final edit | OPEN |
 | Fri 4 Dec 18:00 | Submit (internal deadline; official deadline Sat 5 Dec 06:00) | Đăng |
 

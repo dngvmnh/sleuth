@@ -12,9 +12,44 @@ Built for Kiroween 2026 (Costume Contest). MIT licensed.
 | Poltergeist | Evidence out of date |
 | Needs Outside Proof | Footage cannot prove this |
 
+**Live:** https://sleuth-eight.vercel.app (signed out, you see the read-only demo; "Make an editable copy" starts a guest session).
+
+![The SLEUTH workspace](docs/submission/screenshots/workspace-after.png)
+
+## Try it in 2 minutes
+
+1. Open the live site. The public demo project opens with no login.
+2. Click a line of the script. The clock moves to its evidence. Click a marker on the timeline and the sentence lights up.
+3. Press "Make an editable copy". Change one sentence of the script and save. Only that sentence's evidence goes stale (Poltergeist, evidence out of date).
+4. Open "Open the Final Seal report" to see what still blocks the seal.
+
+Uploading your own video gives a speech-only check. The worker runs on a free GitHub Actions schedule, so a job can wait 10 to 15 minutes (ADR 0009).
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  Browser[Browser: Next.js UI] --> API[REST API /api/v1]
+  API --> Store{Store}
+  Store --> Fixture[In-memory golden fixture]
+  Store --> Supa[(Supabase: Postgres, Auth, Storage)]
+  Worker[Worker: GitHub Actions, every 10 min] --> Supa
+  Worker --> FFmpeg[FFmpeg: audio and frames]
+  Worker --> Providers[Deepgram speech, Gemini frames for our own clips]
+  Worker --> Engine[Evidence engine: align and match]
+```
+
+## How we used Kiro
+
+Five specs, nine steering files, three hooks and five custom agents drove the build, and property tests written from the specs found three bugs in our own code. MCP servers are configured but disabled, and we did not use Powers. Details with links: [docs/submission/kiro-usage.md](docs/submission/kiro-usage.md). The dated log is [docs/kiro-engineering-journal.md](docs/kiro-engineering-journal.md).
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
+
 ## Five-minute setup (Windows, PowerShell)
 
-You need Node 22 and Git. Run everything in PowerShell on a normal Windows folder, not inside WSL.
+You need Node 22 and Git. Run everything in PowerShell on a normal Windows folder, not inside WSL. On macOS the same commands work in a normal terminal (use `;` or newlines, not `&&` chains, if you copy the PowerShell ones).
 
 ```powershell
 git clone https://github.com/dngvmnh/sleuth
