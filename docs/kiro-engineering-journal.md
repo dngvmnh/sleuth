@@ -1223,3 +1223,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `scripts/prod-e2e.test.ts`: 4 tests for option parsing and the count, with no network. The vitest projects do not include `scripts/`, so it runs with `pnpm tsx --test scripts/prod-e2e.test.ts`: 4 of 4 passed. It is not part of `pnpm test`.
 - Rehearsal on sleuth-dev as a guest, with a local worker on production settings (gemini, empty owner list): worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output. In guest mode step 7 is always SKIP and step 8 has no evidence; those two need the team account.
 - `docs/deploy-plan.md`: new section 5c, "First real job".
+
+## 2026-11-14: script tests run in CI (Đăng)
+
+- `vitest.config.ts` (shared file): the node project now includes `scripts/*.test.ts`. This is the smallest change: `pnpm test` already runs in the CI `check` job, so no workflow edit is needed, and the tests run locally with the same command.
+- `scripts/prod-e2e.test.ts` is rewritten from `node:test` to vitest (4 tests, same checks).
+- New `scripts/keep-alive.test.ts`: 21 tests for `categoryOf`. 18 codes map to auth, host, timeout, tls, config or other; a TypeError gives config; unknown input gives other. A wrapped `cause` is read one level down, the outer code wins, and a cause that points at itself does not loop. A property test (200 runs) shows the message text never changes the category and the printed line is always one fixed word. Mutation check: with the cause lookup removed, 1 test failed.
+- `vitest run scripts`: 2 files, 25 tests passed.
