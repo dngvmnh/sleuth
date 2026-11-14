@@ -3,7 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FindingBadge } from "@/components/finding-badge";
-import { ErrorState, LoadingSkeleton } from "@/components/state-panel";
+import { RouteLoading } from "@/components/route-loading";
+import { ErrorState } from "@/components/state-panel";
 import type { ApiClient } from "@/lib/api-client";
 import { CoverageTable } from "./coverage-table";
 import { OutsideProofList } from "./outside-proof-list";
@@ -233,9 +234,7 @@ export function ReportView({ projectId, client }: { projectId: string; client?: 
 
   if (report.status === "loading") {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-10">
-        <LoadingSkeleton label="Loading report" />
-      </div>
+      <RouteLoading label="Loading report" layout="report" />
     );
   }
   if (report.status === "not_found") {

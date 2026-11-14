@@ -8,7 +8,8 @@ import {
   type FindingType,
   type ReviewDecisionKind,
 } from "@sleuth/contracts";
-import { ErrorState, LoadingSkeleton } from "@/components/state-panel";
+import { RouteLoading } from "@/components/route-loading";
+import { ErrorState } from "@/components/state-panel";
 import { LiveRegion } from "@/components/live-region";
 import type { ApiClient } from "@/lib/api-client";
 import { ExorcismActions } from "../lantern/actions";
@@ -343,9 +344,7 @@ export function Workspace({
 
   if (state.status === "loading") {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <LoadingSkeleton label="Loading project" />
-      </div>
+      <RouteLoading label="Loading project" layout="workspace" />
     );
   }
 

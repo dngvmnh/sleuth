@@ -169,8 +169,8 @@ test("review actions are reachable and usable from the keyboard on a copy", asyn
 test("the 404 page is themed, has no serious or critical issues and links home", async ({ page }) => {
   const res = await page.goto("/this-page-does-not-exist");
   expect(res?.status()).toBe(404);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("This page vanished");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("This room is empty.");
   expect(await seriousViolations(page)).toEqual([]);
-  await page.getByRole("link", { name: "Back to your projects" }).click();
+  await page.getByRole("link", { name: "Back to the dashboard" }).click();
   await expect(page.getByText("Public demo, read-only")).toBeVisible();
 });
