@@ -98,7 +98,7 @@ export function ExorcismActions({ evidence, isDemo, pending, error, onDecide, on
             maxLength={1000}
             rows={3}
             onChange={(e) => setNote(e.currentTarget.value)}
-            className="mt-1 w-full rounded-md border border-line bg-background p-2 text-sm text-foreground"
+            className="mt-1 w-full rounded-md border border-line-strong bg-background p-2 text-sm text-foreground"
           />
           <p className="mt-1 text-xs text-muted">
             Say what to film again. This creates a reshoot task.

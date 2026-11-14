@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export function ExportButtons({ projectId, print = () => window.print() }: { projectId: string; print?: () => void }) {
   const base = `/api/v1/projects/${encodeURIComponent(projectId)}`;
   const link =
-    "inline-flex h-8 items-center rounded-md border border-line px-3 text-sm text-foreground hover:bg-raised";
+    "inline-flex h-8 items-center rounded-md border border-line-strong px-3 text-sm text-foreground hover:bg-raised";
   return (
     <section aria-labelledby="export-heading" className="rounded-md border border-line bg-surface p-4 print:hidden">
       <h2 id="export-heading" className="font-display text-xl text-foreground">

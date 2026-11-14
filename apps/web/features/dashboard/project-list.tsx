@@ -74,7 +74,7 @@ export function ProjectList({ client, auth }: { client?: ApiClient; auth?: Guest
               {project.isDemo ? (
                 <Link
                   href={`/projects/${encodeURIComponent(project.id)}`}
-                  className="rounded-md border border-line px-3 py-1.5 text-sm text-foreground hover:bg-raised"
+                  className="rounded-md border border-line-strong px-3 py-1.5 text-sm text-foreground hover:bg-raised"
                   aria-label={`Open demo: ${project.name}`}
                 >
                   Open demo
