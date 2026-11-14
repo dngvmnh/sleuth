@@ -97,8 +97,17 @@ Environment variables (Production):
 | `DAILY_ANALYSIS_LIMIT_PER_USER` | `5` | no |
 | `MAX_VIDEO_SECONDS` | `180` | no |
 | `MAX_VIDEO_BYTES` | `52428800` | no |
+| `WORKER_DISPATCH_TOKEN` | fine-grained GitHub token, `dngvmnh/sleuth` only, "Actions: Read and write" only (ADR 0009 amendment) | yes, server only; **Production only**, never Preview |
 
 The web app needs no provider keys: only the worker calls Deepgram and Gemini.
+
+How to make `WORKER_DISPATCH_TOKEN`:
+1. GitHub, your avatar, Settings, Developer settings, Personal access tokens, Fine-grained tokens, Generate new token.
+2. Name `sleuth-worker-dispatch`. Expiration: 60 days. Resource owner: `dngvmnh`. Repository access: Only select repositories, `dngvmnh/sleuth`.
+3. Permissions, Repository permissions: Actions, Read and write. Leave every other permission at No access. Generate, copy it.
+4. Vercel, the project, Settings, Environment Variables, Add: key `WORKER_DISPATCH_TOKEN`, paste the value, tick **Production** only, mark it Sensitive, Save.
+5. Deployments, the latest Production deployment, Redeploy, so the new variable is read.
+Undo: delete the variable in Vercel and the token on GitHub. The 10-minute schedule still runs the worker.
 
 Deploy, then open the public demo signed out. It must load without a login.
 
