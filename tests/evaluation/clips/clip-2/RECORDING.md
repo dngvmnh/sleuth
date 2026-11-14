@@ -1,6 +1,6 @@
 # Clip 2: recording script (evidence-analysis 11)
 
-For Đăng (@dngvmnh), who records (decision D-10). Phạm Quốc Bảo labels it afterwards by watching. One take, your own voice and your own screen. No third-party footage, nothing secret on screen or in the audio.
+For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Phạm Quốc Bảo labels it afterwards by watching; the recorder never labels. One take, your own voice and your own screen. No third-party footage, nothing secret on screen or in the audio.
 
 ## What the clip must test
 
