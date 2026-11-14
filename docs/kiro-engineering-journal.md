@@ -1245,3 +1245,8 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Tests per clip: the harness schema, the script splitting into its own lines, the lines matching `RECORDING.md`, recorded fields all empty or all filled, no `labels.json` before the recording, recorder and labeller being different people, and no secret in `demo.ps1`. Plus one case check each: clip-1 has no outside-proof line and one step per item; clip-2 has no `upload-url` call; clip-3 has exactly line 5 flagged by `needsOutsideProof`. `tests/evaluation`: 5 files, 49 tests passed.
 - `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
 - Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.
+
+## 2026-11-14: WP0, board and human checklist (Đăng)
+
+- Merged #39 (clip kits), #41 (brief 006), #42 (script tests in CI) and #40 (board) after main sync and green CI. #27 is handled in WP2.
+- decisions-needed.md: D-11 decided, freeze moved to 29 Nov (D-19), worker trigger decided (D-20). cleanup.md lists 5 Storage folders to delete by hand. New human-actions.md.
