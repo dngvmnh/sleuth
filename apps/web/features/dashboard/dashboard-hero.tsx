@@ -33,7 +33,7 @@ function ClueCard({ demoId, clue }: { demoId: string; clue: DemoClue }) {
     <Link
       href={clueHref(demoId, clue)}
       data-testid="clue-card"
-      className="panel panel-lift relative z-10 -mt-4 block max-w-xs bg-surface p-4 sm:-mt-10"
+      className="panel panel-lift relative block max-w-xs bg-surface p-4"
     >
       <PanelCorners />
       <span className="eyebrow">A clue from the demo</span>
@@ -91,6 +91,12 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
                   Open the public demo
                   <ArrowUpRightIcon size={16} />
                 </Link>
+              ) : snapshot.state === "loading" ? (
+                // Holds the button's place while the demo loads, so nothing shifts when it appears.
+                <span aria-hidden="true" className="invisible inline-flex min-h-11 items-center gap-2 px-5 py-2.5 text-sm font-semibold">
+                  Open the public demo
+                  <ArrowUpRightIcon size={16} />
+                </span>
               ) : null}
               <Link
                 href="/#projects"
@@ -99,8 +105,10 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
                 Start a project
               </Link>
             </div>
+            {/* The coverage line's place is kept from the first paint (no layout shift when it loads). */}
+            <div className="relative mt-6 min-h-16 max-w-md">
             {proven ? (
-              <div className="relative mt-6 max-w-md" data-testid="hero-coverage">
+              <div data-testid="hero-coverage">
                 <p className="text-sm text-muted">
                   <span className="font-display text-2xl text-foreground tabular-nums">
                     {pad2(proven.done)} / {pad2(proven.total)}
@@ -119,12 +127,16 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
                 </div>
               </div>
             ) : null}
+            </div>
           </div>
 
           <div className="relative">
-            <HeroArt className="h-auto w-full max-w-xl justify-self-center" />
+            <HeroArt className="w-full max-w-xl justify-self-center" />
             {/* Below the house, overlapping only the foot of the hill, so the door stays clear. */}
-            {snapshot.clue && snapshot.demoId ? <ClueCard demoId={snapshot.demoId} clue={snapshot.clue} /> : null}
+            {/* The clue card's place is kept while the demo loads, so the hero does not grow later. */}
+            <div className="relative z-10 -mt-4 min-h-36 sm:-mt-10">
+              {snapshot.clue && snapshot.demoId ? <ClueCard demoId={snapshot.demoId} clue={snapshot.clue} /> : null}
+            </div>
           </div>
         </div>
       </section>

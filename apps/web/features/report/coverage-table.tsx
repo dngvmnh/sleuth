@@ -113,7 +113,9 @@ export function CoverageTable({
           This project has no checklist items, so there is nothing to cover. An empty checklist blocks the seal.
         </p>
       ) : (
-        <div className="mt-3 overflow-x-auto">
+        // On a narrow screen the table scrolls sideways; a focusable, named region lets keyboard
+        // users scroll it too (axe: scrollable-region-focusable).
+        <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Coverage table, scrolls sideways">
           <table className={styles.ledger}>
             <caption className="sr-only">Coverage of each checklist item</caption>
             <thead>

@@ -285,12 +285,12 @@ describe("Workspace: a house of claims", () => {
     expect(screen.getByText("Chapter II · The investigation")).toBeInTheDocument();
     expect(screen.getByText(/^A house of/)).toHaveTextContent("A house of claims.");
     const map = screen.getByTestId("claims-map");
-    fireEvent.click(within(map).getByRole("button", { name: /^Line 3, candidate waiting/ }));
+    fireEvent.click(within(map).getByRole("button", { name: /^Line 3\s*,\s*candidate waiting/i }));
     expect(line(3)).toHaveAttribute("aria-pressed", "true");
-    expect(within(map).getByRole("button", { name: /^Line 3,/ })).toHaveAttribute("aria-pressed", "true");
+    expect(within(map).getByRole("button", { name: /^Line 3\s*,\s*/i })).toHaveAttribute("aria-pressed", "true");
     await waitFor(() => expect(clockText()).toBe("8.0 s of 20.0 s"));
     expect(screen.getByRole("heading", { name: "Evidence for line 3" })).toBeInTheDocument();
-    expect(within(map).getByRole("button", { name: /^Line 2, no proof yet/ })).toBeInTheDocument();
+    expect(within(map).getByRole("button", { name: /^Line 2\s*,\s*no proof yet/i })).toBeInTheDocument();
   });
 
   it("frames the player as a projector and the Lantern as a side panel", async () => {

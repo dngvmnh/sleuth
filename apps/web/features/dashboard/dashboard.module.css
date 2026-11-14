@@ -7,6 +7,7 @@
 .bat {
   animation: bat-cross 30s linear infinite;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes bat-cross {
@@ -28,34 +29,6 @@
   }
 }
 
-/* The lit window breathes very slowly: 6 s, opacity 0.8 to 1 only. */
-.window {
-  animation: window-glow 6s ease-in-out infinite alternate;
-}
-
-@keyframes window-glow {
-  from {
-    opacity: 0.8;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Mist at the foot of the hill drifts 14px and back over 40 s. */
-.groundMist {
-  animation: ground-mist 40s ease-in-out infinite alternate;
-}
-
-@keyframes ground-mist {
-  from {
-    transform: translateX(-7px);
-  }
-  to {
-    transform: translateX(7px);
-  }
-}
-
 /* Cursed Frame card: a still 2px red and teal split of the name on hover or focus. */
 .cursed:hover .cursedName,
 .cursed:focus-visible .cursedName {
@@ -67,10 +40,6 @@
 @media (prefers-reduced-motion: reduce) {
   .bat {
     display: none;
-    animation: none;
-  }
-  .window,
-  .groundMist {
     animation: none;
   }
   .cursed:hover .cursedName,

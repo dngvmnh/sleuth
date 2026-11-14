@@ -318,6 +318,60 @@ Earlier the same day, the agent tried and could not do it from its own session:
 
 The Pass above comes only from Đạt's own check.
 
+## Production axe and Lighthouse (2026-11-14, after brief 007)
+
+Pages: the dashboard, the demo workspace, the demo report and the 404 page, each at 1440x900 and 375x812, signed out. Axe ran through Playwright with the WCAG 2.0/2.1 A and AA tags plus best-practice. Lighthouse 12.8.2 (axe-core 4.14) ran in its mobile preset (slow 4G, 4x CPU slowdown) and its desktop preset.
+
+**Before** is the live site, https://sleuth-eight.vercel.app, at `827a2a6`. The PR preview needs a Vercel login, so **after** is a local production build (`next build`, `next start`, fixture mode) of branch `fix/prod-a11y-perf`. A local build of `main`, measured the same way, gave close to the live numbers (dashboard mobile perf 58 vs 60), so the two columns compare fairly. Replace the after column with live numbers once this is deployed.
+
+### Axe, serious and critical
+
+| Page | Before | After |
+|---|---|---|
+| Dashboard, both sizes | none | none |
+| Workspace, both sizes | none | none |
+| Report, 1440 | none | none |
+| Report, 375 | serious: `scrollable-region-focusable` (the coverage table's sideways scroll box) | none |
+| 404, both sizes | none | none |
+
+### Lighthouse scores (performance / accessibility / best practices / SEO)
+
+| Page | Preset | Before (live) | After (local build) |
+|---|---|---|---|
+| Dashboard | mobile | 60 / 100 / 96 / 100 | 73 / 100 / 100 / 100 |
+| Dashboard | desktop | 75 / 100 / 96 / 100 | 78 / 100 / 100 / 100 |
+| Workspace | mobile | 78 / 100 / 96 / 100 | 70 / 100 / 100 / 100 |
+| Workspace | desktop | 92 / 100 / 96 / 100 | 99 / 100 / 100 / 100 |
+| Report | mobile | 79 / 100 / 96 / 100 | 74 / 100 / 100 / 100 |
+| Report | desktop | 93 / 100 / 96 / 100 | 98 / 100 / 100 / 100 |
+| 404 | both | not scored | not scored |
+
+Lighthouse will not score a page that answers with HTTP 404, so the 404 page is covered by axe only.
+
+The mobile performance score moves several points between identical runs. Repeated runs of the workspace on mobile gave total blocking time of 990 to 1,490 ms on `main` and 950 to 1,280 ms on the branch, so the workspace and report mobile "after" numbers above are within that noise.
+
+### Main metrics
+
+| Page | Preset | Layout shift before → after | Total blocking time before → after |
+|---|---|---|---|
+| Dashboard | mobile | 0.111 → 0.003 | 3,050 ms → 700 ms |
+| Dashboard | desktop | 0.103 → 0.002 | 460 ms → 500 ms |
+| Workspace | desktop | 0.165 → 0.003 | 30 ms → 40 ms |
+| Report | desktop | 0.164 → 0.003 | 30 ms → 120 ms |
+
+### What was fixed
+
+- **Scroll box on the report** (axe, serious): the coverage table's sideways scroll area is now a focusable, named region, so keyboard users can scroll it.
+- **Label in name** (Lighthouse, WCAG 2.5.3): the claims-map rooms had an `aria-label` that did not hold their visible words in the same case. The rooms now take their name from their text, with the punctuation and the word "Checklist" for screen readers only.
+- **Layout shift**: the footer jumped down when a page's data arrived (`main` is now at least one screen tall). The dashboard hero now holds the places of the demo button, the coverage line and the clue card from the first paint. The fallback serif is sized to match Instrument Serif.
+- **Main-thread time on the dashboard**: the bat and the lit-window glow were animated inside the hero SVG, next to its blur filters, so the whole picture was redrawn on every frame. The bat now flies on its own small layer, and the window and the mist at the foot of the hill are still. The waiting rooms' glow fades a separate layer instead of animating a box shadow.
+- **Console error** (best practices 96 → 100): `/favicon.ico` was missing. The app now has `app/icon.svg`, an original key mark.
+
+### Left as is
+
+- Unused and legacy JavaScript (about 106 KiB and 14 KiB): these are framework bundles, and removing them is not cheap.
+- Mobile largest contentful paint is about 3.4 s on the throttled preset. It is the first text block, which waits for the page's JavaScript and data.
+
 ## Known gaps
 
 - All screen-reader results come from one person (Đạt) using Narrator in Microsoft Edge on Windows. NVDA, JAWS and other browsers were not used.
