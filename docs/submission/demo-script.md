@@ -2,7 +2,7 @@
 
 Updated 14 November 2026 for the new screens (brief 007). It follows `dogfood-plan.md`: we run SLEUTH on our own demo and show the real result. The official video rules were not readable (the page returned HTTP 403), so Đăng checks the length and language rule before recording. If the limit is shorter than 3:00, cut scene 8 first.
 
-Rules: our own screen, our own voice, no third-party footage or music. Show only output SLEUTH produced on that run. No secrets, keys or emails on screen. The video must go on YouTube as public.
+Rules: our own screen, no third-party footage or music. The narration may use a text-to-speech voice (decided by Đăng, 14 November), disclosed in the YouTube description and Devpost text ("Narration: AI text-to-speech voice"). Never clone or imitate a real person's voice, and never present the voice as a team member or a user. Show only output SLEUTH produced on that run. No secrets, keys or emails on screen. The video must go on YouTube as public.
 
 ## Scenes
 

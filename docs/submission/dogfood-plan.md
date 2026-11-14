@@ -29,7 +29,7 @@ The rules page ([kiroween.devpost.com/rules](https://kiroween.devpost.com/rules)
 ## People
 
 - Who records the screen: OPEN.
-- Who narrates: OPEN. The voice must be one of us, never a synthetic voice passed off as a person.
+- Who narrates: a text-to-speech voice (decided by Đăng, 14 November). It is disclosed in the YouTube description and on Devpost, and never passed off as a person. No cloned or imitated real voice.
 - Who reviews the findings in the app on camera: OPEN.
 
 ## Files
@@ -39,7 +39,7 @@ The rules page ([kiroween.devpost.com/rules](https://kiroween.devpost.com/rules)
 
 ## Our clip, our rules
 
-- Only our own screen and our own voice. No third-party footage or music.
+- Only our own screen. The narration is a disclosed text-to-speech voice. No third-party footage or music.
 - Our own recording may use the Gemini free tier (decision D-4). Visitors' videos never do.
 - Before the worker runs, the queue check must show only our job.
 
