@@ -1380,3 +1380,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `apps/worker/src/schedule.test.ts`: 4 tests. The schedule and concurrency group exist, the run is `--once`, and an empty queue returns after one claim.
 - ADR `docs/decisions/0009-worker-schedule.md` records the limits: GitHub may delay a scheduled run, and it pauses schedules after 60 days of no repository activity.
 - Kiro features used: the handover as a spec, steering rules, and the worker-area rules. Checks run: lint, typecheck, test (979 passed, 70 skipped because they need Postgres), test:property (114), check:contracts (14), build, ghost-scan. Nothing failed. The first edit of the workflow failed to match because the comment text differed from what I remembered, so I read the file bytes before editing again.
+
+## 2026-11-14 afternoon: first real job on production, guest mode (results reported by Đăng)
+
+- `scripts/prod-smoke.ts` parts A and B against the live site: ALL CHECKS PASSED. Test project `zz-test-prpfcc` deleted.
+- `scripts/prod-e2e.ts` in guest mode, 04:14 to 04:17 UTC, `main` at `bcba5e0`. The queue check showed only our job. Worker runs 43555627213 and 43555808634 both succeeded (`speechOnly=1`, 2 transcript segments, 0 evidence, 3 findings). The script passed steps 1 to 6, 8, 9 and 10: job succeeded after 1 attempt, 2 Ghost findings, speech-only findings 2 of 2, seal 409 `uncovered_items`, `report.csv` 30 rows. Step 7 was SKIP because speech only gives no candidate to review. Step 8 is weak, because the edited line had no evidence. Both `zz-test-e2e-*` projects were deleted.
+- So the first real job is proven on production in speech-only mode, and no frame reached Gemini. Steps 7 and 8 still need the team-account run with a clip that produces evidence (#45).
+- `board.md` section 4 and `cleanup.md` are updated: six Storage folders are left to delete by hand.
