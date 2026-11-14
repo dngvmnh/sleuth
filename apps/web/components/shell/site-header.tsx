@@ -45,8 +45,13 @@ export function SiteHeader() {
   const refreshKey = `${pathname}#${savedCount}`;
 
   return (
-    <header className="border-b border-line bg-surface/80 backdrop-blur-sm print:hidden">
-      <div className="mx-auto grid max-w-6xl gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+    <header className="border-b border-line bg-surface/80 backdrop-blur-sm print:hidden" data-testid="site-header">
+      {/*
+        From 1024 px: one row. The sides take only the room they need and the centre takes the
+        rest, so a third nav link (Report) can never push the right-hand chips onto a second row.
+        Below 1024 px the three parts stack on purpose.
+      */}
+      <div className="mx-auto grid max-w-6xl gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-6">
         <div className="flex flex-col gap-0.5">
           <Link
             href="/"
@@ -62,7 +67,10 @@ export function SiteHeader() {
         </div>
 
         <nav aria-label="Site navigation" className="lg:justify-self-center">
-          <ul className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted" role="list">
+          <ul
+            className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted lg:flex-nowrap lg:gap-x-5 lg:whitespace-nowrap xl:gap-x-6"
+            role="list"
+          >
             {navItems(pathname).map((item) => (
               <li key={item.label}>
                 <Link
@@ -79,7 +87,7 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex flex-wrap items-center gap-2 lg:justify-self-end">
+        <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap lg:justify-self-end lg:whitespace-nowrap" data-testid="header-tools">
           <OpenFindingsChip refreshKey={refreshKey} />
           <NightWindToggle />
           <IdentityChip refreshKey={pathname} />
