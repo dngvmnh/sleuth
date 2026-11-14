@@ -1224,6 +1224,9 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Rehearsal on sleuth-dev as a guest, with a local worker on production settings (gemini, empty owner list): worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output. In guest mode step 7 is always SKIP and step 8 has no evidence; those two need the team account.
 - `docs/deploy-plan.md`: new section 5c, "First real job".
 
+## 2026-11-14: brief 006, UI revamp for Đạt (Đăng)
+
+- `docs/coordination/briefs/006-ui-revamp-for-dat.md`: one PR per screen, in this order: #27 first, then the flaky clock test, tokens in components (strong border on the outline button and inputs, finding icon in `FindingBadge`), dashboard, workspace (coverage bar says "covered", tabs), report (draft, sealed and broken banners; print stays white), and `not-found.tsx` and `error.tsx`. Also the no-video panel copy and the real player on the playback URL. UI freeze Sun 29 Nov. Clips 4 and 5 stay his.
 ## 2026-11-14: recording kits for clips 1 to 3 (Đăng, decision D-10 recommendation)
 
 - `tests/evaluation/clips/clip-1` to `clip-3`: `RECORDING.md` (one page, 8 or 7 lines to read, 60 to 120 s, English), `demo.ps1` (the on-screen API steps in fixture mode), `finalise.ps1` (fills length, date, hash, link), a draft `clip.json` (recorded fields empty, `labelledBy` null) and `clip.test.ts`.
