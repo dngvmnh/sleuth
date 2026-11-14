@@ -1436,3 +1436,15 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Repository checks: licence reads MIT through GitHub's API, `.kiro/` is tracked, `.env.example` is the only tracked env file.
 - Release rehearsal: `docs/deploy-plan.md` still said the worker was manual only and the schedule was off; fixed (four places). The launch checklist still had the freeze on 2 Dec; it is 29 Nov. Steps only a person can do are marked. Not done yet: the tags. `v1.0.0-rc1` waits for the freeze and `v1.0.0` for the human checklist.
 - Not verified: the official rules and Devpost field names (the page returned 403). The video length is therefore unconfirmed.
+## 2026-11-14: findings no longer overwrite another project's findings (Đăng)
+
+- Found from the team-account prod-e2e run (reported by Đăng): the worker made 2 findings, but the project listed only the Ghost. The engine keys line findings by segment id (`fd-cursed-frame-seg-1`). Segment ids restart at `seg-1` in every project, while `findings.id` is unique across all projects. `upsertFindings` then updated the row that already had that id, the public demo's included, and kept its project id. So the new project lost its Cursed Frame, and the demo's finding pointed at another project's evidence.
+- Proven on sleuth-dev before the fix: 3 of the 4 demo findings carried a test job's run id (cursed frame, phantom dialogue, needs outside proof). On production, at least `fd-cursed-frame-seg-1` is affected by the team-account run.
+- Fix in `packages/db/src/supabase/rows.ts`:
+  - `mergeAnalysisResult` stores line findings as `<projectId>:<id>`. That is the same form `cloneWithPrefix` gives a copy of the demo, so a re-analysis of a copy updates its copied findings.
+  - `upsertFindings` and `upsertEvidence` now update only rows of the same project (`setWhere`) and throw if a row was not written.
+  - No contract change: ids stay opaque strings, and the golden output is unchanged.
+- New contract test in `change-impact-contract.ts`, run on both stores: two projects with the same segment ids each keep their own Cursed Frame, a repeat run changes nothing, and the demo's findings are unchanged. Mutation check: with the fix removed, it fails (`expected [] to have a length of 1`).
+- Repair: `docs/coordination/cleanup.md` section 3 has a select-first SQL that puts the demo's four findings back to the golden fixture. Run on sleuth-dev on 14 Nov: all four rows show `run-golden-1` again, and they still did after the database suites ran. Production waits for Đăng's SQL Editor run.
+- prod-e2e step 7 needs no change. Spec and engine already raise a Cursed Frame for medium candidate evidence; the bug hid it. With the fix, the evidence clip's medium line gives step 7 its finding.
+- Database suites run one file at a time on sleuth-dev: worker.test 6, supabase-handler.db 5, store.test 35, store.write 9, store.change-impact 3, all passed.
