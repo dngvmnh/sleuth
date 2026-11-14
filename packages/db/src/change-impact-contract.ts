@@ -359,5 +359,60 @@ export function runChangeImpactContract(
       );
       expect(ghost?.status).toBe("resolved");
     });
+
+    it("keeps each project's findings in that project, and never touches the demo's", async () => {
+      // The engine keys segment findings by segment id (fd-cursed-frame-seg-1), and segment ids
+      // restart at seg-1 in every project and in the demo. Bug found on 14 Nov: an analysis in one
+      // project overwrote the demo's finding with the same id.
+      const store = await makeStore();
+      const demoBefore = await store.listFindings({ userId: null }, "proofpay-demo");
+      const projects: string[] = [];
+      for (let i = 0; i < 2; i++) {
+        const p = await store.createProject(alice, { name: projectName });
+        await store.createUploadUrl(alice, p.id, {
+          fileName: "v.mp4",
+          mimeType: "video/mp4",
+          sizeBytes: 1000,
+          durationMs: 30_000,
+        });
+        await store.createScript(alice, p.id, "Open the project.\nClick Export report.");
+        projects.push(p.id);
+      }
+      for (const id of projects) {
+        const job = await store.startAnalysis(alice, id, {});
+        const d = await store.getProjectDetail(alice, id);
+        const segments = d.scriptVersion?.segments ?? [];
+        const result = produce(id, d.assetVersion?.id ?? "", segments, [segments[0]?.id ?? ""]);
+        const ev = result.evidence[0] as EvidenceCandidate;
+        result.findings = [
+          {
+            id: `fd-cursed-frame-${ev.scriptSegmentId}`,
+            projectId: id,
+            type: "cursed_frame",
+            plainLabel: "Needs a human check",
+            checklistItemId: null,
+            scriptSegmentId: ev.scriptSegmentId,
+            evidenceId: ev.id,
+            found: "Stand-in.",
+            notFound: "Stand-in.",
+            limits: "Stand-in.",
+            status: "open",
+            analysisRunId: "run-collision",
+          },
+        ];
+        await store.applyAnalysisResult(alice, id, job.id, result);
+        // Running it again changes nothing (3.5).
+        await store.applyAnalysisResult(alice, id, job.id, result);
+      }
+      for (const id of projects) {
+        const mine = (await store.listFindings(alice, id)).filter((f) => f.type === "cursed_frame");
+        expect(mine).toHaveLength(1);
+        expect(mine[0]?.projectId).toBe(id);
+        expect((await store.listEvidence(alice, id)).map((e) => e.id)).toContain(
+          mine[0]?.evidenceId,
+        );
+      }
+      expect(await store.listFindings({ userId: null }, "proofpay-demo")).toEqual(demoBefore);
+    });
   });
 }
