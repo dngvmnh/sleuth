@@ -9,6 +9,7 @@ import { CoverageTable } from "./coverage-table";
 import { OutsideProofList } from "./outside-proof-list";
 import { ReshootList } from "./reshoot-list";
 import { ExportButtons } from "./export-buttons";
+import { CloseIcon, FileIcon, WaxSealIcon } from "@/components/icons";
 import { HONESTY_NOTES, sealBanner } from "./labels";
 import { SealPanel } from "./seal-panel";
 import { useReport, type ReportData, type SealResult } from "./use-report";
@@ -24,9 +25,16 @@ function Section({ id, title, children }: { id: string; title: string; children:
   );
 }
 
+/** An icon per status, so the banner never relies on colour alone. */
+function BannerIcon({ status }: { status: "draft" | "sealed" | "broken" }) {
+  if (status === "sealed") return <WaxSealIcon size={24} />;
+  if (status === "broken") return <CloseIcon size={24} />;
+  return <FileIcon size={24} />;
+}
+
 const BANNER_CLASS = {
   draft: "border-warn",
-  sealed: "border-ok",
+  sealed: "border-gold",
   broken: "border-danger border-dashed",
 } as const;
 
@@ -72,7 +80,12 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
         data-status={banner.status}
         className={`rounded-md border-2 bg-surface p-4 ${BANNER_CLASS[banner.status]}`}
       >
-        <p className="font-display text-xl text-foreground">{banner.title}</p>
+        <p className="flex items-center gap-2 font-display text-xl text-foreground">
+          <span className={banner.status === "sealed" ? "text-gold" : banner.status === "broken" ? "text-danger" : "text-warn"}>
+            <BannerIcon status={banner.status} />
+          </span>
+          {banner.title}
+        </p>
         {banner.detail ? <p className="mt-1 text-sm text-muted">{banner.detail}</p> : null}
         {data.seal?.note ? <p className="mt-1 text-sm text-muted">Sign-off note: {data.seal.note}</p> : null}
       </div>

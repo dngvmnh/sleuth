@@ -92,6 +92,17 @@ describe("ReportBody", () => {
     expect(banner).toHaveTextContent("Line 3 changed.");
   });
 
+  it("shows an icon in every banner, so the status never relies on colour alone", () => {
+    const sealed = render(<ReportBody data={data({ seal: SEAL })} />);
+    expect(screen.getByTestId("seal-banner").querySelector("svg")).not.toBeNull();
+    sealed.unmount();
+    const broken = render(<ReportBody data={data({ seal: { ...SEAL, status: "broken", brokenAt: SEAL.sealedAt, brokenReason: "x" } })} />);
+    expect(screen.getByTestId("seal-banner").querySelector("svg")).not.toBeNull();
+    broken.unmount();
+    render(<ReportBody data={data()} />);
+    expect(screen.getByTestId("seal-banner").querySelector("svg")).not.toBeNull();
+  });
+
   it("lays out the sections in the order of requirement 4.1", () => {
     render(<ReportBody data={data()} />);
     const headings = screen.getAllByRole("heading").map((h) => h.textContent);
