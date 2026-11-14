@@ -22,7 +22,7 @@ Shell rule: run every command in PowerShell on native Windows, from a clean work
 
 - [ ] Request Kiro credits before Wed 2 Dec 04:00.
 - [ ] Open both Supabase projects once a week (`sleuth-dev` has no ping).
-- [ ] Thu 3 Dec: final production smoke (`pnpm tsx scripts/prod-smoke.ts`) and the team-account e2e. Paste the lines.
+- [ ] **Thu 3 Dec: final production check.** In your own PowerShell, from a clean worktree of `origin/main`: `powershell -ExecutionPolicy Bypass -File scripts/final-prod-check.ps1`. It asks for the production Project URL and publishable key (public values) and the team e-mail and password (never shown, never stored). It runs the smoke test, then the team-account e2e with the evidence clip. If the worker dispatch word is not `sent`, it tells you to run the queue check before starting the worker by hand. Paste the PASS/FAIL lines, then delete what it lists at the end (SQL Editor, then Storage). Details: `docs/deploy-plan.md`, section 5d.
 
 ## Phạm Quốc Bảo (@baofrovn)
 
