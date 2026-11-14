@@ -48,11 +48,11 @@ export function ProjectList({ client, auth }: { client?: ApiClient; auth?: Guest
         onCreateProject={() => void createProject()}
         creating={creating}
       >
-        <ul className="space-y-3">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {projects.map((project) => (
             <li
               key={project.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-4"
+              className="flex flex-wrap items-start justify-between gap-3 rounded-md border border-line bg-surface p-4"
             >
               <div>
                 <Link
@@ -62,7 +62,7 @@ export function ProjectList({ client, auth }: { client?: ApiClient; auth?: Guest
                   {project.name}
                 </Link>
                 {project.isDemo ? (
-                  <span className="ml-3 rounded border border-line px-2 py-0.5 text-xs text-muted">
+                  <span className="ml-3 inline-block rounded border border-line-strong px-2 py-0.5 text-xs text-muted">
                     Public demo, read-only
                   </span>
                 ) : null}
