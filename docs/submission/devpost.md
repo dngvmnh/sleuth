@@ -57,13 +57,11 @@ See `docs/submission/kiro-usage.md`. In short: five specs, nine steering files, 
 | Production site | Live | `scripts/prod-smoke.ts`: 32 of 32 on 14 November |
 | First real job on production | Partly proven | `scripts/prod-e2e.ts` as a guest passed steps 1 to 6, 9 and 10. Step 7 (resolve a finding) was skipped and step 8 passed only weakly, because a speech-only run produces no frame evidence. The team-account run with our own clip is on the human list |
 | Transcription and video analysis | Adapters work | One 6-second clip of our own: Deepgram returned 2 segments and 14 words, Gemini `gemini-3.6-flash` returned 3 observations for 3 frames. This shows the keys and adapters work. It says nothing about accuracy |
-| Accuracy | Not measured | No real clip is recorded and labelled yet. `docs/evidence-confidence.md` shows only a mock plumbing run on 1 hand-written clip. See "Accuracy" below |
+| Accuracy | Not measured | We chose not to run an evaluation before submission. `docs/evidence-confidence.md` shows only a mock plumbing run on 1 hand-written clip. See "Accuracy" below |
 
 ## Accuracy
 
-<!-- PLACEHOLDER (issue #67): paste the table that `pnpm eval --providers real` printed, with the date, the provider names and the clip count. Do not type numbers by hand. Then update the Accuracy row above. -->
-
-`[Accuracy table from issue #67 goes here, exactly as pnpm eval printed it. Until then: not measured.]`
+Not measured. We publish no precision, recall or accuracy number. The evaluation harness (`pnpm eval`) and its protocol are in the repository, but we did not run it on labelled clips before submission.
 
 ## Challenges
 
@@ -81,11 +79,11 @@ See `docs/submission/kiro-usage.md`. In short: five specs, nine steering files, 
 ## What we learned
 
 - Writing the spec first made the rules (candidates, not verdicts) testable instead of a slogan.
-- Measuring beats claiming: we publish no accuracy number until our own clips are labelled by watching, before the tool runs. With three people, the person who recorded the clips also labels them; any number we publish says so.
+- Measuring beats claiming: we have not measured accuracy, so we publish no accuracy number.
 
 ## What's next
 
-Record and label five clips, run the evaluation with real providers, and publish the precision, recall and false-warning rate with the clip count. Add captions to the player.
+Label our recorded clips, run the evaluation with real providers, and publish the precision, recall and false-warning rate with the clip count. Add captions to the player.
 
 ## Built with
 

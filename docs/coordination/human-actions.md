@@ -26,13 +26,12 @@ Shell rule: run every command in PowerShell on native Windows, from a clean work
 
 ## Phạm Quốc Bảo (@baofrovn)
 
-- Nothing on the evaluation. Labels, the protocol update and the first evaluation moved to Đạt on 14 Nov (decision D-10, #66, #67).
+- Nothing on the evaluation: it is dropped before submission (decision D-21).
 
 ## Đạt (@phatdat220707)
 
-- [ ] Record clips 1 to 3 by Wed 18 Nov ([issue #58](https://github.com/dngvmnh/sleuth/issues/58), reassigned from Đăng, decision D-10). Kits: `tests/evaluation/clips/clip-1` to `clip-3`, start with `RECORDING.md`, finish with `finalise.ps1`. Then label them yourself, at least an hour after recording and before any evaluation run (#66).
-- [ ] Record clips 4 and 5 by Tue 24 Nov (ea 14, ea 15), and label them the same way.
-- [ ] Update `docs/evaluation-protocol.md` for the AI voice and your labelling (#66), then run `pnpm eval -- --providers real` on the five clips and post the printed table on #67 (ea 13).
+- Clips 1 to 4 were recorded on 14 Nov. No labels and no evaluation (decision D-21); clip 5 is dropped.
+- [ ] Review the merged UI PRs (#64) and check each one on a phone and a laptop (#84).
 - [ ] Record the demo-video footage by Mon 30 Nov, following `docs/submission/demo-script.md`.
 - [ ] Check the UI on a phone and on a laptop after each UI PR is deployed. Note anything that is cut off or unreadable.
 

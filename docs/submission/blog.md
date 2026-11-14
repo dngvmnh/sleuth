@@ -26,10 +26,7 @@ Demo videos lie by accident. A step gets cut in editing, a screen changes, a scr
 
 **Free means slow, so we say so.** The worker runs on a GitHub Actions schedule every 10 minutes. A visitor's job can wait 10 to 15 minutes, and the page says that instead of faking a progress bar.
 
-**What is not done.** We have not measured accuracy. No real clip is recorded and labelled yet, so we publish no precision or recall number. The repository's `docs/evidence-confidence.md` will show one when the clips exist, with the clip count beside it.
-
-<!-- PLACEHOLDER (issue #67): replace the paragraph above with the table `pnpm eval --providers real` printed, with the date and the clip count. Do not type numbers by hand. -->
-`[Accuracy table from issue #67 goes here once it is posted.]`
+**What is not done.** We have not measured accuracy, and we chose not to before submission. We publish no precision or recall number. The evaluation harness and its protocol are in the repository for a later run.
 
 Try it: https://sleuth-eight.vercel.app. Code: https://github.com/dngvmnh/sleuth (MIT).
 

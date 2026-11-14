@@ -27,7 +27,7 @@ The Night wind in scene 4 is generated in the browser and is off by default. Tur
 
 ## Numbers on screen
 
-Show only numbers SLEUTH printed on that run. Do not say or show an accuracy figure unless the table from issue #67 is in `docs/evaluation-results.md`, and then only exactly as it was printed.
+Show only numbers SLEUTH printed on that run. Do not say or show any accuracy figure: accuracy is not measured (decision D-21). If a scene needs it, say "accuracy is not measured yet".
 
 ## If the real run misbehaves
 
