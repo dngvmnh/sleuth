@@ -14,14 +14,36 @@ Built for Kiroween 2026 (Costume Contest). MIT licensed.
 
 **Live:** https://sleuth-eight.vercel.app (signed out, you see the read-only demo; "Make an editable copy" starts a guest session).
 
-![The SLEUTH workspace](docs/submission/screenshots/workspace-after.png)
+![The SLEUTH dashboard hero: "The cut is haunted.", the real demo coverage and a clue card](docs/submission/screenshots/dashboard-desktop-1440.png)
+
+## The screens
+
+The look is a haunted house at night. Every themed label keeps its plain name beside it.
+
+| Screen | What it shows | Screenshot |
+|---|---|---|
+| Dashboard hero | "The cut is haunted.", the demo's real coverage, and a clue card with one real open finding that opens its line | [desktop](docs/submission/screenshots/dashboard-desktop-1440.png), [mobile](docs/submission/screenshots/dashboard-mobile-375.png) |
+| Findings cabinet | One card per finding type, with what it means, how it is found, how to clear it, and whether it blocks the seal | [desktop](docs/submission/screenshots/dashboard-desktop-1440.png) (lower half) |
+| Claims map | The workspace floor plan: one room per script line and checklist item, in four states (covered, candidate waiting, no proof yet, stale after edit), each with its own border and icon | [desktop](docs/submission/screenshots/workspace-desktop-1440.png), [mobile](docs/submission/screenshots/workspace-mobile-375.png) |
+| The Lantern | The side panel for the chosen line: what was found, what was not, the limits, and the review actions | [Lantern open](docs/submission/screenshots/workspace-lantern-open-1440.png) |
+| "The final seal" | The report: blockers as locked doors, the coverage ledger, and the seal once a person signs off | [draft](docs/submission/screenshots/haunted-report/desktop-1440.png) |
+
+These screenshots come from local fixture mode on 14 November. The sealed report has not been captured yet.
+
+**Night wind** is optional ambient sound, made in the browser with the Web Audio API. There are no audio files. It is off until you press "Night wind" in the header. It goes quiet while the demo video plays, and it pauses when the tab is hidden.
 
 ## Try it in 2 minutes
 
 1. Open the live site. The public demo project opens with no login.
-2. Click a line of the script. The clock moves to its evidence. Click a marker on the timeline and the sentence lights up.
-3. Press "Make an editable copy". Change one sentence of the script and save. Only that sentence's evidence goes stale (Poltergeist, evidence out of date).
-4. Open "Open the Final Seal report" to see what still blocks the seal.
+2. On the dashboard, click the clue card, or open the demo. Pick a room in the claims map or a line of the script: the clock moves to its evidence and the Lantern opens beside it. Click a marker on the timeline and the sentence lights up.
+3. Press "Make an editable copy". In the Script tab, change one sentence and save. Only that sentence's evidence goes stale (Poltergeist, evidence out of date).
+4. Open "Open the Final Seal report" to see "The final seal" and what still blocks it.
+
+## Accuracy
+
+<!-- PLACEHOLDER (issue #67): paste the table that `pnpm eval --providers real` printed, with the date and the clip count. Do not type numbers by hand. -->
+
+**Not measured yet.** Bảo runs the first evaluation on our five labelled clips (issue #67). The table goes here exactly as `pnpm eval` prints it.
 
 Uploading your own video gives a speech-only check. The worker runs on a free GitHub Actions schedule, so a job can wait 10 to 15 minutes (ADR 0009).
 
