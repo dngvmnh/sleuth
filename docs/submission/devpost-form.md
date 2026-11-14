@@ -97,7 +97,7 @@ typescript, nextjs, react, node.js, web-audio-api, zod, drizzle-orm, postgresql,
 | `06-mobile.jpg` | The same screens at phone width (375 px). |
 | `07-kiro.jpg` | How we used Kiro: specs, steering, hooks, custom agents and property tests, all in the public repo. |
 
-**Demo video URL:** `[YouTube URL]`. Rules from the form: YouTube only; only the first 3 minutes are reviewed; public or unlisted, no password.
+**Demo video URL:** `[YouTube URL]`. The video's walkthrough uses a guest copy of the public demo with sample data (D-22); its description says so, and that the narration is an AI text-to-speech voice. Rules from the form: YouTube only; only the first 3 minutes are reviewed; public or unlisted, no password.
 
 ## Prizes and eligibility
 

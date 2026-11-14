@@ -1,12 +1,12 @@
 # Demo video: shot list and narration (2:50)
 
-Updated 14 November 2026 for the new screens (brief 007). It follows `dogfood-plan.md`: we run SLEUTH on our own demo and show the real result. The official video rules were not readable (the page returned HTTP 403), so Đăng checks the length and language rule before recording. If the limit is shorter than 3:00, cut scene 8 first.
+Updated 14 November 2026 for the new screens (brief 007). It no longer runs SLEUTH on our own demo: the walkthrough uses sample data, disclosed (decision D-22). The official video rules were not readable (the page returned HTTP 403), so Đăng checks the length and language rule before recording. If the limit is shorter than 3:00, cut scene 8 first.
 
 Rules: our own screen, no third-party footage or music. The narration may use a text-to-speech voice (decided by Đăng, 14 November), disclosed in the YouTube description and Devpost text ("Narration: AI text-to-speech voice"). Never clone or imitate a real person's voice, and never present the voice as a team member or a user. Show only output SLEUTH produced on that run. No secrets, keys or emails on screen. The video must go on YouTube as public.
 
 ## Scenes
 
-Legend for the last column: LIVE = must be recorded on production (https://sleuth-eight.vercel.app). PUBLIC DEMO = the signed-out demo project on production. Its results are **seeded output** from the golden fixture, not a live analysis, and the narration says so. REPO = a screen of the repository.
+Legend for the last column (since D-22, LIVE scenes use a guest copy of the public demo on production): LIVE = recorded on production (https://sleuth-eight.vercel.app). PUBLIC DEMO = the signed-out demo project on production. Its results are **seeded output** from the golden fixture, not a live analysis, and the narration says so. REPO = a screen of the repository.
 
 | # | Time | On screen | Narration | Source |
 |---|---|---|---|---|
@@ -19,9 +19,14 @@ Legend for the last column: LIVE = must be recorded on production (https://sleut
 | 7 | 2:15-2:42 | "The final seal": no locked doors left, the coverage ledger, Apply the Final Seal and the wax seal pressed, and the report with the run's real numbers | "The seal names who signed, and which video and script versions." | LIVE |
 | 8 | 2:42-2:50 | Kiro: specs, steering, hooks, agents in the repository | "Built spec by spec with Kiro." | REPO |
 
-## What must be live production
+## Sample data, disclosed (decision D-22)
 
-Scenes 3 to 7 are one real run on production, recorded in a single sitting. The public demo (scene 2) shows seeded results, has no video file (it says "No playable video file") and has no Poltergeist example, which is why scene 6 uses a copy.
+Scenes 3 to 7 use a guest copy of the public ProofPay demo on production, not a fresh analysis of our own video (decided by Đăng, 14 November, D-22). Its findings are **seeded sample output** from a saved run. The review and seal actions in those scenes are clicks made on camera on sample data, not a review of real footage.
+
+Say so on screen and in the narration:
+- An on-screen label for scenes 3 to 7: "Sample data: a copy of the public demo. Review actions shown on sample data."
+- The seal note on camera reads "Walkthrough on sample data".
+- The YouTube description and Devpost text say the walkthrough uses sample data.
 
 The Night wind in scene 4 is generated in the browser and is off by default. Turn it on with one click before pressing Play, and keep its volume low so the narration stays clear.
 
@@ -29,9 +34,9 @@ The Night wind in scene 4 is generated in the browser and is off by default. Tur
 
 Show only numbers SLEUTH printed on that run. Do not say or show any accuracy figure: accuracy is not measured (decision D-21). If a scene needs it, say "accuracy is not measured yet".
 
-## If the real run misbehaves
+## Never
 
-Use the public demo project and say on screen: "This is the demo project with sample results. Our live run on this video did not finish in time." Never edit a result or show mock output as real analysis.
+Never edit a result, add a finding by hand, or present sample output as an analysis of a real video.
 
 ## Before recording
 

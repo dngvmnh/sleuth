@@ -1,5 +1,7 @@
 # Dogfood plan for our own demo video
 
+> **Superseded on 14 November 2026 (decision D-22):** the demo video uses a guest copy of the public demo with sample data, disclosed on screen, instead of a real run on our own video. Kept for a later run. See `demo-script.md`.
+
 > Team-plan principle 6: we run SLEUTH on our own submission video and show the real Final Seal report in that video. We never fake a result.
 
 ## Official video requirements: NOT READ YET
