@@ -1567,3 +1567,10 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Clip kits 1, 2, 3 and 5 (`RECORDING.md`): "your own voice" now allows a disclosed text-to-speech voice.
 - Clip facts checked with `ffprobe` on Đạt's drafts: clip 1 90.0 s, clip 2 74.3 s, clip 3 84.6 s, all H.264/AAC 1280x720. Files are 84 to 102 MB, so they stay out of Git. `finalise.ps1` (duration, hash, link) is still Đạt's step.
 - Docs only.
+
+## 2026-11-14: fixes from the review of #34, #43 and #52 (Phạm Quốc Bảo, #68)
+
+- #34: on a speech-only run, a Ghost's `notFound` now says no frames were checked, instead of "No frame near a matching spoken line shows it". Normal runs and the golden text are unchanged.
+- #43: a `--once` run takes no new job after `WORKER_ONCE_BUDGET_MS` (default 720000 ms, 12 minutes). A job already started finishes. Reason: one worst-case job can need about 6 minutes of Deepgram calls and 16 of Gemini calls with retries, and the workflow stops at 20 minutes. The last 8 workflow runs took 41 to 90 s, so normal runs are far from either limit. One worst-case job can still pass 20 minutes; the budget only stops a late start. `worker.yml` header no longer says the schedule is off.
+- #52: protocol step 6 no longer asks for a real run per clip (it conflicted with #67: one run on all five clips). Step 4 names the four finding types correctly.
+- Gate: lint and typecheck clean; worker, evidence-engine, contract and evaluation tests 237 passed, 18 skipped (need a database); property tests 115 of 115; ghost scan clean.

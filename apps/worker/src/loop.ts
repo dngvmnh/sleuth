@@ -9,6 +9,14 @@ export interface LoopOptions {
   heartbeatMs: number;
   /** Stop after the queue is empty once. */
   once: boolean;
+  /**
+   * With `once`: take no new job after this long, so a job is not cut off by the runner's own time
+   * limit (the scheduled workflow stops at 20 minutes, review of #43). Jobs left queued go to the
+   * next run. A job already started always finishes.
+   */
+  onceBudgetMs?: number;
+  /** Clock in ms, for tests. */
+  now?: () => number;
   signal?: AbortSignal;
   log?: (event: string, fields?: Record<string, string | number>) => void;
 }
@@ -25,8 +33,14 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 /** Claim, heartbeat while working, then complete or fail. Logs ids and counts only. */
 export async function runLoop(o: LoopOptions): Promise<void> {
   const log = o.log ?? (() => undefined);
+  const now = o.now ?? Date.now;
+  const startedAt = now();
   let idleLogged = false;
   while (!o.signal?.aborted) {
+    if (o.once && o.onceBudgetMs !== undefined && now() - startedAt >= o.onceBudgetMs) {
+      log("run_budget_reached", { workerId: o.workerId, budgetMs: o.onceBudgetMs });
+      return;
+    }
     const job = await o.queue.claim(o.workerId);
     if (!job) {
       if (o.once) return;

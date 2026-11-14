@@ -28,6 +28,7 @@ async function main() {
     pollMs: config.WORKER_POLL_MS,
     heartbeatMs: config.WORKER_HEARTBEAT_MS,
     once,
+    onceBudgetMs: config.WORKER_ONCE_BUDGET_MS,
     signal: abort.signal,
     log,
   };

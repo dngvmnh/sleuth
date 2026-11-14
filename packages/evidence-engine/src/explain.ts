@@ -37,11 +37,19 @@ export function explainCursedFrame(input: { matchedFrames: number }): FindingPar
   };
 }
 
-export function explainGhost(input: { lineExists: boolean }): FindingParts {
+export function explainGhost(input: { lineExists: boolean; speechOnly?: boolean }): FindingParts {
+  const found = input.lineExists
+    ? "A script line points at this item."
+    : "No script line points at this item.";
+  // Speech only (decision D-4): no frame was looked at, so do not claim a frame search failed.
+  if (input.speechOnly)
+    return {
+      found,
+      notFound: "No frames were checked, so nothing on screen could be found for this item.",
+      limits: "Watch the clip, or run the analysis with video analysis, to check the screen.",
+    };
   return {
-    found: input.lineExists
-      ? "A script line points at this item."
-      : "No script line points at this item.",
+    found,
     notFound: "No frame near a matching spoken line shows it.",
     limits:
       "Frames are sampled, so a quick action between samples can be missed. Scrub the video to check.",
