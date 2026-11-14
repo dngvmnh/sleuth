@@ -33,6 +33,8 @@ The interface is a haunted house at night, but every themed label keeps its plai
 - **"The final seal":** the report. Blockers show as locked doors, coverage as a ledger, and the wax seal appears only after a person signs off. It prints on white paper.
 - **Night wind:** optional ambient sound, generated in the browser with the Web Audio API. There are no audio files. It is off by default and starts only on a click. It goes quiet while the demo video plays, so you always hear the demo's own sound, and it pauses when the tab is hidden.
 
+Devpost gallery and thumbnail (3:2): `docs/submission/media/`, field-by-field form answers in `docs/submission/devpost-form.md`.
+
 Screenshots: `docs/submission/screenshots/production/`, taken on the live site at 1440 and 375 px on 14 November: dashboard hero, findings cabinet, claims map, the Lantern on line 3, the draft report, the 404 page, and a sealed report. The sealed one is a rehearsal project whose candidates were confirmed by `scripts/seal-rehearsal.ts` through the team account, not by a person watching the clip; its seal note says so.
 
 ## How we built it
