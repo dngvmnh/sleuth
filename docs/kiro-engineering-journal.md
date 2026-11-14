@@ -1464,6 +1464,41 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Change: every result in Supabase mode is logged as `worker_dispatch`. `POST /projects/{id}/analysis` returns the result word in the `x-sleuth-worker-dispatch` header, through a new `headers` field on the route context in `api.ts`. `scripts/prod-e2e.ts` prints `worker dispatch: <word>`. `docs/deploy-plan.md` maps each word to a token check, and lists 5 checks for the token. No contract change: the body is unchanged.
 - Tests: the route test checks the header (`skipped_fixture` in fixture mode), and a new dispatch test checks that `skipped_no_token` is logged. `apps/web/app/api/_lib`: 53 passed.
 
+## 2026-11-14: flaky browser specs after PR #27 (Đạt)
+
+Branch `fix/e2e-flaky-analysis-seal` from `main` `729ce21`. Đăng's comment on PR #27: on the full run, `analysis` and `seal` failed and then passed when rerun alone. PR #27 itself was already squash-merged (`42d91d8`) and its branch deleted. The playhead unit test named in brief 006 was already fixed on `main` in #46 (`waitFor`).
+
+**`analysis.spec.ts`: cause found and fixed.**
+- Cause: shared state between runs, not timing.
+  - The fixture store keeps a daily analysis limit of 5 per user per UTC day, for the life of the dev server.
+  - Every test acted as the same default user, `fixture-user`, and `analysis.spec.ts` starts 2 analyses per run.
+  - Locally Playwright reuses a running server (`reuseExistingServer: !CI`).
+  - So on one server, the 6th analysis gets `429 limit_exceeded`. The UI then shows "Daily analysis limit reached", and no job is polled.
+  - After a server restart the count is 0 again, which is why a rerun alone could pass.
+- Reproduced on one long-running fixture dev server, running `analysis.spec.ts` and `seal.spec.ts` together:
+  - run 1: 11/11;
+  - run 2: 11/11;
+  - run 3: "leaving the workspace stops the polling" failed with 0 checks.
+  - The error context showed the alert "Daily analysis limit reached".
+  - A direct POST on the same server returned 429 with `limit: 5`.
+- Fix (test only, `tests/e2e/analysis.spec.ts`):
+  - each test uses its own fixture user through `x-fixture-user`;
+  - for the page, `page.setExtraHTTPHeaders`; for the API calls, the same header.
+  - No assertion, timeout, retry or wait was changed. The limit itself is a product rule and stays.
+- Proof on the same server, where `fixture-user` was still limited (429):
+  - the unfixed spec failed 2 of 3;
+  - the fixed specs passed 5 runs in a row (11/11 each).
+  - A full suite on a fresh server, `--workers=1`: 73/73.
+  - `pnpm lint` and `pnpm typecheck`: clean.
+
+**`seal.spec.ts`: not reproduced, no change.**
+- It passed in 3 full serial runs before the fix, in 8 targeted runs and in the full run after the fix.
+- Its tests make their own copies and start no analysis, so the limit above does not explain it.
+- Without a failure to read, no fix was made. If it fails again, keep the trace from `test-results`.
+
+Also seen: a full run with the default parallel workers (8 on this machine) failed 40 of 73, mostly test timeouts on the one dev server. The specs are written for `--workers=1`, and `playwright.config.ts` only sets that in CI. That is a config question, not part of this fix.
+
+Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under the condition that broke it before.
 ## 2026-11-14: final production check script (Đăng)
 
 - New `scripts/final-prod-check.ps1` for Thu 3 Dec. It runs `prod-smoke.ts` (parts A and B), then `prod-e2e.ts` in team-account mode with the evidence clip, building it if missing. It shows the worker dispatch word, with the queue-check instructions if the word is not `sent`. A `finally` block clears every environment variable it set. It ends with the test project ids, the select-first SQL and the Storage folders. The Project URL and publishable key come from parameters or a prompt, never from `.env.local`. The team password uses `Read-Host -AsSecureString` and the BSTR is freed. `-SmokeOnly` skips the e2e.

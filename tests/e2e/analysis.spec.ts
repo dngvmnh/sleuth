@@ -9,19 +9,28 @@ const expect = baseExpect.configure({ timeout: 30_000 });
 
 const panel = (page: Page) => page.locator("section[aria-labelledby='analysis-heading']");
 
-async function openCopy(page: Page, request: APIRequestContext): Promise<string> {
+/**
+ * Each test acts as its own fixture user. The daily analysis limit (5 per user per UTC day)
+ * is counted per user for the life of the dev server, and Playwright reuses a running server
+ * locally. With the shared default user, the 6th analysis since the server started got 429
+ * and these tests failed on the third run against the same server.
+ */
+async function openCopy(page: Page, request: APIRequestContext): Promise<{ id: string; headers: Record<string, string> }> {
+  const headers = { "x-fixture-user": `e2e-analysis-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` };
+  await page.setExtraHTTPHeaders(headers);
   const res = await request.post("/api/v1/projects", {
+    headers,
     data: { name: `Analysis copy ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, copyFromDemo: true },
   });
   expect(res.status()).toBe(201);
   const id = ((await res.json()) as { project: { id: string } }).project.id;
   await page.goto(`/projects/${id}`);
   await expect(panel(page).getByRole("button", { name: "Run analysis" })).toBeVisible();
-  return id;
+  return { id, headers };
 }
 
 test("Run analysis queues a real job and polls it every 2 seconds, one check at a time", async ({ page, request }) => {
-  const id = await openCopy(page, request);
+  const { id, headers } = await openCopy(page, request);
   const checks: number[] = [];
   let inFlight = 0;
   let overlap = false;
@@ -52,7 +61,7 @@ test("Run analysis queues a real job and polls it every 2 seconds, one check at 
   expect(overlap).toBe(false);
 
   // The UI shows the real state the server reports: still queued.
-  const fromApi = await request.get(`/api/v1/projects/${id}/jobs/${job.id}`);
+  const fromApi = await request.get(`/api/v1/projects/${id}/jobs/${job.id}`, { headers });
   expect(((await fromApi.json()) as { job: { status: string } }).job.status).toBe("queued");
   await expect(page.getByTestId("job-processing")).toContainText("Queued. Analysis starts within about 10 to 15 minutes.");
 });
