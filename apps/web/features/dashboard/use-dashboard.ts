@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@sleuth/contracts";
-import { createApiClient, type ApiClient } from "@/lib/api-client";
+import type { ApiClient } from "@/lib/api-client";
+import { guestAuthMessage, type GuestAuth } from "@/lib/guest-auth";
+import { useApiClient, useGuestAuth } from "@/components/guest-auth-provider";
 import type { PanelStatus } from "@/components/state-panel";
+
+/** Where a create stands: signing in as a guest first (Supabase mode), then creating. */
+export type CreatePhase = "idle" | "signing_in" | "creating";
 
 /** Open-findings count for one project: still loading, a real number, or failed to load. */
 export type OpenCount = { state: "loading" } | { state: "ready"; count: number } | { state: "error" };
@@ -14,6 +19,8 @@ export interface DashboardState {
   openCounts: Record<string, OpenCount>;
   errorMessage: string | undefined;
   creating: boolean;
+  createPhase: CreatePhase;
+  /** The full message to show, already worded for people. */
   createError: string | undefined;
   reload: () => void;
   createProject: () => Promise<void>;
@@ -34,13 +41,16 @@ export function formatLastChange(updatedAt: string): string {
 }
 
 /** Loads projects and their open-findings counts, and offers a copy-from-demo create action. */
-export function useDashboard(client?: ApiClient): DashboardState {
-  const api = useMemo(() => client ?? createApiClient(), [client]);
+export function useDashboard(client?: ApiClient, auth?: GuestAuth): DashboardState {
+  const shared = useApiClient();
+  const sharedAuth = useGuestAuth();
+  const api = useMemo(() => client ?? shared, [client, shared]);
+  const guest = auth ?? sharedAuth;
   const [status, setStatus] = useState<PanelStatus>("loading");
   const [projects, setProjects] = useState<Project[]>([]);
   const [openCounts, setOpenCounts] = useState<Record<string, OpenCount>>({});
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-  const [creating, setCreating] = useState(false);
+  const [createPhase, setCreatePhase] = useState<CreatePhase>("idle");
   const [createError, setCreateError] = useState<string | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
   // A ref blocks a second submit in the same tick, before React re-renders.
@@ -90,25 +100,36 @@ export function useDashboard(client?: ApiClient): DashboardState {
   const createProject = useCallback(async () => {
     if (createInFlight.current) return;
     createInFlight.current = true;
-    setCreating(true);
     setCreateError(undefined);
     try {
-      await api.createProject("Copy of ProofPay demo", true);
-      reload();
-    } catch (error: unknown) {
-      setCreateError(messageOf(error));
+      // Sign in first (a no-op in fixture mode). If it fails, no project request is sent.
+      if (guest.mode === "supabase") setCreatePhase("signing_in");
+      try {
+        await guest.ensureSession();
+      } catch (error: unknown) {
+        setCreateError(guestAuthMessage(error) ?? `Could not sign in: ${messageOf(error)}`);
+        return;
+      }
+      setCreatePhase("creating");
+      try {
+        await api.createProject("Copy of ProofPay demo", true);
+        reload();
+      } catch (error: unknown) {
+        setCreateError(`Could not create the project: ${messageOf(error)}`);
+      }
     } finally {
       createInFlight.current = false;
-      setCreating(false);
+      setCreatePhase("idle");
     }
-  }, [api, reload]);
+  }, [api, guest, reload]);
 
   return {
     status,
     projects,
     openCounts,
     errorMessage,
-    creating,
+    creating: createPhase !== "idle",
+    createPhase,
     createError,
     reload,
     createProject,

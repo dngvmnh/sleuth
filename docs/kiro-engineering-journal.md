@@ -1038,6 +1038,129 @@ Final Seal tasks 1 to 10 are all ticked. Review Workspace task 14 stays open. St
 - Tests (no network, no FFmpeg): with fake providers that hear and see what the example's hand-written inputs say, the real path scores exactly like the mock path; the temporary folder is gone after the run; no video means skipped; over 180 s throws before any provider call; header names models, never a key. `tests/evaluation`: 24 of 24 pass.
 - Not done: the real run itself. It needs clips 1 to 5 recorded and labelled, and the keys Đăng holds.
 
+## 2026-11-13: anonymous guest sign-in in the browser (Đạt, review 003 blocker, ADR 0006)
+
+Branch `feat/web-anonymous-signin`, in its own worktree from `main` `62e2332`. Nothing was committed or pushed. The accessibility work (PR #26) and the stash were not touched.
+
+What changed (frontend only; no API route, contract, database, RLS, worker or dependency change):
+- `apps/web/lib/guest-auth.ts`: the sign-in rules.
+  - `ensureSession()` reuses a session the Auth server still accepts. Otherwise it calls `signInAnonymously()`.
+  - A new user is made only when there is no session, or when the Auth server answers that the session is gone (401/403, `user_not_found`, ...). A network error never makes a new user.
+  - Calls made at the same time share one sign-in.
+  - `prepareRequest()` only reads the session, so an expired cookie gets refreshed. It never signs in.
+  - Errors are `not_configured`, `anonymous_disabled`, `network` and `failed`. Each has a plain message saying nothing was created. Nothing is logged.
+- `apps/web/lib/supabase-browser.ts`: `createBrowserClient` from `@supabase/ssr` (existing 0.12.7), built lazily, only in Supabase mode. The session is kept in the `@supabase/ssr` cookies that `supabase-server.ts` reads (same URL, so the same cookie name).
+- `apps/web/lib/auth-config.ts` (server): the mode comes from `SLEUTH_DATA_MODE`, by the same rule as `dataMode()`. It is not guessed from a URL or key being set. Only the two public values are passed on.
+- `apps/web/app/(workspace)/layout.tsx`: reads that config per request (`connection()`) and wraps the pages in `GuestAuthProvider`. The pages are now rendered on demand (`ƒ /`).
+- `apps/web/components/guest-auth-provider.tsx`: one guest auth and one API client for every page, so both entry points share the session and the in-flight sign-in. `GuestSessionNote` says the session lives in this browser only and cannot be recovered after its data is cleared.
+- `apps/web/lib/api-client.ts`: a `beforeRequest` option. In Supabase mode it is `prepareRequest`, and no `x-fixture-user` header is sent. Same-origin calls carry the cookie.
+- Dashboard "Create a project" and demo "Make an editable copy":
+  1. sign in;
+  2. only then send the create request;
+  3. while waiting, the button is locked with a ref against double clicks and says "Starting a guest session..." and then "Creating..." / "Making a copy...";
+  4. a failed sign-in shows an alert and sends no request, and pressing again retries.
+- Viewing pages never signs anyone in. The demo stays read-only.
+
+Checks (fixture mode, on the worktree):
+
+| Check | Result |
+|---|---|
+| New unit tests: `guest-auth.test.ts` (17), project-list (+5), editors-panel (+5), api-client (+1) | pass |
+| `vitest run apps/web/lib apps/web/features` | 327/327 |
+| `pnpm test` | 885 passed, 75 skipped (the same DB/key/ffmpeg suites as before) |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `pnpm --filter @sleuth/web build` | passed |
+| Client bundle (`.next/static`) contains `SUPABASE_SERVICE_ROLE`, `DATABASE_URL` or `service_role` | 0 files |
+| `playwright test --workers=1` (all specs) | 71/71 |
+
+One run of the full features set had a single timing failure in `workspace-flow.test.tsx` (the playhead test). It passed 3 of 3 times alone, and in the next full run. It does not touch the new code.
+
+Not verified: a real sign-in. This machine has no Supabase test project. It has no `NEXT_PUBLIC_SUPABASE_*` values and no Supabase CLI. The unit tests use a fake `supabase.auth`, so they do not prove the following:
+- a real anonymous user is made;
+- the cookie survives a reload;
+- the server reads it;
+- two users are kept apart.
+
+For Đăng: a test Supabase project with anonymous sign-ins on, and its `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `DATABASE_URL` set locally (not shared in chat). Then run part B of `scripts/prod-smoke.ts`, plus a reload check, against that test project. Not against production.
+
+### 2026-11-13: guest sign-in no longer replaces a session on unclear errors (review fix)
+
+Two cases were reproduced in `guest-auth.ts`:
+1. `getSession` returned `session: null` with an `AuthApiError` 429. `ensureSession` still called `signInAnonymously`.
+2. With a session, `getUser` returned 403 `access_denied`. The code signed out and made a new guest, because `isDeadSession` treated every 401 or 403 as a dead session.
+
+Fix (`apps/web/lib/guest-auth.ts`, frontend only):
+- A failed session read is no longer read as "signed out". Now a new guest is made only in two cases:
+  - the read succeeds and there is no session;
+  - the Auth server gives a specific dead-session code (`user_not_found`, `session_not_found`, `session_expired`, `bad_jwt`, `refresh_token_not_found`, or `AuthSessionMissingError`).
+- HTTP 401 or 403 alone no longer counts as a dead session.
+- Rate limits, access denied, other unknown errors and network errors now throw. The person sees "Guest sign-in did not work ... Try again" or the network message. Nothing calls `signOut` or `signInAnonymously`, and no create request is sent.
+- Reusing a valid session and sharing one sign-in between concurrent calls are unchanged.
+
+Regression tests. Before the fix, 6 failed, and these were exactly the new tests:
+- `guest-auth.test.ts`: `getSession` 429; `getSession` unknown error; `getUser` 403 `access_denied`; `getUser` bare 401. In each, `signInAnonymously` and `signOut` are not called.
+- `project-list.test.tsx`: the real `createGuestAuth` with a 429 session read. The test checks for an alert, no POST, no sign-in or sign-out, and that the button can be pressed again.
+- `editors-panel.test.tsx`: the real `createGuestAuth` with a `getUser` 403 `access_denied`. The test checks for an alert, no copy, and no sign-in or sign-out.
+
+Also added: `getSession` with `refresh_token_not_found` still starts a new guest. This test passed before the fix and after it.
+
+After the fix:
+- `vitest run apps/web/lib apps/web/features`: 335/335;
+- `pnpm lint`, `pnpm typecheck` and `git diff --check`: clean.
+
+Still not verified: a real Supabase sign-in, the cookie surviving a reload, and two users kept apart. There is no Supabase test environment on this machine. Nothing was committed or pushed.
+
+### 2026-11-13: live check of guest sign-in on the dev Supabase project
+
+Setup:
+- Branch `feat/web-anonymous-signin` at `e8fa7cd`.
+- The env is the "sleuth dev" set in `apps/web/.env.local`. It is git-ignored and not tracked, and no values were printed.
+- The file has every required name set. But its `SLEUTH_DATA_MODE` is not `supabase`, so the server was started with `SLEUTH_DATA_MODE=supabase` set in the shell.
+- `next dev` on `127.0.0.1:3001`, opened as `http://localhost:3001`.
+- Supabase mode was confirmed: a POST /projects with no session got 401, and so did one with a forged `x-fixture-user`.
+- No migration, seed, worker or AI provider was used.
+
+**Browser, with real cookies.** Playwright Chromium was used with separate contexts for A, B and a visitor. The "Create a project" and "Make an editable copy" requests were renamed on the way out to `zz-test-*`. The cookie and the sign-in were untouched.
+
+Final run: 30 of 30 checks pass.
+- Viewing the dashboard, demo and report made 0 `/auth/v1/signup` calls and left no auth cookie. The guest note shows on the demo.
+- Create a project made 1 real anonymous sign-in, then the project (201), and set an `sb-*-auth-token` cookie.
+- After a reload, A still sees the project. A can open it, and it is editable. A cookie request to GET it returned 200. No new guest was made.
+- Make an editable copy gave 201 with the same owner as A, no new guest, and the copy opens editable.
+- B double-clicked: 1 sign-in and 1 create POST. B is a different user.
+- B cannot reach A's project or copy:
+  - GET returns 404 and writing a script returns 404;
+  - A's projects are not in B's list;
+  - B's page for A's project says not found.
+- The visitor cannot read A's project (404) or write it (404). The visitor's list holds only the demo, and the visitor made no guest.
+- A still reads its project after B signs in.
+
+The first three runs had failures in the test script, not in the app:
+- a response body read too early;
+- visibility checks that did not wait;
+- the copy's POST body could not be read after the page left.
+
+The script was fixed and the app code was not changed.
+
+**API smoke test** (`scripts/prod-smoke.ts`). Set in the shell only: `PROD_SITE_URL=http://localhost:3001`, plus the dev URL and anon key mapped to `PROD_SUPABASE_URL` and `PROD_SUPABASE_ANON_KEY`.
+- Part A: 14 of 14 pass.
+- Part B: 17 of 19 pass. Two backend or config points for Đăng:
+  1. "signed upload URL issued" expects status 200, but the API answers 201 with an `uploadUrl`. The script and the API disagree; the URL was issued.
+  2. "bucket refuses a .txt body": the dev bucket accepted a `text/plain` upload (200). The bucket's allowed MIME types do not seem to be set on dev. The 51 MB upload was refused (400).
+
+Test data made, for cleanup (the API has no delete route; use `docs/deploy-plan.md` section 7):
+- 11 projects named `zz-test-*`, from 13:45 to 13:49 UTC:
+  - `zz-test-4waug-A-1`;
+  - `zz-test-wp25u-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-w9ui3-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-aglvg-A-1`, `-A-2`, `-B-1`;
+  - `zz-test-hgli8c` (smoke).
+  - Their ids run from `prj-0mwf14qud0001-eb75deee` to `prj-0mwf19d62000l-f5cc5b6b`.
+- About 9 anonymous auth users: 7 from the browser runs and 2 from the smoke test.
+- 3 smoke asset versions: `av-0mwf19hj8000n-2959d91c`, `av-0mwf19k1l000p-14c9f07f` and `av-0mwf19msw000s-ea33f596`. The first two have storage objects (4 KB webm, and the accepted .txt).
+- Two older rows, `zz-test-e2e-zkgp8m` and `zz-test-e2e-15jv2c` from 11:34 and 11:39 UTC, were not made here.
+
+The live checks ran against the dev project only, not production. No frontend bug was found, so no app code changed in this step. Nothing was committed or pushed.
 ## 2026-11-11: Narrator walkthrough and the step 18 fix (Review Workspace task 14)
 
 A Narrator walkthrough was run on Windows and Edge, against the production build in fixture mode, at commit `c737231`. An agent pressed the keys. The evidence is screenshots of Narrator's Speech recap. Nobody listened by ear. The step-by-step results are in `docs/accessibility.md` ("Narrator walkthrough log").
