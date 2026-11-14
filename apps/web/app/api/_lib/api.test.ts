@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   ErrorResponseSchema,
   ListEvidenceResponseSchema,
@@ -170,6 +170,29 @@ describe("API routes in fixture mode", () => {
       expect(res.status).toBe(201);
     },
   );
+
+  it("queues analysis in fixture mode without calling GitHub to start a worker", async () => {
+    const spy = vi.spyOn(globalThis, "fetch");
+    try {
+      const who = "dispatch-fixture-user";
+      const created = await createProject(json("POST", { name: "Dispatch" }, who), ctx());
+      const id = ((await created.json()) as { project: { id: string } }).project.id;
+      await createUploadUrl(
+        json(
+          "POST",
+          { fileName: "a.mp4", mimeType: "video/mp4", sizeBytes: 1000, durationMs: 5000 },
+          who,
+        ),
+        ctx({ id }),
+      );
+      await createScript(json("POST", { text: "One line here." }, who), ctx({ id }));
+      const res = await startAnalysis(json("POST", {}, who), ctx({ id }));
+      expect(res.status).toBe(202);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
 
   it("answers 429 with the standard error shape and a reset time after the daily limit", async () => {
     const who = "limit-test-user";

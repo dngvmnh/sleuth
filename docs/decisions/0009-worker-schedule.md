@@ -17,4 +17,16 @@ Visitors' analysis jobs are queued in the production database. Nothing runs them
 
 ## Rejected
 - A hosted always-on worker: not free.
-- A webhook from the web app that starts the workflow on each upload: needs a token with `actions:write` stored in Vercel. That is a bigger secret for a small gain, so it is not used now.
+- (Rejected on 13 Nov, accepted on 14 Nov; see the amendment.) A call from the web app that starts the workflow: needs a token with `actions:write` stored in Vercel.
+
+## Amendment, 14 November 2026: start the worker when a job is queued
+
+What happened: the `*/10` schedule produced no scheduled run for more than 45 minutes after #43 was merged (04:51 UTC). Only manual runs existed. The workflow was active, the repository public, `main` the default branch and Actions allowed. At 05:44 UTC Đăng's builder session disabled and re-enabled the workflow, which makes GitHub read the schedule again. GitHub gives no way to see a registered schedule, so the only proof is a run with event `schedule`.
+
+The decision now: a queued job must not depend on GitHub's cron alone.
+- `POST /projects/{id}/analysis` calls `requestWorkerRun()` (`apps/web/app/api/_lib/worker-dispatch.ts`) when the job is queued. It asks GitHub to start `worker.yml` on `main` (`workflow_dispatch`).
+- **Token:** `WORKER_DISPATCH_TOKEN` is a fine-grained token for `dngvmnh/sleuth` only, with "Actions: Read and write" and nothing else. It is set in Vercel for Production only and never sent to the browser. Without it, nothing is sent and the schedule is the only path.
+- **Limits:** one start per server instance per minute, and a 3-second limit on the call. The call never throws: the job is already saved, so a failed start only means the scheduled run picks it up. Logs hold `worker_dispatch` and a result word (and the HTTP status on a refusal), never the token or GitHub's reply.
+- **Overlap:** the workflow's `concurrency: group: worker` keeps one run going and one waiting, so several starts do not run the worker twice at once.
+- **Schedule:** the 10-minute schedule stays as the second path, for a start that failed, and for jobs that retry after a failure.
+- **Risk:** someone holding the token can start and cancel workflow runs in this repository. The token cannot read code, change files or read other secrets. Give it an expiry date (60 days covers judging) and remove it from Vercel after judging.
