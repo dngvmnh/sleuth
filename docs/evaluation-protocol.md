@@ -122,8 +122,10 @@ The number printed at the end, and the clip count beside it, go into `docs/evide
 | Clip | Case | Recorded by | Labelled by | State |
 |---|---|---|---|---|
 | `example` | Hand-written text only; tests the harness | nobody (no video) | hand-written, not watched | Done. Not counted as one of the five clips. |
-| `clip-1` | Plain demo of one screen | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov (D-10), kit in `clips/clip-1` |
-| `clip-2` | One deliberately missing step | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-2` |
-| `clip-3` | One security claim | Đăng (@dngvmnh) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-3` |
-| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller proposed, not yet agreed |
-| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller proposed, not yet agreed |
+| `clip-1` | Plain demo of one screen | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov (D-10), kit in `clips/clip-1` |
+| `clip-2` | One deliberately missing step | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-2` |
+| `clip-3` | One security claim | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 18 Nov, kit in `clips/clip-3` |
+| `clip-4` | Two lines said in the wrong order | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 14); labeller agreed (#66) |
+| `clip-5` | One sentence not in the script | Đạt (@phatdat220707) | Phạm Quốc Bảo (@baofrovn) | To record by 24 Nov (task 15), kit in `clips/clip-5`; labeller agreed (#66) |
+
+Recorder and labeller are never the same person. Phạm Quốc Bảo (@baofrovn) labels all five clips, including clips 4 and 5, and records none of them (#58, #66). Labels are due 2 days after each drive link: clips 1 to 3 by Fri 20 Nov, clips 4 and 5 by Thu 26 Nov (SGT).
