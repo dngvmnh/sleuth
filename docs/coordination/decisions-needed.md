@@ -6,7 +6,7 @@ Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options o
 
 | ID | Decision | Who | By | Recommendation |
 |---|---|---|---|---|
-| D-10 | Who records clips 1 to 3 (ea 11). | Đăng | Wed 18 Nov | **Đăng's recommendation:** Đăng records clips 1 to 3 by Wed 18 Nov (API and database demos, the same style as clip 5's `demo.ps1`). Bảo writes the protocol and labels them by watching, before any run. Đạt keeps clips 4 and 5 (ea 14, 15). The recorder and the labeller are different people, which keeps the labels honest. |
+| D-10 | Who records and who labels the evaluation clips (ea 11, 14, 15). | Đăng | Changed 14 Nov | **Changed on 14 Nov (issue #58):** Đạt (@phatdat220707) records clips 1 to 5: clips 1 to 3 by Wed 18 Nov (kits in `tests/evaluation/clips/clip-1` to `clip-3`), clips 4 and 5 by Tue 24 Nov. Phạm Quốc Bảo labels all five by watching. The recorder never labels a clip they recorded. Before: Đăng recorded clips 1 to 3. |
 
 ## Decided
 
