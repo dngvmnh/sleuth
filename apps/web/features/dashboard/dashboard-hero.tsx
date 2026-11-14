@@ -11,6 +11,12 @@ import { formatClock, useDemoSnapshot, type DemoClue } from "./use-demo-snapshot
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/** "4 findings waiting for a person", from the real open count. */
+export function waitingText(count: number): string {
+  if (count === 0) return "no findings waiting for a person";
+  return `${count} ${count === 1 ? "finding" : "findings"} waiting for a person`;
+}
+
 /** `/projects/{id}`, with `?line=` so the workspace opens on that line. */
 export function clueHref(demoId: string, clue: DemoClue): string {
   const base = `/projects/${encodeURIComponent(demoId)}`;
@@ -27,7 +33,7 @@ function ClueCard({ demoId, clue }: { demoId: string; clue: DemoClue }) {
     <Link
       href={clueHref(demoId, clue)}
       data-testid="clue-card"
-      className="panel panel-lift relative block max-w-xs bg-surface p-4 sm:absolute sm:bottom-6 sm:left-0"
+      className="panel panel-lift relative z-10 -mt-4 block max-w-xs bg-surface p-4 sm:-mt-10"
     >
       <PanelCorners />
       <span className="eyebrow">A clue from the demo</span>
@@ -94,15 +100,22 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
               </Link>
             </div>
             {proven ? (
-              <div className="relative mt-6 max-w-sm" data-testid="hero-coverage">
+              <div className="relative mt-6 max-w-md" data-testid="hero-coverage">
                 <p className="text-sm text-muted">
                   <span className="font-display text-2xl text-foreground tabular-nums">
                     {pad2(proven.done)} / {pad2(proven.total)}
                   </span>{" "}
-                  · checklist items proven in the demo
+                  checklist items proven so far
+                  {snapshot.waiting !== null ? <> · {waitingText(snapshot.waiting)}</> : null}
                 </p>
-                <div className="mt-2 h-1 w-full bg-line" aria-hidden="true">
-                  <div className="h-1 bg-gold" style={{ width: `${Math.round((proven.done / proven.total) * 100)}%` }} />
+                {/* One notch per checklist item: gold when a person proved it. */}
+                <div className="mt-2 flex gap-1" aria-hidden="true" data-testid="hero-notches">
+                  {Array.from({ length: proven.total }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 flex-1 rounded-[1px] ${i < proven.done ? "bg-gold" : "border border-line-strong"}`}
+                    />
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -110,6 +123,7 @@ export function DashboardHero({ client }: { client?: ApiClient }) {
 
           <div className="relative">
             <HeroArt className="h-auto w-full max-w-xl justify-self-center" />
+            {/* Below the house, overlapping only the foot of the hill, so the door stays clear. */}
             {snapshot.clue && snapshot.demoId ? <ClueCard demoId={snapshot.demoId} clue={snapshot.clue} /> : null}
           </div>
         </div>

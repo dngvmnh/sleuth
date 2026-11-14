@@ -3,10 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { FINDING_LABELS, type EvidenceCandidate, type Finding, type ScriptSegment } from "@sleuth/contracts";
 import type { ApiClient } from "@/lib/api-client";
-import { clueHref, DashboardHero } from "./dashboard-hero";
+import { clueHref, DashboardHero, waitingText } from "./dashboard-hero";
 import { FINDING_GUIDE, FINDING_ORDER, TAG_TEXT } from "./finding-guide";
 import { FindingsCabinet } from "./findings-cabinet";
-import { batCycleSeconds } from "./hero-art";
+import { batCycleSeconds, batFirstDelaySeconds } from "./hero-art";
 import { formatClock, pickClue } from "./use-demo-snapshot";
 
 const seg = (id: string, index: number, text: string) => ({ id, index, text }) as ScriptSegment;
@@ -91,7 +91,13 @@ describe("DashboardHero", () => {
   it("shows the heading, the real demo coverage and a clue that opens its line", async () => {
     render(<DashboardHero client={client()} />);
     expect(screen.getByRole("heading", { level: 1, name: /^The cut is haunted/ })).toBeInTheDocument();
-    expect(await screen.findByTestId("hero-coverage")).toHaveTextContent("01 / 05 · checklist items proven in the demo");
+    expect(await screen.findByTestId("hero-coverage")).toHaveTextContent(
+      "01 / 05 checklist items proven so far · 1 finding waiting for a person",
+    );
+    // One notch per checklist item, one of them proven.
+    const notches = screen.getByTestId("hero-notches").children;
+    expect(notches).toHaveLength(5);
+    expect(Array.from(notches).filter((n) => n.className.includes("bg-gold"))).toHaveLength(1);
     const clue = await screen.findByTestId("clue-card");
     expect(clue).toHaveAttribute("href", "/projects/proofpay-demo?line=seg-3");
     expect(clue).toHaveTextContent("Cursed Frame · Needs human check");
@@ -127,6 +133,24 @@ describe("DashboardHero", () => {
   it("lets the bat cross every 20 to 40 seconds", () => {
     expect(batCycleSeconds(() => 0)).toBe(20);
     expect(batCycleSeconds(() => 0.999)).toBe(40);
+    expect(batFirstDelaySeconds(() => 0)).toBe(2);
+    expect(batFirstDelaySeconds(() => 0.999)).toBe(8);
+  });
+
+  it("words the waiting count from the real number", () => {
+    expect(waitingText(4)).toBe("4 findings waiting for a person");
+    expect(waitingText(1)).toBe("1 finding waiting for a person");
+    expect(waitingText(0)).toBe("no findings waiting for a person");
+  });
+
+  it("draws stars, three hill layers, mist, a front tree row and the bat", () => {
+    render(<DashboardHero client={client()} />);
+    const art = screen.getByTestId("hero-art");
+    for (const layer of ["stars", "hills", "mist", "front-trees", "bat"]) {
+      expect(art.querySelector(`[data-layer="${layer}"]`), layer).not.toBeNull();
+    }
+    expect(art.querySelectorAll("[data-layer=hills] path")).toHaveLength(3);
+    expect(art.innerHTML).not.toMatch(/#[0-9a-fA-F]{3,6}\b/);
   });
 });
 

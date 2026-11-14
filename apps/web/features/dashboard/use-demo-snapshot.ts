@@ -23,10 +23,12 @@ export interface DemoSnapshot {
   demoId: string | null;
   /** Checklist items a person proved, out of all checklist items. Null when unknown. */
   proven: { done: number; total: number } | null;
+  /** Open findings in the demo, each waiting for a person. Null when unknown. */
+  waiting: number | null;
   clue: DemoClue | null;
 }
 
-const NONE: DemoSnapshot = { state: "none", demoId: null, proven: null, clue: null };
+const NONE: DemoSnapshot = { state: "none", demoId: null, proven: null, waiting: null, clue: null };
 
 /**
  * The clue card shows one open finding. The API gives findings no time stamp, so "newest" is
@@ -82,6 +84,7 @@ export function useDemoSnapshot(client?: ApiClient): DemoSnapshot {
         state: "ready",
         demoId: demo.id,
         proven: coverage && total > 0 ? { done: coverage.coverage.totals.proven, total } : null,
+        waiting: findings.findings.filter((f) => f.status === "open").length,
         clue: pickClue(findings.findings, evidence.evidence, detail.scriptVersion?.segments ?? []),
       } satisfies DemoSnapshot;
     })()

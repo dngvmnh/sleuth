@@ -42,6 +42,20 @@
   }
 }
 
+/* Mist at the foot of the hill drifts 14px and back over 40 s. */
+.groundMist {
+  animation: ground-mist 40s ease-in-out infinite alternate;
+}
+
+@keyframes ground-mist {
+  from {
+    transform: translateX(-7px);
+  }
+  to {
+    transform: translateX(7px);
+  }
+}
+
 /* Cursed Frame card: a still 2px red and teal split of the name on hover or focus. */
 .cursed:hover .cursedName,
 .cursed:focus-visible .cursedName {
@@ -55,7 +69,8 @@
     display: none;
     animation: none;
   }
-  .window {
+  .window,
+  .groundMist {
     animation: none;
   }
   .cursed:hover .cursedName,
