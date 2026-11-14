@@ -1,10 +1,10 @@
-# DRAFT: how we used Kiro
+# How we used Kiro
 
-> DRAFT. Every claim below comes from `docs/kiro-engineering-journal.md` (the journal), with the entry date beside it. Numbers are the ones the tests or tools printed on that day. Nothing here is an accuracy number: none exists until evidence-analysis 13 runs on labelled clips.
+> Final as of 14 November 2026. Every claim below comes from `docs/kiro-engineering-journal.md` (the journal), with the entry date beside it. Numbers are the ones the tests or tools printed on that day. Nothing here is an accuracy number: none exists until evidence-analysis 13 runs on labelled clips.
 
 ## Steering
 
-- Eight steering files in `.kiro/steering/` (product, AI safety, architecture, coding standards, frontend, backend, media, team workflow) were written before any code (journal, 2026-11-08, Phase 1).
+- Nine steering files in `.kiro/steering/`: eight always-on (product, AI safety, architecture, coding standards, frontend, backend, media, team workflow) and one manual (`ghost-hunt.md`). The eight were written before any code (journal, 2026-11-08, Phase 1).
 - Review changed them before use. `frontend.md` first listed UI folders because we could not confirm that `fileMatch` excludes paths. After review it matches `apps/web/**`. ADR 0004 replaced "strip all punctuation" with a token rule, so "3.5" and "35" hash differently (journal, 2026-11-08, Phase 1 review).
 - `ghost-hunt.md` is a manual steering file (`/ghost-hunt`). Kiro 1.x has no manual hooks, so a steering file took that role (journal, 2026-11-08, Phase 3).
 
@@ -23,7 +23,7 @@
 
 ## Custom agents
 
-- Four agents in `.kiro/agents/`: `frontend-builder`, `backend-builder`, `media-builder` and `qa-reviewer`. Each builder may write only its own folders. `qa-reviewer` has no write tool (journal, 2026-11-08, Phase 3).
+- Five agents in `.kiro/agents/`: `frontend-builder`, `backend-builder`, `media-builder`, `qa-reviewer` and `coordinator`. Each builder may write only its own folders. `qa-reviewer` has no write tool (journal, 2026-11-08, Phase 3). `coordinator` may write only under `docs/coordination/` (its permission rules are in `.kiro/agents/coordinator.md`); it wrote the briefs and reviews listed below.
 - The backend, frontend and media work after that ran under these agents and the specs (journal entries by Đăng, Đạt and Phạm Quốc Bảo, 2026-11-08 to 2026-11-13).
 
 ## Property tests that found real bugs
@@ -48,6 +48,17 @@ Over 200 random histories of edits, cosmetic edits, removals, uploads, re-analys
 - **Missing database:** when no database existed, we stopped instead of writing database code we could not run (journal, 2026-11-08, milestones 1 and 2).
 - **CI database:** the CI `db` job runs every Postgres, Auth and Storage suite on a throwaway Supabase stack. A missing setting fails the job instead of skipping it. First real run: 61 passed, 0 skipped (journal, 2026-11-09, CI database job; PR #5).
 
+## MCP and Powers: configured, not used
+
+- `.kiro/settings/mcp.json` lists three MCP servers (Supabase read-only, Playwright, GitHub). All three are `disabled: true` with placeholder values (journal, 2026-11-08, Phase 3). We did not use MCP for any result in this project.
+- We did not use Kiro Powers.
+
+## Evidence in the repository, not only in prose
+
+- `tests/kiro-config/specs.test.ts` fails when a task cites a missing requirement or lists a file outside its owner's area.
+- `tools/kiro-hooks/hook.mjs ghost-scan` blocks new code that sets evidence to `confirmed` outside `packages/domain/src/review.ts`. It passed on `main` at `2c4bc1d`.
+- `docs/kiro-engineering-journal.md` has a dated entry for each package of work, with the test numbers that run printed.
+
 ## Review and checklist routine
 
 - **Checklist:** every PR from a teammate is checked against `docs/coordination/reviews/README.md`. The checks are both CI jobs, the `contract-change` label, shared files, area ownership, the spec's "done when", ghost-scan, and names and language. Each review is one dated file in `docs/coordination/reviews/`.
@@ -58,3 +69,9 @@ Over 200 random histories of edits, cosmetic edits, removals, uploads, re-analys
 - Đạt: how the review workspace and Final Seal UI were built with the frontend agent and spec. Also what the accessibility pass with Narrator and Windows High Contrast found (journal, 2026-11-11 to 2026-11-13).
 - Phạm Quốc Bảo: how the media pipeline, alignment and matching, the provider adapters and the evaluation harness were built. Also what failed with real FFmpeg and the provider APIs (journal, 2026-11-09 to 2026-11-11).
 - Both: which Kiro features they found most and least useful, and one thing they would do differently.
+
+The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.
+
+The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.
+
+The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.

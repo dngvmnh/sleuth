@@ -17,14 +17,17 @@ Shell rule: run every command in PowerShell on native Windows, from a clean work
 
 Run in your own PowerShell, from a clean worktree of `origin/main`, with the production values set in that shell only:
 
-1. Make the clip: `powershell -File scripts/make-evidence-clip.ps1` (available after WP3 is merged). It writes our own footage; no third-party material.
-2. Add the team user, then run `pnpm tsx scripts/prod-e2e.ts` in team-account mode with the clip. The exact options are in the header of `scripts/prod-e2e.ts`.
-3. Paste the PASS, FAIL and SKIP lines into the chat. Steps 7 and 8 must be PASS.
+1. Make the clip: `powershell -File scripts/make-evidence-clip.ps1 -Out $env:TEMP\sleuth-evidence-clip.mp4` (10 seconds, our own slides and Windows speech, no third-party material).
+2. Add the team user in Supabase (sleuth-prod, Authentication, Users, Add user) and set the repository variable `VIDEO_ANALYSIS_OWNER_IDS` to that user's id. In your own PowerShell set the team e-mail and password for this shell only (the header of `scripts/prod-e2e.ts` shows the exact variable names and the `Read-Host -AsSecureString` form), then run `pnpm tsx scripts/prod-e2e.ts $env:TEMP\sleuth-evidence-clip.mp4`. The worker schedule picks the job up within 10 to 15 minutes; the script waits (default 10 minutes, `PROD_E2E_WAIT_MIN` up to 30).
+3. Paste the PASS, FAIL and SKIP lines into the chat. Steps 7 and 8 must be PASS. If they are still SKIP, tell the agent: that means Gemini frames were not used for this account.
 4. Delete the test projects it prints, by id, with `docs/coordination/cleanup.md`.
 
 ### Before Fri 20 Nov
 
-- [ ] Re-seed the demo project on production (WP6). Steps are written in `docs/coordination/wp6-demo-reseed.md` once it is merged. It is a migration-safe script; you run it, not the agent.
+- [ ] Set the GitHub repository description and topics (Settings, General). The description is empty today.
+- [ ] Read the official rules page (it returned HTTP 403 to our page reader) and paste the video length, language and required contents into `docs/submission/dogfood-plan.md`. Check the Devpost field names against `docs/submission/devpost.md`.
+- [ ] Production guest check of PR #27 (it was checked on sleuth-dev only): `pnpm tsx scripts/guest-flow-check.ts https://sleuth-eight.vercel.app <clip.mp4>`. It creates one project; delete it by the printed id with `docs/coordination/cleanup.md`.
+- No re-seed of the demo project is needed: the demo data did not change.
 
 ### Later
 
@@ -34,7 +37,7 @@ Run in your own PowerShell, from a clean worktree of `origin/main`, with the pro
 
 ## Phạm Quốc Bảo (@baofrovn)
 
-- [ ] Label clips 1 to 3 against `docs/evaluation-protocol.md` by Sat 21 Nov. About 20 minutes per clip. Do not label a clip you recorded.
+- [ ] Agree to label clips 4 and 5 too (proposed in `docs/evaluation-protocol.md`; Đạt records them, so Đạt cannot label them).`n- [ ] Label clips 1 to 3 against `docs/evaluation-protocol.md` by Sat 21 Nov. About 20 minutes per clip. Do not label a clip you recorded.
 - [ ] Then run `pnpm eval --providers real` on them, and send the table to Đăng.
 
 ## Đạt (@phatdat220707)
@@ -45,6 +48,7 @@ Run in your own PowerShell, from a clean worktree of `origin/main`, with the pro
 
 ## Everyone
 
+- [ ] Đạt and Bảo: each write your part of the last section of `docs/submission/kiro-usage.md` (what you used in Kiro, what helped, what you would change).
 - [ ] Confirm student status for Best Student Project: school, degree, year, student email, LinkedIn. Put the answers in a private place, not in the repo.
 - [ ] Confirm the age-of-majority rule (21 in Singapore). If anyone is younger, ask the organisers.
 - [ ] Đăng confirms whether one person may enter two projects (DEAD AIR and SLEUTH), then the team picks categories.

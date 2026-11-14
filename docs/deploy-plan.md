@@ -63,7 +63,7 @@ Do not run the other database suites against production. The Free plan pauses a 
 
 ### 2. Worker on GitHub Actions
 
-The workflow is `.github/workflows/worker.yml`. It runs `pnpm worker -- --once` on `ubuntu-latest` with FFmpeg, takes the queued jobs, and does one retention purge (ADR 0008) first. It is manual only (`workflow_dispatch`) for now. The 5-minute schedule is commented out because decision D-4 says visitors' videos must not reach Gemini, and the "no video analysis" worker mode is not built. When that mode exists, uncomment the schedule.
+The workflow is `.github/workflows/worker.yml`. It runs `pnpm worker -- --once` on `ubuntu-latest` with FFmpeg, takes the queued jobs, and does one retention purge (ADR 0008) first. Since 14 November it runs on a schedule every 10 minutes and can also be started by hand (`workflow_dispatch`); ADR 0009 records the choice and its limits. Visitors' videos stay speech only (decision D-4): frames go to Gemini only for owners listed in the repository variable `VIDEO_ANALYSIS_OWNER_IDS`.
 
 Repository secrets to add (GitHub, Settings, Secrets and variables, Actions, New repository secret):
 
@@ -114,7 +114,7 @@ Deploy, then open the public demo signed out. It must load without a login.
 ### 4. Smoke test after each deploy
 1. Signed out: the demo project, its evidence and the report open.
 2. "Try your own video": anonymous sign-in, create a project, upload a short clip, start analysis.
-3. Run the worker workflow by hand (Actions tab). The job reaches `succeeded`.
+3. Wait for the scheduled worker (10 to 15 minutes), or start it now: `gh workflow run worker.yml --repo dngvmnh/sleuth`. The job reaches `succeeded`.
 4. A second browser cannot see the first browser's project.
 
 ### 5. Production check, 10 November 2026 (`https://sleuth-eight.vercel.app`)
@@ -164,7 +164,7 @@ In guest mode, speech alone gives screen claims no candidate. So step 7 is SKIP 
 Order of work:
 1. Run the queue check; it must return no rows.
 2. Start the script.
-3. When it prints "analysis queued", run the queue check again. Start the worker (`gh workflow run worker.yml --repo dngvmnh/sleuth`) only if there is exactly one row, named `zz-test-e2e-...`, with queued 1 and running 0.
+3. When it prints "analysis queued", run the queue check again. The scheduled worker takes the job within 10 to 15 minutes; you do not have to start it. If you want it sooner, run `gh workflow run worker.yml --repo dngvmnh/sleuth`. Only test projects (`zz-test-e2e-...`) should be queued while you rehearse, so a visitor's job is not mixed in.
 4. After the run, delete the printed project by id (`docs/coordination/cleanup.md`).
 
 Rehearsal on sleuth-dev, 14 November 2026: a local worker with the production settings (gemini, empty owner list) and a guest. Result: worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output.
@@ -242,7 +242,7 @@ It prints only `ok` or `error <category>`. The category is read from the error's
 1. Leave the keep-alive schedule on, and do not merge anything risky to `main`.
 2. Each week, check the last keep-alive runs in Actions and open both Supabase projects.
 3. If a project pauses anyway, restore it from the dashboard (Resume project), then run `pnpm tsx scripts/prod-smoke.ts` part A.
-4. Do not turn on the worker schedule. It waits for the speech-only worker mode (brief 002b).
+4. Leave the worker schedule on (ADR 0009). If GitHub switches it off after 60 days without repository activity, turn it back on in the Actions tab.
 
 ## Vercel Hobby terms (read 10 November 2026)
 
