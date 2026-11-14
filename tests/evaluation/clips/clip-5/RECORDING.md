@@ -1,6 +1,6 @@
 # Clip 5: recording script (evidence-analysis 15)
 
-For Đăng (@dngvmnh). One take, your own voice and your own screen. No third-party footage.
+For Đăng (@dngvmnh). One take, your own screen. Narrate in your own voice or with a text-to-speech voice; if it is synthetic, say so (name the voice) when you send the link, so the clip table can list it (#66). Never a cloned or imitated real voice. No third-party footage.
 
 ## What the clip must test
 

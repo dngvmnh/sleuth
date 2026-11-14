@@ -1,6 +1,6 @@
 # Clip 2: recording script (evidence-analysis 11)
 
-For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Phạm Quốc Bảo labels it afterwards by watching; the recorder never labels. One take, your own voice and your own screen. No third-party footage, nothing secret on screen or in the audio.
+For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Phạm Quốc Bảo labels it afterwards by watching; the recorder never labels. One take, your own screen. Narrate in your own voice or with a text-to-speech voice; if it is synthetic, say so (name the voice) when you send the link, so the clip table can list it (#66). Never a cloned or imitated real voice. No third-party footage, nothing secret on screen or in the audio.
 
 ## What the clip must test
 
