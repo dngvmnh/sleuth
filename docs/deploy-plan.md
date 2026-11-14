@@ -192,6 +192,29 @@ Order of work:
 
 Rehearsal on sleuth-dev, 14 November 2026: a local worker with the production settings (gemini, empty owner list) and a guest. Result: worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output.
 
+### 5d. Final production check (Thu 3 Dec)
+
+`scripts/final-prod-check.ps1` runs the whole production check in one go, in your own PowerShell, from a clean worktree of `origin/main`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/final-prod-check.ps1
+# or only the smoke test:
+powershell -ExecutionPolicy Bypass -File scripts/final-prod-check.ps1 -SmokeOnly
+```
+
+| Step | What it does |
+|---|---|
+| 1 | Asks for the production Project URL and publishable key, unless you pass `-ProjectUrl` and `-PublishableKey`. Both are public (they are in the page). It never reads `.env.local`, so it cannot reach dev. |
+| 2 | Runs `scripts/prod-smoke.ts`, parts A and B. |
+| 3 | Unless `-SmokeOnly`: builds the evidence clip with `scripts/make-evidence-clip.ps1` if `-Clip` (default `%TEMP%\sleuth-evidence-clip.mp4`) is missing. Asks for the team e-mail and password (`Read-Host -AsSecureString`). Then runs `scripts/prod-e2e.ts` in team-account mode. |
+| 4 | Shows the `worker dispatch:` word. If it is not `sent`, it tells you to run the read-only queue check first, and to run `gh workflow run worker.yml --repo dngvmnh/sleuth` only if the one row is the script's job. |
+| 5 | Removes every environment variable it set, in a `finally` block, even after an error. |
+| 6 | Prints the test project ids, the select-first SQL to delete them, and the Storage folders to delete in the dashboard (folder name = project id). |
+
+Nothing you type is echoed, logged or written to a file. `scripts/final-prod-check.test.ts` checks these rules by reading the script, because CI has no Windows PowerShell.
+
+Run on 14 Nov with `-SmokeOnly`: ALL CHECKS PASSED (14 checks in part A, 18 in part B). It made one test project, listed at the end for deletion.
+
 ### 6. Row-level security review (migrations 0000 to 0002)
 
 All 14 tables in `public` have RLS on: `asset_versions`, `audit_events`, `checklist_items`, `evidence_candidates`, `findings`, `frame_observations`, `processing_jobs`, `projects`, `reshoot_tasks`, `review_decisions`, `script_segments`, `script_versions`, `seals`, `transcript_segments`.
