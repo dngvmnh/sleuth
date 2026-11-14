@@ -148,6 +148,9 @@ const ICON_NAMES = [
   "CloseIcon",
   "UploadIcon",
   "FileIcon",
+  "KeyIcon",
+  "CrescentWindIcon",
+  "HoodedFigureIcon",
 ] as const;
 
 describe("icons", () => {

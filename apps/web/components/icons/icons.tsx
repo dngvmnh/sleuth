@@ -172,3 +172,36 @@ export function FileIcon(props: IconProps) {
     </Icon>
   );
 }
+
+// ---- shell marks (brief 007) ----
+
+/** The wordmark glyph: an old door key with a round bow and two teeth. */
+export function KeyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="7" cy="12" r="3.5" />
+      <circle cx="7" cy="12" r="1.2" />
+      <path d="M10.5 12H20.5M17 12v3M19.5 12v2" />
+    </Icon>
+  );
+}
+
+/** Night wind: a crescent moon with three wind lines drifting past it. */
+export function CrescentWindIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M13.5 3.5a6.5 6.5 0 1 0 6 9 5 5 0 0 1-6-9Z" />
+      <path d="M3 17.5h8.5a1.8 1.8 0 1 0-1.8-1.8M5 20.5h10M2.5 14.5h4" />
+    </Icon>
+  );
+}
+
+/** The reviewer: a hooded figure seen from the front, the face left in shadow. */
+export function HoodedFigureIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3c-3.6 0-6 3-6 6.8 0 2.2-.8 3.6-2 4.7L5 21h14l1-6.5c-1.2-1.1-2-2.5-2-4.7C18 6 15.6 3 12 3Z" />
+      <path d="M9 11.5c0-2 1.3-3.5 3-3.5s3 1.5 3 3.5-1.3 3-3 3-3-1-3-3Z" />
+    </Icon>
+  );
+}
