@@ -1151,6 +1151,12 @@ PR #21 (`feat/web-test-tooling`) was already merged on 2026-11-09. So the follow
 
 The only conflict was this journal: `main` had new entries. Both sides were kept, with `main`'s entries first.
 
+## 2026-11-13: submission groundwork (brief 005)
+
+- `docs/submission/kiro-usage.md` (DRAFT): steering, specs, hooks, agents, property tests, mutation checks and the review routine, each claim with its journal date, PR or commit. Ends with what only Dat and Phạm Quốc Bảo can add.
+- `docs/submission/dogfood-plan.md` (DRAFT): order, dates, people, files, fallback. The official rules page returned HTTP 403 to the page reader, so the video rules are not quoted; Dang reads them.
+- `.github/workflows/keep-alive.yml`: one read-only query against sleuth-prod on Mondays and Thursdays at 03:17 UTC, plus manual runs and a run on PRs that change the file. Prints only ok or an error code. `docs/deploy-plan.md` quotes the Supabase pausing rule (7 days of low activity) and GitHub's 60-day rule for scheduled workflows in a public repo.
+- `docs/submission/launch-checklist.md` (DRAFT): 15 dated items with owners; most are open.
 ## 2026-11-13: speech-only worker mode (brief 002b, built by Đăng under D-13)
 
 - `VIDEO_ANALYSIS_PROVIDER=none`: no frame folder, no frame files, no Gemini client and no `VIDEO_ANALYSIS_API_KEY` read; the pipeline runs on the transcript alone. Unset or `mock` in supabase mode is still refused (`provider_not_configured`), so a missing setting never falls back to Gemini.
@@ -1188,6 +1194,11 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - Gate on this branch: see the PR. Part B was not run and no production values were set.
 - Gate: lint and typecheck clean; 81 test files, 955 tests passed; build passed. Correction: the shell had the production values from the user settings, so the smoke script ran part B as well as part A (all checks passed) and made one more zz-test- project in sleuth-prod, which needs the cleanup SQL in section 7.
 
+## 2026-11-14: keep-alive ping uses the worker's driver (PR #33)
+
+- The `ping` job failed in seconds with only `error 2` (psql could not connect; its text was hidden). New `scripts/keep-alive.ts` runs the same read-only query through `createDb` from `@sleuth/db` (postgres.js, `prepare: false`, one connection, 20 s limit), the worker's own driver and options. It prints `ok` or `error <category>` (auth, host, timeout, tls, config, other), chosen from the error code or name only.
+- Local check of the categories: sleuth-dev URL `ok`; wrong password `error auth`; unknown pooler user `error other`; unknown host `error host`; unroutable address `error timeout`; not a URL `error host`; no variable `error config`.
+- The workflow now sets up pnpm and Node 22 and installs like CI, then runs the script. Trigger, schedule, permissions, concurrency group and repository guard are unchanged.
 ## 2026-11-14: theme foundations for the revamp (Đăng, decisions D-14 to D-18)
 
 - `tokens.css`: theme `hollow` is the default on `:root` (forest black, cream text, amber action, spectral teal, gold), and `:root[data-theme="midnight"]` keeps the first look. `layout.tsx` sets `data-theme="hollow"`; rollback is one line. New tokens: `border-strong`, `gold`, `spectral`, and fog colours per theme. They are mapped in `@theme inline` as `line-strong`, `gold`, `spectral` and `focus`. The print block now also beats `:root[data-theme]`.
