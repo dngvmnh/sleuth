@@ -41,9 +41,7 @@ These screenshots are from the live site on 14 November (`scripts/prod-screensho
 
 ## Accuracy
 
-<!-- PLACEHOLDER (issue #67): paste the table that `pnpm eval --providers real` printed, with the date and the clip count. Do not type numbers by hand. -->
-
-**Not measured yet.** Đạt runs the first evaluation on our five labelled clips (issue #67). He recorded and labelled them himself, so the result will say so. The table goes here exactly as `pnpm eval` prints it.
+**Not measured.** We chose not to run an accuracy evaluation before submission (decision D-21). We publish no precision, recall or accuracy number. The harness (`pnpm eval`, `docs/evaluation-protocol.md`) is in the repository for a later run.
 
 Uploading your own video gives a speech-only check. The worker runs on a free GitHub Actions schedule, so a job can wait 10 to 15 minutes (ADR 0009).
 

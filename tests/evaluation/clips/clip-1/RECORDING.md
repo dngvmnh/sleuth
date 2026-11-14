@@ -1,5 +1,7 @@
 # Clip 1: recording script (evidence-analysis 11)
 
+> **Not needed for submission (decision D-21, 14 Nov).** The clip was recorded on 14 Nov; nobody labels it and no evaluation runs before submission. Keep this kit for a later run.
+
 For Đạt (@phatdat220707), who records (decision D-10, reassigned from Đăng in issue #58). Đạt also labels it afterwards by watching, before anyone runs SLEUTH on it (decision D-10, changed 14 Nov; the bias this adds is stated in `docs/evaluation-protocol.md`). One take, your own screen. Narrate in your own voice or with a text-to-speech voice; if it is synthetic, say so (name the voice) when you send the link, so the clip table can list it (#66). Never a cloned or imitated real voice. No third-party footage, nothing secret on screen or in the audio.
 
 ## What the clip must test

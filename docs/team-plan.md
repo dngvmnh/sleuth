@@ -11,7 +11,7 @@ Written 8 November 2026. Deadline: 5 December 2026, 06:00 Singapore time (4 Dece
 5. **Judges must get in within 10 seconds.** A public read-only demo project with no login, plus "try your own video" behind anonymous sign-in with limits. A login wall costs score on Potential Impact and Design.
 6. **Use SLEUTH on our own submission video.** Write the demo script and checklist first, run SLEUTH on our own recording, and show the Final Seal report in the video and on Devpost. This proves the product works on real footage, and it is the strongest story for Best Demo.
 7. **Hosting must survive judging, not just the deadline.** Judging continues after 5 December. Supabase free projects pause after about a week without activity, and free web hosts put services to sleep. Team rule: free tiers only. Keep the project active (the worker queries it every few minutes) and run the worker, with FFmpeg, as a scheduled GitHub Actions job. See `docs/deploy-plan.md`.
-8. **Keep the AI humble.** Matches are candidates; confidence is a ranking, not accuracy; "Needs Outside Proof" for claims footage cannot show. Report measured precision and recall from hand-labelled clips, never invented numbers.
+8. **Keep the AI humble.** Matches are candidates; confidence is a ranking, not accuracy; "Needs Outside Proof" for claims footage cannot show. Report measured precision and recall from hand-labelled clips, never invented numbers. (14 Nov, D-21: no evaluation before submission, so we report none.)
 
 ## 2. Ownership (nobody edits another area without a pull request review from its owner)
 
@@ -190,8 +190,6 @@ First pull request: `feat/domain-segment-state` (change-impact task 2). It is sm
 | 2 | Pure timeline helpers | review-workspace 4 | `apps/web/features/timeline/geometry.ts`, `segment-at.ts` and property tests |
 | 3 | Player port and simulated player | review-workspace 5 | `apps/web/features/player/*` |
 | 3 | Workspace data hook and page skeleton | review-workspace 6 | `apps/web/app/(workspace)/projects/[id]/page.tsx`, `apps/web/features/workspace/*` |
-| Any | Record and label the clip with an unscripted line (moved from Đăng; Đăng reviews the format only; tick only after evidence-analysis 9 and 11 are on main) | evidence-analysis 15 | `tests/evaluation/clips/clip-5` |
-| Wed 18 Nov | Record evaluation clips 1 to 3 (reassigned from Đăng, [issue #58](https://github.com/dngvmnh/sleuth/issues/58)). Đạt labels them too (D-10, changed 14 Nov), then runs the first evaluation (ea 13, #67). Clips 4 and 5 by Tue 24 Nov | evidence-analysis 11 | `tests/evaluation/clips/clip-1` to `clip-3` |
 
 First pull request: `feat/web-test-tooling` (review-workspace task 1, plus task 2 if small). Tell the team before you change `pnpm-lock.yaml`.
 
