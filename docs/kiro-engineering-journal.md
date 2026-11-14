@@ -1406,6 +1406,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - So the first real job is proven on production in speech-only mode, and no frame reached Gemini. Steps 7 and 8 still need the team-account run with a clip that produces evidence (#45).
 - `board.md` section 4 and `cleanup.md` are updated: six Storage folders are left to delete by hand.
 
+## 2026-11-14: WP4 part 4, coverage bar (Đăng, brief 006 item 5, first half)
+
+- `CoverageBar` above the workspace: 'n of m script lines covered', a progressbar with its number, and the words 'a person confirmed the evidence' (never 'confirmed' as the label). 3 unit tests.
+- Not done: the Script, Checklist, Upload and Analysis tabs. The browser specs expect the four panels visible together; hiding three of them would break them, and the gain is small. Left for a human decision.
 ## 2026-11-14: WP4 part 3, the dashboard (Đăng, brief 006 item 4)
 
 - Eyebrow, display heading with an italic gold line, project cards in two columns, and an icon on each of the five finding cards. The h1 is still exactly 'SLEUTH' (the browser specs look for it).
