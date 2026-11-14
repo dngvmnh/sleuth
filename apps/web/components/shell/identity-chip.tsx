@@ -43,7 +43,8 @@ export function IdentityChip({ refreshKey, auth: given }: { refreshKey: string; 
       <span className="flex flex-col leading-tight">
         <span className="text-xs font-semibold text-foreground">{title}</span>
         {/* Wait for the real answer before saying anything about the session. */}
-        {kind ? <span className="hidden text-xs text-muted xl:inline">{detail}</span> : null}
+        {/* Visible from 1280 px; below that it stays for screen readers, so the header keeps one row. */}
+        {kind ? <span className="sr-only text-xs text-muted xl:not-sr-only">{detail}</span> : null}
       </span>
     </div>
   );

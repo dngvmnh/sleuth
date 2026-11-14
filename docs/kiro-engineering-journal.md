@@ -1543,3 +1543,12 @@ Not shown: that `analysis.spec.ts` can never flake again. It passed 5 of 5 under
 - Script, Checklist, Upload and Analysis are now tabs (brief 006 asked for them, but they were never built): the WAI-ARIA tabs pattern with automatic activation, the amber underline, and every panel kept mounted, so a draft survives a tab change. The e2e specs open the tab they need.
 - Not in this step: in a project, the shell header's right-side chips wrap onto two rows at 1440 px because of the Report link. That is `components/shell` (step 1), so it is left for a follow-up.
 - Checks: lint 0 problems, typecheck clean, unit tests 1161 passed and 70 skipped, build ok, Playwright chromium 74 passed plus the new claims-map spec (75), ghost-scan clean.
+
+## 2026-11-14: error and loading pages, and a one-row header (brief 007 step 5, issues #78 and #79, Đăng)
+
+- Kiro features used: steering (`.kiro/steering/frontend.md`), the brief and issues #78 and #79 as the task spec, the `ghost-scan` hook, and a Kiro frontend session in its own git worktree.
+- 404: eyebrow `A LOCKED DOOR`, `This room is <em>empty</em>.`, the plain line `We could not find that page.` and an amber `Back to the dashboard`. Error page: `Something <em>creaked</em>.`, a plain message, `Try again` and a link to the dashboard; it still never prints the error text.
+- `loading.tsx` for the workspace and report routes, and the same forest-panel skeletons for the client loading states (`components/route-loading.tsx`). The shimmer is 2.4 s and stops under reduced motion.
+- Header (#79): the grid is now `auto / minmax(0,1fr) / auto` from 1024 px, the nav and chips do not wrap there, and the identity chip's second line shows from 1280 px (screen readers always get it). Height is 76 px on the dashboard, a workspace and a report at 1024, 1280 and 1440 px, also with the Night wind slider showing.
+- New `tests/e2e/shell.spec.ts` (8 tests). Against the old header it fails: the report header was 97 px against 76 px on the dashboard, and the chips sat 40 px apart.
+- Checks: lint 0 problems, typecheck clean, unit tests 1163 passed and 70 skipped, build ok, Playwright chromium 83 passed, ghost-scan clean.
