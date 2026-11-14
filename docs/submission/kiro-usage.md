@@ -70,4 +70,40 @@ Over 200 random histories of edits, cosmetic edits, removals, uploads, re-analys
 - Phạm Quốc Bảo: how the media pipeline, alignment and matching, the provider adapters and the evaluation harness were built. Also what failed with real FFmpeg and the provider APIs (journal, 2026-11-09 to 2026-11-11).
 - Both: which Kiro features they found most and least useful, and one thing they would do differently.
 
-The three bullets above are for the team to fill in before submission. Nobody has written them yet, and we do not guess for them.
+The three bullets above are for the team to fill in before submission, and we do not guess for them. Phạm Quốc Bảo's part is below; Đạt's is still to come.
+
+### Phạm Quốc Bảo (@baofrovn): media pipeline, matching, providers, evaluation
+
+
+**How it was built.** I worked one task at a time from `.kiro/specs/evidence-analysis/tasks.md`, one branch and one PR per task, with the media steering file (`.kiro/steering/media.md`) loaded for every file in my area.
+
+- FFmpeg wrapper: probe, audio and frame extraction, and a temp folder that is always deleted (PR #9).
+- Script alignment: exact, changed, missing, reordered and unscripted lines (PR #10).
+- Matching, confidence rules and explanations, with a doc whose numbers a test checks against the code (PR #11).
+- Outside-proof terms with proof hints (PR #12).
+- Targeted re-analysis with `segmentIds`, and idempotency property tests (PR #13).
+- The evaluation harness, `pnpm eval` (PR #14), and its real-provider mode (PR #25).
+- The queue test on real Postgres (PR #15) and the Supabase worker handler (PR #16).
+- The Deepgram and Gemini adapters (PR #18), and a Gemini fallback model (PR #22).
+
+**What broke when real tools came in** (journal, 9 to 11 November):
+
+- **The machine was not ready.** Task 1 said FFmpeg was installed. It was not, and neither was pnpm. I installed both first. FFmpeg tests now skip with a clear reason when the binary is missing, and CI installs FFmpeg so they always run there.
+- **Typecheck failed on the first FFmpeg code.** `packages/media` and `packages/evidence-engine` used Node APIs without Node types. Adding `types: ["node"]` to their tsconfig fixed it (PR #9).
+- **The design and the old code disagreed.** The design said a high-confidence match needs a strong frame inside the spoken time. The old code accepted one anywhere in a 2-second margin. I made the code follow the design. The golden output stayed the same under both rules (PR #10).
+- **The Gemini API did not behave like its docs promised.** I could not read the newest response format, so the adapter uses the older `generateContent` endpoint. On the free tier, `gemini-3.8-flash` failed 3 of 3 tries and `gemini-3.6-flash` worked 3 of 4. So the adapter now falls back to a second model after its retries fail (PR #22, decision D-4).
+- **A test that passed in CI failed in production.** The queue test held its database connections until the very end. CI's local database has no connection cap, but the hosted pooler stops at 15, so it failed with `EMAXCONNSESSION`. Đăng found it and closed connections after each test (review 002).
+
+
+**Most useful:**
+
+- **Tasks with a "Done when" line.** Each task in `tasks.md` said exactly what had to pass, so I knew when to stop and open the PR.
+- **The media steering file.** `.kiro/steering/media.md` loads for every file in my area. The frame budget, the integer-millisecond rule and "never log media or keys" were applied without my asking each time.
+- **The golden contract test.** Big refactors (alignment, matching, explanations) could only merge if the golden output stayed byte-identical. That made it safe to move code around.
+
+**Least useful:**
+
+- **Manual steering for reviews.** The `ghost-hunt` review is a manual steering file, because Kiro 1.x no longer creates manual hooks. It only runs when someone remembers to call it, so in practice the automatic checks (tests and CI) did most of the work.
+- **MCP and Powers.** They were set up in the repo, but nothing in my area needed them. FFmpeg, Deepgram and Gemini are all reached through plain code behind two interfaces.
+
+**One thing I would do differently:** settle the hard limits before the design. ADR 0007 first picked the paid Gemini tier, and two days later the team chose free tiers only, so I had to amend it (PR #24) and the worker needed a speech-only mode for visitors. Two requirements, 5.6 and 6.3 (naming the frames checked and the kind of proof in a finding), were also left out, because they would change locked golden text. Asking for the money rule and that contract change on day one would have saved both detours.
