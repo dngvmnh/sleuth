@@ -31,6 +31,7 @@ Updated Saturday 14 November 2026, afternoon, by Dang. Team rule: free options o
 | D-20 | What starts the worker | A GitHub Actions `schedule` every 10 minutes, no overlap, `--once`. Visitors see "Queued. Analysis starts within about 10 to 15 minutes." Limits are in the ADR. Decided 14 Nov. | ADR 0009, PR #43 |
 | D-10 | Who records and who labels the evaluation clips | Đạt recorded clips 1 to 4 (14 Nov). Superseded by D-21: no labels, no evaluation before submission. | #58, #66 |
 | D-21 | Run an accuracy evaluation before submission? | No. Decided by Đăng, 14 Nov. Clip 5 is dropped, clips 1 to 4 stay unlabelled drafts, and evidence-analysis 11, 13, 14 and 15 are dropped. SLEUTH ships with accuracy "not measured", said plainly everywhere. Đạt moves to UI review and the demo video. The harness (`pnpm eval`) stays for later. | #66, #67 |
+| D-22 | Demo video scenes 3 to 7: real production run on our own video, or sample data? | Sample data, disclosed. Decided by Đăng, 14 Nov. Đạt keeps the guest copy of the public demo; an on-screen label, the seal note, the narration and the YouTube and Devpost text say it is sample data with review actions shown on sample data. No team-account login is needed. | #63, `docs/submission/demo-script.md` |
 
 ## Facts recorded 13 November (reported by Đăng, verified outside Kiro, not re-checked here)
 
