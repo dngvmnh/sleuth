@@ -9,6 +9,8 @@ import type { ReportData } from "@sleuth/db/fixture";
 export interface ReportModel {
   title: string;
   banner: { status: "draft" | "sealed" | "broken"; text: string };
+  /** The signer's raw user id, for audits only. Readable text never holds it (issue #96). */
+  signerId: string | null;
   summary: { label: string; value: string }[];
   coverage: { item: string; state: CoverageState; stateLabel: string }[];
   findings: {
@@ -23,7 +25,8 @@ export interface ReportModel {
   }[];
   reshoots: { about: string; note: string; status: string }[];
   outsideProof: { line: string; hint: string; acknowledged: string }[];
-  decisions: { about: string; decision: string; reviewer: string; at: string }[];
+  /** `reviewerId` is the raw id (its own CSV column); `reviewer` is the readable label. */
+  decisions: { about: string; decision: string; reviewer: string; reviewerId: string; at: string }[];
   notes: string[];
 }
 
@@ -41,6 +44,15 @@ const HONESTY_NOTES = [
   "Footage cannot prove claims about security, compliance or guarantees. Those need proof from outside the video.",
   "Checks look at sampled frames and speech to text, so they can miss a quick action or a misheard word.",
 ];
+
+/**
+ * A person in words. An export is a file that can be passed on, so it never says "you": the owner
+ * (the only one who may seal or review) is "the project owner", anyone else "a reviewer". The web
+ * page uses the same words plus "you" (features/report/signer.ts).
+ */
+export function personLabel(userId: string, ownerId: string | null): string {
+  return ownerId !== null && userId === ownerId ? "the project owner" : "a reviewer";
+}
 
 function lineFor(data: ReportData, segmentId: string | null): string {
   if (!segmentId) return "";
@@ -63,7 +75,10 @@ export function buildReportModel(data: ReportData): ReportModel {
       text: `Seal broken: evidence changed after sign-off. ${seal.brokenReason ?? ""}`.trim(),
     };
   } else {
-    banner = { status: "sealed", text: `Sealed by ${seal.sealedBy} at ${seal.sealedAt}` };
+    banner = {
+      status: "sealed",
+      text: `Sealed by ${personLabel(seal.sealedBy, data.project.ownerId)} at ${seal.sealedAt}`,
+    };
   }
 
   const summary = [
@@ -85,6 +100,7 @@ export function buildReportModel(data: ReportData): ReportModel {
   return {
     title: data.project.name,
     banner,
+    signerId: seal ? seal.sealedBy : null,
     summary,
     coverage: coverage.items.map((i) => ({
       item: itemFor(data, i.checklistItemId),
@@ -116,7 +132,8 @@ export function buildReportModel(data: ReportData): ReportModel {
     decisions: data.decisions.map((d) => ({
       about: lineFor(data, evidenceById.get(d.evidenceId)?.scriptSegmentId ?? null) || d.evidenceId,
       decision: d.decision,
-      reviewer: d.reviewerId,
+      reviewer: personLabel(d.reviewerId, data.project.ownerId),
+      reviewerId: d.reviewerId,
       at: d.createdAt,
     })),
     notes: HONESTY_NOTES,
@@ -144,7 +161,11 @@ export function buildCsv(data: ReportData): string {
   section(
     "Summary",
     ["field", "value"],
-    m.summary.map((s) => [s.label, s.value]),
+    [
+      ...m.summary.map((s) => [s.label, s.value]),
+      // The raw id in its own row, labelled as an audit id, never inside a sentence.
+      ...(m.signerId ? [["Signer id (audit)", m.signerId]] : []),
+    ],
   );
   section(
     "Coverage",
@@ -186,8 +207,8 @@ export function buildCsv(data: ReportData): string {
   );
   section(
     "Review decisions",
-    ["about", "decision", "reviewer_id", "time"],
-    m.decisions.map((d) => [d.about, d.decision, d.reviewer, d.at]),
+    ["about", "decision", "reviewer", "reviewer_id", "time"],
+    m.decisions.map((d) => [d.about, d.decision, d.reviewer, d.reviewerId, d.at]),
   );
   section(
     "Notes",
@@ -243,6 +264,7 @@ export function buildHtml(data: ReportData): string {
 <body>
 <h1>${e(m.title)}</h1>
 <p class="banner ${m.banner.status}" role="status">${e(m.banner.text)}</p>
+${m.signerId ? `<details><summary><small>Audit id</small></summary><small>${e(m.signerId)}</small></details>` : ""}
 ${m.notes.map((n) => `<p><small>${e(n)}</small></p>`).join("\n")}
 <h2>Summary</h2>
 ${table(

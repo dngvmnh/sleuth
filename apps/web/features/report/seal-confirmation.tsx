@@ -32,7 +32,9 @@ export function SealConfirmation({ seal, ref }: { seal: Seal; ref?: Ref<HTMLDivE
       <div>
         <p className="font-display text-lg text-foreground">Final Seal applied</p>
         <p className="text-sm text-muted">
-          Signed off by {seal.sealedBy} at {seal.sealedAt.slice(0, 16).replace("T", " ")} UTC.
+          {/* Shown only to the person who just pressed the seal, so the signer is always `you`. */}
+          <span title={`Audit id: ${seal.sealedBy}`}>Signed off by you</span> at{" "}
+          {seal.sealedAt.slice(0, 16).replace("T", " ")} UTC.
           {seal.note ? ` Note: ${seal.note}` : ""}
         </p>
       </div>

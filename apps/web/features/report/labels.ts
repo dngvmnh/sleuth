@@ -1,4 +1,5 @@
 import type { CoverageState, Seal } from "@sleuth/contracts";
+import type { SignerLabel } from "./signer";
 
 /**
  * Report wording shared by the page. It matches the CSV and HTML exports
@@ -27,22 +28,31 @@ export const HONESTY_NOTES = [
 export const DRAFT_TEXT = "Draft: not signed off";
 export const BROKEN_TEXT = "Seal broken: evidence changed after sign-off";
 
-export type SealBanner = { status: "draft" | "sealed" | "broken"; title: string; detail: string | null };
+export type SealBanner = {
+  status: "draft" | "sealed" | "broken";
+  title: string;
+  detail: string | null;
+  /** The signer's raw id, for auditors only: shown in a closed <details>, never as plain text. */
+  auditId: string | null;
+};
 
-export function sealBanner(seal: Seal | null): SealBanner {
+/** `signer` is the readable label from `signerLabel` (features/report/signer.ts), never a raw id. */
+export function sealBanner(seal: Seal | null, signer: SignerLabel = "a reviewer"): SealBanner {
   if (!seal) {
     return {
       status: "draft",
       title: DRAFT_TEXT,
       detail: "Nobody has applied the Final Seal. Everything below is a working draft.",
+      auditId: null,
     };
   }
   if (seal.status === "broken") {
-    return { status: "broken", title: BROKEN_TEXT, detail: seal.brokenReason };
+    return { status: "broken", title: BROKEN_TEXT, detail: seal.brokenReason, auditId: seal.sealedBy };
   }
   return {
     status: "sealed",
     title: "Sealed",
-    detail: `Signed off by ${seal.sealedBy} at ${seal.sealedAt.slice(0, 16).replace("T", " ")} UTC.`,
+    detail: `Signed off by ${signer} at ${seal.sealedAt.slice(0, 16).replace("T", " ")} UTC.`,
+    auditId: seal.sealedBy,
   };
 }

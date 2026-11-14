@@ -31,7 +31,9 @@ describe("report model", () => {
       },
     });
     expect(m.banner.status).toBe("sealed");
-    expect(m.banner.text).toContain("user-9");
+    // The demo has no owner, so the signer is "a reviewer"; the raw id is never in the sentence.
+    expect(m.banner.text).toBe("Sealed by a reviewer at 2026-11-08T10:00:00.000Z");
+    expect(m.signerId).toBe("user-9");
     expect(m.summary.find((s) => s.label === "Sign-off note")?.value).toBe("Looks right");
   });
 
@@ -121,5 +123,56 @@ describe("exports contain every required section", () => {
     for (const t of fx.transcript)
       if (!fx.script.text.includes(t.text)) expect(both).not.toContain(t.text);
     for (const f of fx.frames) expect(both).not.toContain(f.description);
+  });
+});
+
+describe("report exports name the signer in words (issue #96)", () => {
+  const UUID = "24c9177b-c629-4203-b740-f603ebe0646c";
+  const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+  async function sealedByOwner(): Promise<ReportData> {
+    const data = await demo();
+    return {
+      ...data,
+      project: { ...data.project, ownerId: UUID },
+      decisions: [{ ...(data.decisions[0] ?? { id: "d1", evidenceId: "e1", decision: "confirm", createdAt: "2026-11-08T09:00:00.000Z", note: null, projectId: "p" }), reviewerId: UUID } as ReportData["decisions"][number]],
+      seal: {
+        id: "s",
+        projectId: "p",
+        sealedBy: UUID,
+        sealedAt: "2026-11-08T10:00:00.000Z",
+        scriptVersionId: "sv",
+        assetVersionId: "av",
+        coverage: data.coverage,
+        note: null,
+        status: "active",
+        brokenAt: null,
+        brokenReason: null,
+      },
+    };
+  }
+
+  it("says the project owner in the banner and the reviewer column, with the id only in audit places", async () => {
+    const data = await sealedByOwner();
+    const m = buildReportModel(data);
+    expect(m.banner.text).toBe("Sealed by the project owner at 2026-11-08T10:00:00.000Z");
+    expect(m.decisions[0]?.reviewer).toBe("the project owner");
+    expect(m.decisions[0]?.reviewerId).toBe(UUID);
+
+    const csv = buildCsv(data).split("\r\n");
+    // The raw id appears only in the audit row and the reviewer_id column.
+    const withId = csv.filter((l) => UUID_RE.test(l));
+    expect(withId[0]).toBe(`Signer id (audit),${UUID}`);
+    expect(withId.slice(1).every((l) => l.split(",")[3] === UUID)).toBe(true);
+    expect(csv).toContain("about,decision,reviewer,reviewer_id,time");
+    expect(csv.find((l) => l.startsWith("Sign-off,"))).toBe("Sign-off,Sealed by the project owner at 2026-11-08T10:00:00.000Z");
+
+    const html = buildHtml(data);
+    expect(html).toContain(`<details><summary><small>Audit id</small></summary><small>${UUID}</small></details>`);
+    // Outside the closed Audit id, the printable page holds no id.
+    expect(html.replace(/<details>[\s\S]*?<\/details>/, "")).not.toMatch(UUID_RE);
+    // No e-mail address anywhere (the CSS has "@page", which is not one).
+    expect(html).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+    expect(buildCsv(data)).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
   });
 });

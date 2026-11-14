@@ -13,6 +13,8 @@ import { ExportButtons } from "./export-buttons";
 import { CloseIcon, FileIcon, WaxSealIcon } from "@/components/icons";
 import { PanelCorners } from "@/components/ornaments";
 import { HONESTY_NOTES, sealBanner } from "./labels";
+import { signerLabel } from "./signer";
+import { useViewerId } from "./use-viewer-id";
 import { SealPanel } from "./seal-panel";
 import styles from "./report.module.css";
 import { useReport, type ReportData, type SealResult } from "./use-report";
@@ -89,7 +91,10 @@ const READ_ONLY: ReportManage = {
 
 /** The report in the order of final-seal requirement 4.1. The owner can mark reshoots done. */
 export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; manage?: ReportManage }) {
-  const banner = sealBanner(data.seal);
+  // The signer as words (`you`, `the project owner`), never the raw id (issue #96).
+  const viewerId = useViewerId();
+  const signer = data.seal ? signerLabel(data.seal.sealedBy, viewerId, data.project.project.ownerId) : "a reviewer";
+  const banner = sealBanner(data.seal, signer);
 
   return (
     <div className="space-y-6">
@@ -107,6 +112,12 @@ export function ReportBody({ data, manage = READ_ONLY }: { data: ReportData; man
           {banner.title}
         </p>
         {banner.detail ? <p className="mt-1 text-sm text-muted">{banner.detail}</p> : null}
+        {banner.auditId ? (
+          <details className="mt-1 text-xs text-muted" data-testid="seal-audit-id">
+            <summary className="cursor-pointer">Audit id</summary>
+            <code className="break-all">{banner.auditId}</code>
+          </details>
+        ) : null}
         {data.seal?.note ? <p className="mt-1 text-sm text-muted">Sign-off note: {data.seal.note}</p> : null}
       </div>
 

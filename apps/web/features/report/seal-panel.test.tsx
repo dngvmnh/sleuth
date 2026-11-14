@@ -114,7 +114,7 @@ describe("SealPanel", () => {
     await user.click(screen.getByRole("button", { name: "Sign and seal" }));
     const confirmation = await screen.findByTestId("seal-confirmation");
     expect(confirmation).toHaveTextContent("Final Seal applied");
-    expect(confirmation).toHaveTextContent("Signed off by fixture-user at 2026-02-03 04:05 UTC. Note: Checked by hand.");
+    expect(confirmation).toHaveTextContent("Signed off by you at 2026-02-03 04:05 UTC. Note: Checked by hand.");
     expect(confirmation.querySelector("svg")).toHaveClass("sleuth-seal-stamp");
     expect(screen.getByRole("status")).toHaveTextContent("The Final Seal was applied. The report is now signed off.");
   });

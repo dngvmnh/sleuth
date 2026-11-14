@@ -101,13 +101,16 @@ describe("final seal through the API", () => {
     const { seal: s } = SealProjectResponseSchema.parse(await sealed.json());
     expect(s).toMatchObject({ status: "active", sealedBy: user, note: "All reviewed." });
 
-    // Exports say who signed.
+    // Exports say who signed in words; the raw id stays only in its audit place (issue #96).
     const html = await (await reportHtml(call(user, "GET"), ctx({ id }))).text();
-    expect(html).toContain(`Sealed by ${user}`);
+    expect(html).toContain("Sealed by the project owner");
+    expect(html).not.toContain(`Sealed by ${user}`);
+    expect(html).toContain(`<details><summary><small>Audit id</small></summary><small>${user}</small></details>`);
     expect(html).not.toContain("Draft: not signed off");
-    expect(await (await reportCsv(call(user, "GET"), ctx({ id }))).text()).toContain(
-      `Sealed by ${user}`,
-    );
+    const csv = await (await reportCsv(call(user, "GET"), ctx({ id }))).text();
+    expect(csv).toContain("Sealed by the project owner");
+    expect(csv).not.toContain(`Sealed by ${user}`);
+    expect(csv).toContain(`Signer id (audit),${user}`);
 
     // The owner marks the reshoot done; the seal stays, the item stays unproven.
     const done = await updateReshoot(
