@@ -141,6 +141,25 @@ Rows of the 10 November table that this replaces:
 | 50 MB cap and file types | Proven on production | Part B: the API refuses a 51 MB size claim, a missing size, `text/plain` and a video over 180 s; the bucket refuses a 51 MB body and a text body |
 | No secret in the page or its JS | Still true as of 10 November. Re-check after PR #27 | PR #27 (guest sign-in, not merged yet) puts the Supabase Project URL and the anon key in the page. Both are public by design (ADR 0006), so after #27 they are expected. Still forbidden anywhere in the page or its JS: `service_role`, `sb_secret_`, `postgres://` and any Deepgram or Gemini key |
 
+### 5c. First real job
+
+`scripts/prod-e2e.ts` runs the whole path as one user and prints PASS, FAIL or SKIP with counts and ids only. The exact lines for both modes, and the read-only queue check, are at the top of the script. Run it in your own shell.
+
+| Mode | How | Worker | What it can prove |
+|---|---|---|---|
+| Guest | Only `PROD_SUPABASE_URL` and `PROD_SUPABASE_ANON_KEY` are set | Speech only, for any owner list (D-4) | Sign-in, upload, queue, worker, transcript, Ghost findings, seal blockers, CSV. It also proves the data rule: "speech-only findings: n of n" |
+| Team account | Also `PROD_E2E_EMAIL` and `PROD_E2E_PASSWORD` (both, or neither) | Frames go to Gemini only if this account's user id is in the `VIDEO_ANALYSIS_OWNER_IDS` variable | Also screen evidence, resolving a finding (step 7) and an edit staling that evidence (step 8). Expect "speech-only findings: 0 of n" |
+
+In guest mode, speech alone gives screen claims no candidate. So step 7 is SKIP and step 8 has no evidence to stale. Those two steps can only be proven in team-account mode.
+
+Order of work:
+1. Run the queue check; it must return no rows.
+2. Start the script.
+3. When it prints "analysis queued", run the queue check again. Start the worker (`gh workflow run worker.yml --repo dngvmnh/sleuth`) only if there is exactly one row, named `zz-test-e2e-...`, with queued 1 and running 0.
+4. After the run, delete the printed project by id (`docs/coordination/cleanup.md`).
+
+Rehearsal on sleuth-dev, 14 November 2026: a local worker with the production settings (gemini, empty owner list) and a guest. Result: worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output.
+
 ### 6. Row-level security review (migrations 0000 to 0002)
 
 All 14 tables in `public` have RLS on: `asset_versions`, `audit_events`, `checklist_items`, `evidence_candidates`, `findings`, `frame_observations`, `processing_jobs`, `projects`, `reshoot_tasks`, `review_decisions`, `script_segments`, `script_versions`, `seals`, `transcript_segments`.

@@ -1216,3 +1216,10 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 
 - New `docs/coordination/cleanup.md`: select-first SQL and Storage click paths for both projects. Production: `zz-test-%` rows, the two 4 KB files in folders `prj-0mwetmijy0001-78237676` and `prj-0mweu1pmk0001-c9e4ae11`, and how to remove the one project each live run of PR #30 or #32 prints. Development: Đạt's 11 `zz-test-*` projects from 13 November, 4 `zz-test-e2e-*` rehearsal projects and the anonymous "Copy of ProofPay demo" projects from PR #30 runs. `docs/deploy-plan.md` section 7 now points to it.
 - Found on the way (Đạt's PR #27 journal): the dev bucket accepted a `text/plain` upload, so its MIME list is not set. Added the click path.
+
+## 2026-11-14: prod-e2e team-account mode and speech-only count (Đăng)
+
+- `scripts/prod-e2e.ts`: if `PROD_E2E_EMAIL` and `PROD_E2E_PASSWORD` are both set, it signs in with the Supabase password grant and prints only "signed in as the team account". One of the two alone fails step 1 with a message that names no value. After step 6 it prints "speech-only findings: n of total". The header now shows how to run both modes, with the queue SQL. The script runs only when called directly, so its helpers can be imported.
+- `scripts/prod-e2e.test.ts`: 4 tests for option parsing and the count, with no network. The vitest projects do not include `scripts/`, so it runs with `pnpm tsx --test scripts/prod-e2e.test.ts`: 4 of 4 passed. It is not part of `pnpm test`.
+- Rehearsal on sleuth-dev as a guest, with a local worker on production settings (gemini, empty owner list): worker `speechOnly=1`, "speech-only findings: 2 of 2", 9 PASS, 1 SKIP (step 7), 0 secrets or transcript strings in the output. In guest mode step 7 is always SKIP and step 8 has no evidence; those two need the team account.
+- `docs/deploy-plan.md`: new section 5c, "First real job".

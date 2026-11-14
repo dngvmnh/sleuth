@@ -1,16 +1,27 @@
 /**
- * First real job on production (brief 004, step 3). One anonymous guest runs the whole path
- * through the public API: create, script, checklist, upload our own clip, analyse, review,
- * edit one sentence, seal, export. Prints PASS, FAIL or SKIP per step, counts and ids only.
- * It never prints a token, a key, a URL, transcript text or evidence text.
+ * First real job on production (brief 004, step 3). One user runs the whole path through the
+ * public API: create, script, checklist, upload our own clip, analyse, review, edit one sentence,
+ * seal, export. Prints PASS, FAIL or SKIP per step, counts and ids only. It never prints a token,
+ * a key, a URL, an email, transcript text or evidence text.
  *
- * Run it in your own shell. The values are public by design (ADR 0006) but stay out of files and
- * chat. The script does not load `.env.local`, so it can never hit the dev project by mistake.
+ * How to run (your own shell; the script never loads `.env.local`, so it cannot hit dev by mistake):
  *
- *   $env:PROD_SUPABASE_URL = Read-Host "Production Project URL"
- *   $env:PROD_SUPABASE_ANON_KEY = Read-Host "Production anon key"
- *   pnpm tsx scripts/prod-e2e.ts <path to our own clip.mp4>
- *   Remove-Item Env:PROD_SUPABASE_URL, Env:PROD_SUPABASE_ANON_KEY
+ *   Guest mode (anonymous sign-in; the worker runs it speech only, decision D-4):
+ *     $env:PROD_SUPABASE_URL = Read-Host "Production Project URL"
+ *     $env:PROD_SUPABASE_ANON_KEY = Read-Host "Production anon key"
+ *     pnpm tsx scripts/prod-e2e.ts <path to our own clip.mp4>
+ *     Remove-Item Env:PROD_SUPABASE_URL, Env:PROD_SUPABASE_ANON_KEY
+ *
+ *   Team-account mode (a real Supabase Auth user; frames go to Gemini only if its user id is in
+ *   the VIDEO_ANALYSIS_OWNER_IDS repository variable). Set the two above, plus:
+ *     $env:PROD_E2E_EMAIL = Read-Host "Team account email"
+ *     $sec = Read-Host "Team account password" -AsSecureString
+ *     $env:PROD_E2E_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+ *     pnpm tsx scripts/prod-e2e.ts <path to our own clip.mp4>
+ *     Remove-Item Env:PROD_E2E_EMAIL, Env:PROD_E2E_PASSWORD
+ *   Both must be set, or neither. The email is never printed.
+ *
+ *   After the job: "speech-only findings: n of total" shows which mode really ran.
  *
  * The clip must be our own footage (scripts/make-check-clip.ps1 makes one). The worker is NOT
  * started here: after "analysis queued" the script waits (default 10 minutes, PROD_E2E_WAIT_MIN
@@ -55,6 +66,37 @@ const REWORDED = [
 const CHECKLIST = ["Export the report", "Show the CSV download"];
 
 type Json = Record<string, any> | null; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** The text the worker puts in every finding's limits on a speech-only run (evidence-engine). */
+export const SPEECH_ONLY_MARK = "Checked by speech only";
+
+export type SignInMode =
+  | { mode: "guest" }
+  | { mode: "team"; email: string; password: string }
+  | { mode: "error"; message: string };
+
+/** Guest unless both PROD_E2E_EMAIL and PROD_E2E_PASSWORD are set. One alone is an error. */
+export function signInModeOf(env: Record<string, string | undefined>): SignInMode {
+  const email = env.PROD_E2E_EMAIL?.trim() ?? "";
+  const password = env.PROD_E2E_PASSWORD ?? "";
+  if (email === "" && password === "") return { mode: "guest" };
+  if (email === "" || password === "") {
+    return {
+      mode: "error",
+      message:
+        "set both PROD_E2E_EMAIL and PROD_E2E_PASSWORD for the team account, or neither for a guest",
+    };
+  }
+  return { mode: "team", email, password };
+}
+
+/** "n of total" findings whose limits say the run was speech only. */
+export function speechOnlyCount(findings: { limits?: unknown }[]): string {
+  const n = findings.filter(
+    (f) => typeof f.limits === "string" && f.limits.includes(SPEECH_ONLY_MARK),
+  ).length;
+  return `${n} of ${findings.length}`;
+}
 let failed = 0;
 let firstFailure: string | null = null;
 function check(step: string, ok: boolean, detail = ""): boolean {
@@ -125,15 +167,29 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Step 1: anonymous sign-in.
-  const signup = await fetch(`${SB_URL}/auth/v1/signup`, {
-    method: "POST",
-    headers: { apikey: SB_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ data: {} }),
-  });
+  // Step 1: sign in, as a guest or as the team account.
+  const signIn = signInModeOf(process.env);
+  if (signIn.mode === "error") {
+    check("1 sign in", false, signIn.message);
+    return;
+  }
+  const signup =
+    signIn.mode === "team"
+      ? await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+          method: "POST",
+          headers: { apikey: SB_KEY, "content-type": "application/json" },
+          body: JSON.stringify({ email: signIn.email, password: signIn.password }),
+        })
+      : await fetch(`${SB_URL}/auth/v1/signup`, {
+          method: "POST",
+          headers: { apikey: SB_KEY, "content-type": "application/json" },
+          body: JSON.stringify({ data: {} }),
+        });
   const session = (await signup.json().catch(() => null)) as Json;
   const token: string | undefined = session?.access_token;
-  if (!check("1 sign in anonymously", signup.ok && !!token, String(signup.status))) return;
+  const stepOne =
+    signIn.mode === "team" ? "1 signed in as the team account" : "1 sign in anonymously";
+  if (!check(stepOne, signup.ok && !!token, String(signup.status))) return;
   const t = token as string;
 
   // Step 2: create a project.
@@ -239,6 +295,8 @@ async function main(): Promise<void> {
     ev1.status === 200 && fi1.status === 200,
     `evidence: ${evidence.length} (${counts(evidence, (e) => e.status) || "none"}); findings: ${findings.length} (${counts(findings, (f) => f.type) || "none"})`,
   );
+  // Which mode really ran: every finding of a speech-only run carries the mark (D-4).
+  console.log(`      speech-only findings: ${speechOnlyCount(fi1.json?.findings ?? [])}`);
 
   // Step 7: resolve one finding through the review call.
   const target = findings.find(
@@ -338,19 +396,24 @@ async function main(): Promise<void> {
   );
 }
 
-main()
-  .catch((e: unknown) => {
-    // An error message can hold a URL or a token, so only the error name is printed.
-    check("script error", false, e instanceof Error ? e.name : "unknown");
-  })
-  .finally(() => {
-    // A skipped step is not a pass: say so in the last line.
-    console.log(
-      failed > 0
-        ? `${failed} STEP(S) FAILED. Earliest: ${firstFailure}`
-        : skipped > 0
-          ? `NO FAILURES, BUT ${skipped} STEP(S) SKIPPED: not all steps are proven`
-          : "ALL STEPS PASSED",
-    );
-    process.exit(failed === 0 ? 0 : 1);
-  });
+// Run only as a script, so the unit test can import the helpers without any network call.
+if (process.argv[1] && /prod-e2e\.ts$/.test(process.argv[1])) runAsScript();
+
+function runAsScript(): void {
+  main()
+    .catch((e: unknown) => {
+      // An error message can hold a URL or a token, so only the error name is printed.
+      check("script error", false, e instanceof Error ? e.name : "unknown");
+    })
+    .finally(() => {
+      // A skipped step is not a pass: say so in the last line.
+      console.log(
+        failed > 0
+          ? `${failed} STEP(S) FAILED. Earliest: ${firstFailure}`
+          : skipped > 0
+            ? `NO FAILURES, BUT ${skipped} STEP(S) SKIPPED: not all steps are proven`
+            : "ALL STEPS PASSED",
+      );
+      process.exit(failed === 0 ? 0 : 1);
+    });
+}
