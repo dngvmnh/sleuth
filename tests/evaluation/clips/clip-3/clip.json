@@ -1,0 +1,34 @@
+{
+  "name": "clip-3",
+  "task": "evidence-analysis 11",
+  "formatStatus": "follows docs/evaluation-protocol.md (clip.json)",
+  "case": "one security claim that a video cannot prove",
+  "recordedBy": "Đăng (@dngvmnh)",
+  "labelledBy": null,
+  "recordedOn": null,
+  "durationMs": null,
+  "video": {
+    "fileName": "clip-3.mp4",
+    "inGit": false,
+    "storedAt": null,
+    "sha256": null
+  },
+  "script": [
+    "This is the SLEUTH API running on my laptop in fixture mode.",
+    "First I make an editable copy of the demo project.",
+    "Next I list the evidence for the copy.",
+    "Then I confirm the first candidate as a person.",
+    "All stored videos are encrypted at rest.",
+    "Now I ask for the coverage summary.",
+    "After that I try to apply the Final Seal.",
+    "Finally I open the printable report."
+  ],
+  "checklist": [
+    "Make a copy of the demo",
+    "List the evidence",
+    "Confirm one candidate",
+    "Show the coverage summary",
+    "Try the Final Seal",
+    "Open the printable report"
+  ]
+}
