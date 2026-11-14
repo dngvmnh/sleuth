@@ -1,0 +1,71 @@
+/*
+ * Dashboard-only motion (brief 007 step 2). Kept in this feature folder so step 1's
+ * globals.css stays untouched; move a class there if another screen needs it.
+ */
+
+/* A bat crosses the moon once per cycle. The cycle is 20 to 40 s, set from JS. */
+.bat {
+  animation: bat-cross 30s linear infinite;
+  opacity: 0;
+}
+
+@keyframes bat-cross {
+  0% {
+    transform: translate(-80px, 120px);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  12% {
+    transform: translate(560px, 70px);
+    opacity: 1;
+  }
+  12.5%,
+  100% {
+    transform: translate(560px, 70px);
+    opacity: 0;
+  }
+}
+
+/* The lit window breathes very slowly: 6 s, opacity 0.8 to 1 only. */
+.window {
+  animation: window-glow 6s ease-in-out infinite alternate;
+}
+
+@keyframes window-glow {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Cursed Frame card: a still 2px red and teal split of the name on hover or focus. */
+.cursed:hover .cursedName,
+.cursed:focus-visible .cursedName {
+  text-shadow:
+    -2px 0 rgb(var(--sleuth-fog-b) / 0.75),
+    2px 0 rgb(var(--sleuth-fog-a) / 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bat {
+    display: none;
+    animation: none;
+  }
+  .window {
+    animation: none;
+  }
+  .cursed:hover .cursedName,
+  .cursed:focus-visible .cursedName {
+    text-shadow: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .bat {
+    display: none;
+  }
+}

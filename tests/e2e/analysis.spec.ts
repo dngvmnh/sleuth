@@ -75,7 +75,7 @@ test("leaving the workspace stops the polling", async ({ page, request }) => {
   await panel(page).getByRole("button", { name: "Run analysis" }).click();
   await expect.poll(() => checks, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
   await page.getByRole("link", { name: "Back to dashboard" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "SLEUTH" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^The cut is haunted/ })).toBeVisible();
   const after = checks;
   await page.waitForTimeout(5000);
   expect(checks).toBe(after);
