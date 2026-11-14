@@ -21,6 +21,9 @@ function messageOf(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "The analysis could not be started.";
 }
 
+/** A job that has waited this long in the queue gets a clear message (WP6). */
+export const STALLED_AFTER_MS = 30 * 60_000;
+
 const STATUS_TEXT: Record<"queued" | "running", string> = {
   queued: "Queued. Analysis starts within about 10 to 15 minutes.",
   running: "Analysis running.",
@@ -77,6 +80,11 @@ export function AnalysisPanel({
         person to check.
       </p>
 
+      <p className="mt-2 text-xs text-muted" data-testid="analysis-limits">
+        Free-tier limits: a video up to 50 MB and 3 minutes, and a small number of analyses per account each day
+        (5 by default). If you reach the limit, this page tells you when it resets.
+      </p>
+
       {readOnly ? (
         <p className="mt-3 text-sm text-muted">The demo is read-only. Make an editable copy to run an analysis.</p>
       ) : job === null || job.status === "succeeded" ? (
@@ -96,6 +104,12 @@ export function AnalysisPanel({
               is kept. If no worker is running (fixture mode in the web app has none), the job stays queued.
             </p>
           </div>
+        ) : null}
+        {job && job.status === "queued" && Date.now() - Date.parse(job.createdAt) > STALLED_AFTER_MS ? (
+          <p role="alert" data-testid="job-stalled" className="mt-3 text-sm text-warn">
+            This job has waited more than 30 minutes. The worker may be late or stopped. You can keep waiting, or
+            come back later: the job is kept. If it is still queued after an hour, tell the team.
+          </p>
         ) : null}
         {job && job.status === "succeeded" ? (
           <div role="status" data-testid="job-done" className="rounded-md border border-line p-3 text-sm">

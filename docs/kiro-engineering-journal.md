@@ -1417,3 +1417,9 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 ## 2026-11-14: WP4 part 5, report banners (Đăng, brief 006 item 6)
 
 - The draft, sealed and broken banners each carry an icon (file, wax seal, cross) beside the text. The sealed banner uses the gold border. The wax-seal stamp after sealing (`SealConfirmation`) was already there and is off under reduced motion. 1 new unit test; report unit tests 62 passed; report, final-seal and a11y browser specs 16 passed. Print was not re-checked on paper.
+
+## 2026-11-14: WP6, hardening for judges (Dang)
+
+- `analysis-panel.tsx`: a job queued for more than 30 minutes shows a clear message (`STALLED_AFTER_MS`); the free-tier limits (50 MB, 3 minutes, 5 analyses a day by default) are visible before anyone starts. 2 new tests; the panel's 10 tests pass. A failed job already shows its error and Try again; oversize and over-length files are already refused in the browser before upload (`duration.ts`); the 404 page and error boundary are in PR #46.
+- Secret scan: gitleaks 8.30.1 over all 125 commits found 2 items, both false positives (a test id of 36 characters and a made-up test string; no key, URL or password). No `.env*` file is tracked except `.env.example`; `.kiro/` (33 files) is tracked and not ignored; GitHub's licence API reports MIT. The repository has no description set (human list).
+- Not done: the public demo has no Poltergeist example and the seal state of the demo is the read-only draft with its blockers. Adding a stale row to the golden fixture changes counts that many tests assert, and the demo copy path already shows a Poltergeist the moment someone edits a line of a copy. The demo script says so. No production re-seed is needed from this work.
