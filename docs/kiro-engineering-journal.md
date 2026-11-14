@@ -1369,6 +1369,12 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 - `demo.ps1 -NoPause` ran all steps of each clip against a fixture `pnpm dev`: clip-1 6 of 6 steps (report.csv 36 rows); clip-2 5 of 5 (job queued); clip-3 6 of 6 (one candidate confirmed, seal refused with 409, report.html 200).
 - Not done here: no `labels.json` (Phạm Quốc Bảo labels by watching), ea 11 not ticked, protocol not edited. Found on the way: `clip-5/demo.ps1` calls upload-url without `sizeBytes`, so it now gets 400; it is outside this PR.
 
+## 2026-11-14: WP3, our own evidence clip (Đăng)
+
+- Why the check clip made no evidence: the engine makes a candidate only when a frame shares a key word with the line (or the line needs outside proof). A speech-only run has no frames, so nothing matched. Steps 7 and 8 need frames, so they need the team account and Gemini.
+- New: `scripts/make-evidence-clip.ps1` (ffmpeg slides plus Windows text-to-speech, 10.3 s, own footage), `scripts/evidence-clip.json` (the script and checklist prod-e2e uses, plus the on-screen text). Slide 1 shows one key word only, so its evidence is medium and raises a Cursed Frame that step 7 can resolve.
+- `scripts/evidence-clip.test.ts`: 4 tests run the clip's expected speech and slide text through the real engine: 3 candidates, a Cursed Frame tied to evidence, no Ghost for item 1, and the same script as prod-e2e. 4 of 4 passed.
+- Checked the clip by looking at a frame (text readable) and ffmpeg volumedetect (speech present). Not checked: what Deepgram or Gemini return for it. That is the human step in human-actions.md.
 ## 2026-11-14: WP0, board and human checklist (Đăng)
 
 - Merged #39 (clip kits), #41 (brief 006), #42 (script tests in CI) and #40 (board) after main sync and green CI. #27 is handled in WP2.
