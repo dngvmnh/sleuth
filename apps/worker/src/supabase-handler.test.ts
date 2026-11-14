@@ -525,7 +525,11 @@ describe("config", () => {
 const hasFfmpeg =
   spawnSync("ffmpeg", ["-version"]).status === 0 && spawnSync("ffprobe", ["-version"]).status === 0;
 
-describe.skipIf(!hasFfmpeg)("with real FFmpeg", () => {
+// These tests start real FFmpeg processes. In a full parallel `pnpm test` on Windows the child
+// processes can be starved past the 5 s default (issue #80), so only these tests get more time.
+const FFMPEG_TEST_TIMEOUT_MS = 30_000;
+
+describe.skipIf(!hasFfmpeg)("with real FFmpeg", { timeout: FFMPEG_TEST_TIMEOUT_MS }, () => {
   it("cuts audio and frames from a real clip, hands them to the providers, then cleans up", async () => {
     const clip = join(scratch, "clip.mp4");
     const made = spawnSync("ffmpeg", [
