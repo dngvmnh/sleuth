@@ -1409,3 +1409,7 @@ The only conflict was this journal: `main` had new entries. Both sides were kept
 ## 2026-11-14: WP4 part 3, the dashboard (Đăng, brief 006 item 4)
 
 - Eyebrow, display heading with an italic gold line, project cards in two columns, and an icon on each of the five finding cards. The h1 is still exactly 'SLEUTH' (the browser specs look for it).
+
+## 2026-11-14: WP4 part 5, report banners (Đăng, brief 006 item 6)
+
+- The draft, sealed and broken banners each carry an icon (file, wax seal, cross) beside the text. The sealed banner uses the gold border. The wax-seal stamp after sealing (`SealConfirmation`) was already there and is off under reduced motion. 1 new unit test; report unit tests 62 passed; report, final-seal and a11y browser specs 16 passed. Print was not re-checked on paper.
