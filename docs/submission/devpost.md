@@ -1,69 +1,77 @@
-# DRAFT: Devpost submission for SLEUTH
+# Devpost submission text for SLEUTH
 
-> DRAFT. Not submitted. Every number below was printed by a test run named next to it, on `main` as of 9 November 2026. Replace them with fresh runs before submitting. Sections marked TODO depend on work that is not built yet.
+Final text for each field, as of 14 November 2026 on `main` at `2c4bc1d`. Numbers come from the commands named beside them. Re-run them on 3 December and replace any that changed. The official rules page returned HTTP 403 to our page reader, so the exact Devpost field names are not confirmed: Đăng pastes them over the headings below on submission day. Items in `[brackets]` are filled in by a person on submission day.
 
 ## Name and one-liner
+
 SLEUTH: a QA workspace that checks a software demo video against its script and checklist, and never lets a machine sign off on its own.
 
-Category: Costume Contest (per our README; confirm against the official categories before submitting).
+Category: Costume Contest. Bonus prizes we aim for: Best Student Project (only after the student check in `docs/coordination/human-actions.md` is done), Bonus Blog, Social Blitz, Best Demo.
+
+Links: live app https://sleuth-eight.vercel.app, repository https://github.com/dngvmnh/sleuth (MIT), video `[YouTube URL]`, blog `[URL]`, social post `[URL]`.
 
 ## Inspiration
-Demo videos drift from what they claim. A line gets cut, a screen changes, a sentence is edited after recording, and nobody notices until a judge or a customer does. We wanted a tool that treats every claim in a demo as something to prove, and treats every match it finds as a candidate that a person must confirm.
+
+Demo videos drift from what they claim. A line gets cut, a screen changes, a sentence is edited after recording, and nobody notices until a judge or a customer does. We wanted a tool that treats every claim in a demo as something to prove, and every match it finds as a candidate that a person must confirm.
 
 ## What it does
-- You give SLEUTH a script (what you meant to say), a video (what happened) and a checklist (what the demo must show).
-- It builds candidate evidence that links each script line to moments in the video, and flags problems as haunted-studio findings: Ghost (no visual evidence), Phantom Dialogue (a script line not spoken), Cursed Frame (needs a human check), Poltergeist (evidence out of date after an edit), Needs Outside Proof (footage cannot prove the claim).
+
+- You give SLEUTH a script (what you mean to say), a video (what happened) and a checklist (what the demo must show).
+- It links each script line to moments in the video and reports problems as haunted-studio findings, each with a plain name beside it: Ghost (no visual evidence), Phantom Dialogue (script line not spoken), Cursed Frame (needs a human check), Poltergeist (evidence out of date), Needs Outside Proof (footage cannot prove this).
 - Edit one sentence and only the evidence for that sentence goes stale. A cosmetic edit (case, spacing, punctuation) changes nothing.
-- A person reviews every candidate. Only a person's decision confirms evidence, and the Final Seal records who signed off on which video and script versions. Any later change breaks the seal.
+- A person reviews every candidate. Only a person's decision confirms evidence. The Final Seal records who signed off, on which video and script versions. A later change breaks the seal.
+- Try it signed out on the public demo, or sign in as a guest and upload your own video. Visitors' videos get a speech-only check: nothing but the transcript is sent to the AI provider, and no frames are.
 
 ## How we built it
-- TypeScript monorepo: Next.js web app and API (`apps/web`), a worker for media jobs (`apps/worker`), shared contracts (Zod), pure domain rules, and a database layer.
-- Two data modes behind one store interface: an in-memory golden fixture (no keys needed) and Supabase (Postgres, Auth with anonymous sign-in, private Storage). Both stores run the same contract test suite, so they cannot drift.
-- Row-level security on every table, proven against a real Postgres in CI, not only in our own code.
+
+- TypeScript monorepo: a Next.js web app and REST API (`apps/web`), a worker (`apps/worker`), shared Zod contracts, pure domain rules and a database layer.
+- Two stores behind one interface: an in-memory golden fixture (no keys needed) and Supabase (Postgres, anonymous Auth, private Storage). Both pass the same contract suite.
+- Row-level security on every table, tested against a real Postgres in CI (the `db` job).
+- The worker runs on a GitHub Actions schedule every 10 minutes (ADR 0009). It is free, and a visitor's job can wait 10 to 15 minutes. The page says so.
+- Free tiers only: Vercel Hobby, Supabase Free, Deepgram credit, Gemini free tier.
 
 ## How we used Kiro
-- Specs: five feature specs (`ingestion`, `change-impact`, `final-seal`, `review-workspace`, `evidence-analysis`), each with requirements, design and tasks. Every task names an owner, files and a "done when". A repo test fails if a task cites a requirement that does not exist or lists a file outside its owner's area.
-- Steering: nine steering files (architecture, backend, frontend, media, coding standards, AI safety, product, team workflow, and a manual "ghost hunt" review).
-- Hooks: three agent hooks (package tests on save, contract checks on save, a check after each spec task).
-- Custom agents: backend, frontend and media builders, a QA reviewer and a coordinator.
-- Property tests written from the spec's `[PBT]` criteria found real bugs in our own earlier code: evidence a person had dismissed could later be confirmed on an outdated line; a dismissed candidate re-opened on every later edit; evidence going stale a second time did not reopen its Poltergeist. All three are fixed and covered.
-- TODO: a short screen capture of a spec task running, and one hook firing.
 
-## What is real and what is mocked (as of 10 November 2026)
+See `docs/submission/kiro-usage.md`. In short: five specs, nine steering files, three hooks, five custom agents, and property tests written from the specs' `[PBT]` criteria that found three bugs in our own code. We configured MCP servers but left them disabled, and we did not use Powers.
 
-| Part | State |
-|---|---|
-| Backend API, both stores, change impact, Final Seal rules, reports (CSV, HTML) | Real, tested |
-| Supabase store, sign-in, row-level security, signed uploads, retention purge | Real, tested in CI against a throwaway Supabase stack |
-| Transcription and video analysis | Deepgram and Gemini adapters exist with recorded-response tests (PR #18). Run once on a 6-second clip we made ourselves (synthetic speech over a plain screen): Deepgram returned 2 segments and 14 words, and Gemini `gemini-3.6-flash` returned 3 observations and 6 text items for 3 frames. This proves the keys and adapters work. It says nothing about accuracy. `gemini-3.8-flash` failed 3 of 3 tries on the free tier. No video of a real product has been analysed yet. |
-| Evidence matching | Script alignment and matching are built (evidence-analysis 5, 6). Not measured on real clips yet. |
-| Review workspace and Final Seal UI | NOT BUILT yet (one placeholder page). |
-| Worker in Supabase mode | Built and tested (evidence-analysis 12, 16). |
-| Deployment | Not deployed. Plan in `docs/deploy-plan.md`. |
+## What is real and what is not
 
-Update this table before submitting. Do not claim a part is real unless it is.
-
-## Numbers we can quote (with their source)
-
-| Number | Printed by |
-|---|---|
-| 532 unit tests passed | `pnpm test`, local run on `main`, 10 November 2026 (with the shared dev database) |
-| 92 property tests passed | `pnpm test:property`, same day |
-| 14 contract tests passed; OpenAPI matches the contracts | `pnpm check:contracts`, same day |
-| 66 Postgres, Auth and Storage tests passed, 0 skipped | CI `db` job, run 42580335599 (9 November 2026; not re-counted since) |
-| Deepgram 2 segments and 14 words; Gemini 3 observations and 6 text items, on one 6 s own clip | `pnpm tsx scripts/provider-check.ts`, 10 November 2026 |
-
-No accuracy, precision or recall numbers yet: the evaluation harness (evidence-analysis 9) and our recorded clips do not exist yet. Quote only numbers `pnpm eval` prints, with the clip count and provider named.
+| Part | State | Proof |
+|---|---|---|
+| API, both stores, change impact, Final Seal rules, reports | Real | `pnpm test`: 1072 passed, 70 skipped (those need Postgres and run in the CI `db` job); CI green on `main` |
+| Property tests | Real | `pnpm test:property`: 114 passed |
+| Contracts and OpenAPI | Real | `pnpm check:contracts`: 14 passed |
+| Production site | Live | `scripts/prod-smoke.ts`: 32 of 32 on 14 November |
+| First real job on production | Partly proven | `scripts/prod-e2e.ts` as a guest passed steps 1 to 6, 9 and 10. Step 7 (resolve a finding) was skipped and step 8 passed only weakly, because a speech-only run produces no frame evidence. The team-account run with our own clip is on the human list |
+| Transcription and video analysis | Adapters work | One 6-second clip of our own: Deepgram returned 2 segments and 14 words, Gemini `gemini-3.6-flash` returned 3 observations for 3 frames. This shows the keys and adapters work. It says nothing about accuracy |
+| Accuracy | Not measured | No real clip is recorded and labelled yet. `docs/evidence-confidence.md` shows only a mock plumbing run on 1 hand-written clip |
 
 ## Challenges
-- Supabase signed upload URLs live about two hours and cannot be shortened, but our spec says five minutes. We enforce the five-minute window ourselves when analysis starts.
-- Keeping "a person confirms" true everywhere: a check in the repo flags any new code outside the review rules that sets evidence to confirmed.
+
+- Supabase signed upload URLs live about two hours and cannot be shortened, but our spec says five minutes. We enforce the five-minute rule ourselves when analysis starts.
+- Keeping "a person confirms" true everywhere: a repo check flags any new code outside the review rules that sets evidence to confirmed.
+- A `.gitignore` rule for `coverage/` hid a route folder named `coverage`. Tests passed on a laptop and failed in CI.
+- A free worker means a delay. We chose to say so in the interface instead of faking progress.
+
+## Accomplishments
+
+- Three real bugs found by property tests in code we wrote the same day.
+- A public repository whose CI runs the whole database suite on a throwaway Supabase stack.
+- A guest flow where a visitor can try the product with no account and no keys.
+
+## What we learned
+
+- Writing the spec first made the rules (candidates, not verdicts) testable instead of a slogan.
+- Measuring beats claiming: we publish no accuracy number until real clips are labelled by someone other than the person who recorded them.
 
 ## What's next
-TODO after the build: real providers, the review workspace, the first evaluation run on our own clips.
+
+Record and label five clips, run the evaluation with real providers, and publish the precision, recall and false-warning rate with the clip count. Add captions to the player.
 
 ## Built with
-TypeScript, Next.js, React, Node.js, Zod, Drizzle ORM, PostgreSQL, Supabase (Auth, Storage), FFmpeg, Vitest, fast-check, Playwright, GitHub Actions, Kiro.
+
+TypeScript, Next.js, React, Node.js, Zod, Drizzle ORM, PostgreSQL, Supabase (Auth, Storage), FFmpeg, Deepgram, Gemini, Vitest, fast-check, Playwright, GitHub Actions, Vercel, Kiro.
 
 ## Team
+
 Đạt (@phatdat220707), frontend. Đăng (@dngvmnh), backend. Phạm Quốc Bảo (@baofrovn), media and evidence engine.
